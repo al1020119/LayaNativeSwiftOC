@@ -1,0 +1,82 @@
+var ActorPropertyType = /** @class */ (function () {
+    function ActorPropertyType() {
+    }
+    ActorPropertyType.WnProps = '0';
+    ActorPropertyType.Spirit = '1';
+    ActorPropertyType.Max = '2';
+    return ActorPropertyType;
+}());
+var ActorProperty = /** @class */ (function () {
+    function ActorProperty() {
+        this._mProperties = new Object();
+    }
+    ActorProperty.prototype.getProperty = function (type) {
+        if (this._mProperties.hasOwnProperty(type)) {
+            return this._mProperties[type];
+        }
+        else {
+            console.warn('not find this property' + type);
+            return 0;
+        }
+    };
+    ActorProperty.prototype.changeProperty = function (type, chanegeValue) {
+        var old = this.getProperty(type);
+        var after = old + chanegeValue;
+        this.setProperty(type, after);
+    };
+    ActorProperty.prototype.setProperty = function (type, setValue) {
+        this._mProperties[type] = setValue;
+    };
+    ActorProperty.prototype.clearProperty = function (type) {
+        this._mProperties = null;
+        this._mProperties = new Object;
+    };
+    return ActorProperty;
+}());
+var ActorPropertyManager = /** @class */ (function () {
+    function ActorPropertyManager(owner) {
+        this._owner = owner;
+        this._baseProperty = new ActorProperty();
+        this._reduceProperty = new ActorProperty();
+        var start = parseInt(ActorPropertyType.WnProps);
+        var end = parseInt(ActorPropertyType.Max);
+        for (var i = start; i < end; i++) {
+            this._baseProperty[i] = 0;
+            this._reduceProperty[i] = 0;
+        }
+    }
+    ActorPropertyManager.prototype.setBaseProperty = function (type, val) {
+        this._baseProperty.setProperty(type, val);
+    };
+    ActorPropertyManager.prototype.getBaseProperty = function (type) {
+        return this._baseProperty.getProperty(type);
+    };
+    ActorPropertyManager.prototype.changeProperty = function (type, val) {
+        if (type == ActorPropertyType.Spirit) {
+            var spirit = this.getCurrentProperty(type) + val;
+            var max = this.getBaseProperty(type);
+            if (spirit > max) {
+                this._reduceProperty.setProperty(type, 0);
+            }
+            else if (spirit <= 0) {
+                this._reduceProperty.setProperty(type, -this.getBaseProperty(type));
+            }
+        }
+        this._reduceProperty.setProperty(type, val);
+    };
+    ActorPropertyManager.prototype.getCurrentProperty = function (type) {
+        var max = this._baseProperty.getProperty(type);
+        var reduce = this._reduceProperty.getProperty(type);
+        return (max + reduce);
+    };
+    ActorPropertyManager.prototype.clear = function () {
+        var start = parseInt(ActorPropertyType.WnProps);
+        var end = parseInt(ActorPropertyType.Max);
+        for (var i = start; i < end; i++) {
+            this._baseProperty[i] = 0;
+            this._reduceProperty[i] = 0;
+        }
+    };
+    return ActorPropertyManager;
+}());
+//# sourceMappingURL=ActorProperty.js.map

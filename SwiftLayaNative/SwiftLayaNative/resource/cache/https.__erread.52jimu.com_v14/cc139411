@@ -1,0 +1,22 @@
+var PrintControlManager = /** @class */ (function () {
+    function PrintControlManager() {
+        this.lineHeight = 38;
+        this.font = jmt.Skin.FONT;
+        this.fontSize = 27;
+        this.fontBigSize = 46;
+        this.printSpeed = 40;
+        this.showSpeed = 100;
+        this.letterColor = '#492424';
+        this.printControl = new jmt.common.SoulTextBox(this);
+        this.printControl.lineHeight = this.lineHeight;
+        this.printControl.fontSize = this.fontSize;
+        this.printControl.fontSmallSize = this.fontSize;
+        this.printControl.fontBigSize = this.fontBigSize;
+        this.printControl.printSpeed = this.printSpeed;
+        this.printControl.showSpeed = this.showSpeed;
+        this.printControl.font = this.font;
+        this.printControl.letterColor = this.letterColor;
+    }
+    return PrintControlManager;
+}());
+//# sourceMappingURL=PrintControl.js.map

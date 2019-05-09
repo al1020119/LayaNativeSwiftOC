@@ -1,0 +1,535 @@
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var OptionView = /** @class */ (function (_super) {
+    __extends(OptionView, _super);
+    function OptionView(view, coninfo, selected) {
+        var _this = _super.call(this) || this;
+        _this.name = 'OptionView';
+        _this.oplist = [];
+        _this.optype = jmt.Content.OPTYPE_MULTI;
+        _this.optime = 0;
+        _this.itemHeight = 127;
+        _this.clipArray = []; //碎片合集，显示的碎片对象都放这个数组里，用于改变数据
+        _this.disableClick = 0;
+        //平台，为了兼容零下记忆
+        if (jmt.Config.NOVELID != 10000) {
+            _this.itemHeight = 107;
+        }
+        view.addChild(_this);
+        _this.left = 0;
+        _this.right = 0;
+        _this.top = 0;
+        _this.bottom = 0;
+        _this.zOrder = 900;
+        _this.maskBg = new Laya.Sprite();
+        _this.addChild(_this.maskBg);
+        _this.maskBg.graphics.drawRect(0, 0, _this.width, _this.height, '#000000');
+        _this.maskBg.alpha = 0.3;
+        _this.selectedHandler = selected;
+        _this.coninfo = coninfo;
+        if (!_this.coninfo || !_this.coninfo.optionlist) {
+            _this.close();
+            return _this;
+        }
+        _this.oplist = _this.coninfo.optionlist ? _this.coninfo.optionlist : [];
+        _this.optype = _this.coninfo.optype;
+        _this.optime = _this.coninfo.optime;
+        _this.mainBox = new Laya.VBox();
+        _this.addChild(_this.mainBox);
+        _this.mainBox.pivot(_this.mainBox.width / 2, _this.mainBox.height / 2);
+        _this.mainBox.alpha = 0;
+        _this.mainBox.scale(0.5, 0.5);
+        _this.mainBox.height = _this.oplist.length * _this.itemHeight;
+        if (_this.optype == jmt.Content.OPTYPE_SERIES) {
+            //播放声效
+            var soundurl = jmt.Resource.SOUND_OPTION_SERIES;
+            jmt.util.Sound.playSound(soundurl, jmt.Resource.RESTYPE_SOUND);
+            // var volume = jmt.Data.getPlayVolume(jmt.Resource.RESTYPE_SOUND);
+            // SoundManager.setSoundVolume(volume);//设置音量
+            //追问
+            _this.mainBox.centerX = 0;
+            _this.mainBox.left = 0;
+            _this.mainBox.right = 0;
+            _this.mainBox.bottom = 400;
+            _this.mainBox.height = 700;
+            // 辩驳追问的提示按钮
+            _this.pointPrompt = new game.PointPrompt();
+            _this.addChild(_this.pointPrompt);
+            _this.pointPrompt.top = 330;
+            _this.pointPrompt.left = 40;
+            _this.pointPrompt.on(Laya.Event.CLICK, _this, _this.getET);
+            _this.initSeries(_this.oplist);
+        }
+        else if (_this.optype == jmt.Content.OPTYPE_LEAD) {
+            //带人
+            _this.mainBox.height = 700;
+            _this.mainBox.width = 300;
+            _this.mainBox.right = 0;
+            _this.mainBox.centerY = 0;
+            _this.mainBox.graphics.drawRect(0, 0, _this.mainBox.width, _this.mainBox.height, '#000000aa');
+            _this.initLead(_this.oplist);
+        }
+        else {
+            _this.mainBox.centerX = 0;
+            _this.mainBox.left = 0;
+            _this.mainBox.right = 0;
+            _this.mainBox.bottom = 400;
+            if (_this.optype == jmt.Content.OPTYPE_MULTI) {
+                // SoundManager.playSound(jmt.Resource.SOUND_OPTION_MULTI);
+                // var volume = jmt.Data.getPlayVolume(jmt.Resource.RESTYPE_SOUND);
+                // SoundManager.setSoundVolume(volume);//设置音量
+                var soundurl = jmt.Resource.SOUND_OPTION_MULTI;
+                jmt.util.Sound.playSound(soundurl, jmt.Resource.RESTYPE_SOUND);
+                //多选增加确定按钮高度
+                _this.mainBox.height += _this.itemHeight;
+            }
+            if (_this.optype == jmt.Content.OPTYPE_NORMAL && _this.optime > 0) {
+                // SoundManager.playSound(jmt.Resource.SOUND_TIME_DOWN,0);
+                // var volume = jmt.Data.getPlayVolume(jmt.Resource.RESTYPE_SOUND);
+                // SoundManager.setSoundVolume(volume);//设置音量
+                var soundurl = jmt.Resource.SOUND_TIME_DOWN;
+                jmt.util.Sound.playSound(soundurl, jmt.Resource.RESTYPE_SOUND, 0);
+                //倒计时
+                _this.timeBox = new game.OptionTimeBox(_this.optime, Handler.create(_this, _this.selectTimeOut));
+                _this.mainBox.addChild(_this.timeBox);
+                _this.timeBox.centerX = 0;
+                _this.mainBox.height += _this.timeBox.height;
+            }
+            _this.initNormal(_this.oplist);
+        }
+        Laya.Tween.to(_this.mainBox, { alpha: 1, scaleX: 1, scaleY: 1 }, 200, Laya.Ease.backOut);
+        return _this;
+    }
+    //带人
+    OptionView.prototype.initLead = function (list) {
+        this.optionList = new LayaList();
+        // this.optionList.spaceY=20;
+        this.optionList.itemRender = jmt.item.LeadListItem;
+        // 使用但隐藏滚动条
+        this.optionList.vScrollBarSkin = "";
+        this.optionList.selectEnable = true;
+        this.optionList.selectHandler = new Handler(this, this.onLeadSelect);
+        // this.optionList.mouseEnabled = true;
+        // this.optionList.mouseHandler = new Handler(this, this.onSelect);
+        this.optionList.renderHandler = new Handler(this, this.updateLeadItem);
+        this.mainBox.addChild(this.optionList);
+        this.optionList.width = this.mainBox.width;
+        this.optionList.height = list.length * this.itemHeight;
+        this.optionList.centerX = 0;
+        // this.optionList.centerY=0;
+        // this.optionList.top = 50;
+        // this.optionList.bottom = 0;
+        this.optionList.array = list;
+    };
+    OptionView.prototype.updateLeadItem = function (cell, index) {
+        // cell.setBgImg(cell.dataSource);
+        cell.setData(cell.dataSource);
+    };
+    OptionView.prototype.onLeadSelect = function (index) {
+        var item = this.optionList.getItem(index);
+        if (item) {
+            // jmt.Print.log(1111111111);
+            var apiUtil = new ApiUtil();
+            apiUtil.postOption(item.opid, jmt.Data.chapterinfo, this.coninfo, Handler.create(this, this.showOptionResult));
+        }
+    };
+    //追问
+    OptionView.prototype.initSeries = function (optionlist) {
+        this.flotBox = new Laya.Box();
+        this.mainBox.addChild(this.flotBox);
+        this.flotBox.width = this.mainBox.width;
+        this.flotBox.height = this.mainBox.height;
+        for (var i = 0; i < optionlist.length; i++) {
+            var opinfo = optionlist[i];
+            var skin = jmt.Skin.OPTION_STONE_ARR[i + 1] ? jmt.Skin.OPTION_STONE_ARR[i + 1] : jmt.Skin.OPTION_KEYWORD_STONE1;
+            var clipBox = new game.FloatClipBox(this, opinfo.title, opinfo, skin);
+            this.clipArray.push(clipBox);
+            this.flotBox.addChild(clipBox);
+            clipBox.pivot(clipBox.width / 2, clipBox.height / 2);
+            var cx = 0;
+            var cy = 0;
+            if (i == 0) {
+                cx = 40;
+                cy = 150;
+            }
+            else if (i == 1) {
+                cx = 490;
+                cy = 150;
+            }
+            else if (i == 2) {
+                cx = 50;
+                cy = 340;
+            }
+            else if (i == 3) {
+                cx = 460;
+                cy = 380;
+            }
+            else if (i == 4) {
+                cx = 40;
+                cy = 540;
+            }
+            else if (i == 5) {
+                cx = 340;
+                cy = 560;
+            }
+            clipBox.on(Laya.Event.CLICK, this, this.onPostSeries);
+            clipBox.on(Laya.Event.MOUSE_OVER, this, this.overSeriesItem);
+            clipBox.on(Laya.Event.MOUSE_DOWN, this, this.overSeriesItem);
+            clipBox.on(Laya.Event.MOUSE_OUT, this, this.outSeriesItem);
+            clipBox.alpha = 0;
+            clipBox.scale(0, 0);
+            clipBox.x = cx;
+            clipBox.y = cy;
+            Laya.Tween.to(clipBox, { x: cx, y: cy, scaleX: 1, scaleY: 1, alpha: 1 }, 300, Laya.Ease.backOut, null, i * 200);
+        }
+    };
+    // 追问看广告检查，获取错误碎片
+    OptionView.prototype.getET = function () {
+        this.pointPrompt.off(Laya.Event.CLICK, this, this.getET);
+        Laya.timer.once(2000, this, function () {
+            this.pointPrompt.on(Laya.Event.CLICK, this, this.getET);
+        });
+        var apiUtil = new ApiUtil();
+        apiUtil.getErrorTatter(this.coninfo.chapterid, this.coninfo.conid, jmt.Data.chapterinfo.branchid, 0, Handler.create(this, this.BVSprompt));
+    };
+    OptionView.prototype.BVSprompt = function (res) {
+        // jmt.Console.log(res);
+        if (res.payinfo) {
+            var isVS = 1;
+            if (res.payinfo.showshare) {
+                isVS = 0;
+            }
+            if (res.payinfo.showshare || res.payinfo.showad) {
+                var vsPrompt = new game.lookVedioOrShare('分享成功后，去掉一半错误', '立即分享', jmt.QQresType.QUESTION, this.coninfo.chapterid, jmt.Data.chapterinfo.branchid, isVS, this.coninfo.conid, 0, 0, Handler.create(this, this.showErrorTatter));
+                if (isVS === 1) {
+                    vsPrompt.infoLabel.text = '观看视频，去掉一半错误碎片';
+                    vsPrompt.btnImg.label = '观看视频';
+                    //辩驳提示按钮统计
+                    var apiUtil1 = new ApiUtil();
+                    apiUtil1.Stat(jmt.Stat.ACT_SERIES_TIPS, jmt.Stat.ACT_SHOWAD);
+                }
+                else {
+                    //辩驳提示按钮统计
+                    var apiUtil2 = new ApiUtil();
+                    apiUtil2.Stat(jmt.Stat.ACT_SERIES_TIPS, jmt.Stat.ACT_SHOWSHARE);
+                }
+                vsPrompt.popup();
+            }
+        }
+        else {
+            this.getErrorTatter(res);
+        }
+    };
+    OptionView.prototype.showErrorTatter = function () {
+        var apiUtil = new ApiUtil();
+        apiUtil.getErrorTatter(this.coninfo.chapterid, this.coninfo.conid, jmt.Data.chapterinfo.branchid, 0, Handler.create(this, this.getErrorTatter));
+    };
+    OptionView.prototype.getErrorTatter = function (res) {
+        if (res) {
+            if (res.ids) {
+                this.errorTatter = res.ids;
+                for (var i = 0; i < this.clipArray.length; i++) {
+                    for (var j = 0; j < this.errorTatter.length; j++) {
+                        if (this.errorTatter[j] == this.clipArray[i].opinfo.opid) {
+                            this.clipArray[i].showErrorTatter();
+                            this.clipArray[i].off(Laya.Event.CLICK, this, this.onPostSeries);
+                            this.clipArray[i].off(Laya.Event.MOUSE_OVER, this, this.overSeriesItem);
+                            this.clipArray[i].off(Laya.Event.MOUSE_OUT, this, this.outSeriesItem);
+                            this.clipArray[i].off(Laya.Event.MOUSE_DOWN, this, this.overSeriesItem);
+                        }
+                    }
+                }
+                // 已经付款，直接toast提示
+                jmt.common.Toast.msg('已提示部分错误的选择，请再思考一下哦');
+            }
+        }
+    };
+    OptionView.prototype.overSeriesItem = function (e) {
+        e.target.onHover();
+    };
+    OptionView.prototype.outSeriesItem = function (e) {
+        e.target.onOut();
+    };
+    //提交追问选项
+    OptionView.prototype.onPostSeries = function (e) {
+        var opinfo = e.target.opinfo;
+        this.currentitem = opinfo;
+        // jmt.Print.log(222222222);
+        var apiUtil = new ApiUtil();
+        apiUtil.postOption(opinfo.opid, jmt.Data.chapterinfo, this.coninfo, Handler.create(this, this.showOptionResult));
+    };
+    //普通选项
+    OptionView.prototype.initNormal = function (optionlist) {
+        this.optionList = new LayaList();
+        // this.optionList.spaceY=10;
+        this.optionList.itemRender = jmt.item.OptionListItem;
+        // 使用但隐藏滚动条
+        this.optionList.vScrollBarSkin = "";
+        // this.optionList.selectEnable = false;
+        // this.optionList.selectHandler = new Handler(this, this.onSelect);
+        this.optionList.renderHandler = new Handler(this, this.updateItem);
+        this.mainBox.addChild(this.optionList);
+        this.optionList.width = this.mainBox.width;
+        this.optionList.height = 600;
+        this.optionList.centerX = 0;
+        // this.optionList.centerY=0;
+        // this.optionList.top = 50;
+        // this.optionList.bottom = 0;
+        // 设置多选按钮
+        if (this.optype == jmt.Content.OPTYPE_MULTI) {
+            this.okBtn = new Laya.Button(jmt.Skin.PIECES_OKBTN, '确定');
+            this.mainBox.addChild(this.okBtn);
+            this.okBtn.stateNum = 1;
+            this.okBtn.centerX = 0;
+            this.okBtn.bottom = 0;
+            this.okBtn.labelFont = jmt.Skin.FONT;
+            this.okBtn.labelSize = 30;
+            this.okBtn.labelColors = '#DDDDDD,#DDDDDD,#DDDDDD';
+            this.okBtn.on(Laya.Event.CLICK, this, this.OnPostOption);
+            for (var i = 0; i < optionlist.length; i++) {
+                optionlist[i]['selectimg'] = jmt.Skin.OPTION_MULTI_NORMAL_BTN;
+            }
+        }
+        // console.log(optionlist);
+        this.optionList.array = optionlist;
+        // console.log('普通选项');
+        // console.log(this.optionList);
+        //设置两秒延迟，才能点击
+        Laya.timer.once(2000, this, function () {
+            this.optionList.mouseEnabled = true;
+            this.optionList.mouseHandler = new Handler(this, this.onSelect);
+        });
+    };
+    OptionView.prototype.updateItem = function (cell, index) {
+        // cell.setBgImg(cell.dataSource);
+        cell.setData(cell.dataSource, this.coninfo, index);
+    };
+    OptionView.prototype.onSelect = function (e, index) {
+        if (e.type == Laya.Event.MOUSE_DOWN) {
+            if (this.optype == jmt.Content.OPTYPE_NORMAL) {
+                for (var i = 0; i < this.optionList.length; i++) {
+                    var item = this.optionList.getItem(i);
+                    var bgimg = jmt.Skin.OPTION_NORMAL_BTN;
+                    var color = '#0E0E0E';
+                    //平台，为了兼容零下记忆
+                    if (jmt.Config.NOVELID != 10000) {
+                        var bgimg = 'skin/niji/read_normal_option.png';
+                        var color = '#492424';
+                    }
+                    if (i == index) {
+                        bgimg = jmt.Skin.OPTION_SELECTED_BTN;
+                        color = '#dddddd';
+                        //平台，为了兼容零下记忆
+                        if (jmt.Config.NOVELID != 10000) {
+                            var bgimg = 'skin/niji/read_selected_option.png';
+                            var color = '#492424';
+                        }
+                    }
+                    item.color = color;
+                    item.bgimg = bgimg;
+                    this.optionList.changeItem(i, item);
+                }
+            }
+            else if (this.optype == jmt.Content.OPTYPE_MULTI) {
+                var currentitem = this.optionList.getItem(index);
+                if (!currentitem) {
+                    return;
+                }
+                if (currentitem.ischeck == 1) {
+                    //已选的第二次点击则取消选择
+                    currentitem.bgimg = jmt.Skin.OPTION_NORMAL_BTN;
+                    currentitem.selectimg = jmt.Skin.OPTION_MULTI_NORMAL_BTN;
+                    currentitem.color = '#0E0E0E';
+                    currentitem.ischeck = 0;
+                }
+                else {
+                    currentitem.bgimg = jmt.Skin.OPTION_SELECTED_BTN;
+                    currentitem.selectimg = jmt.Skin.OPTION_MULTI_SELECTED_BTN;
+                    currentitem.color = '#dddddd';
+                    currentitem.ischeck = 1;
+                }
+                this.optionList.changeItem(index, currentitem);
+            }
+        }
+        else if (e.type == Laya.Event.MOUSE_UP) {
+            this.currentitem = this.optionList.getItem(index);
+            if (!this.currentitem) {
+                return;
+            }
+            if (this.optype == jmt.Content.OPTYPE_NORMAL) {
+                this.currentitem.bgimg = jmt.Skin.OPTION_NORMAL_BTN;
+                this.currentitem.color = '#0E0E0E';
+                this.optionList.changeItem(index, this.currentitem);
+                //禁用两秒点击事件，防止网络请求过慢，重复弹窗
+                this.optionList.mouseEnabled = false;
+                Laya.timer.once(2000, this, function () {
+                    this.optionList.mouseEnabled = true;
+                });
+                //if(!(+this.currentitem.ischarge)){
+                this.submitOption();
+                //} 
+            }
+        }
+    };
+    // 特殊单选，看广告
+    OptionView.prototype.specialVS = function () {
+        var conid = this.coninfo.conid;
+        var opid = this.currentitem.opid;
+        var apiUtil = new ApiUtil();
+        apiUtil.checkBuyShare(jmt.QQresType.OPTION, jmt.Data.chapterinfo.chapterid, 0, conid, opid, Handler.create(this, this.checkStatus));
+    };
+    OptionView.prototype.checkStatus = function (res) {
+        var isSV = 1;
+        var showshare = 0;
+        var showad = 1;
+        var infoText = '观看视频，解锁隐藏剧情';
+        var btnText = '观看视频';
+        if (res.showshare) {
+            isSV = 0;
+            showshare = 1;
+            showad = 0;
+            infoText = '分享成功后，解锁隐藏剧情';
+            btnText = '立即分享';
+        }
+        var videoOrSharePrompt = new game.lookVedioOrShare(infoText, btnText, jmt.QQresType.OPTION, jmt.Data.chapterinfo.chapterid, jmt.Data.chapterinfo.branchid, isSV, this.coninfo.conid, this.currentitem.opid, 0, Handler.create(this, this.submitOption, [{ close: 1, showshare: showshare, showad: showad }]));
+        videoOrSharePrompt.popup();
+    };
+    OptionView.prototype.submitOption = function (args, rs) {
+        //提交选项
+        if (this.optype == jmt.Content.OPTYPE_MULTI) {
+            //多选
+        }
+        else {
+            if (jmt.GlobalData.SPACIAl_OPTION_TOTAL && rs && rs.type == 2) {
+                //提交选项时，如果计数+1
+                // jmt.GlobalData.SPACIAl_OPTION_TOTAL = null;
+                jmt.GlobalData.SPACIAL_OPTION_NUM += 1;
+                jmt.GlobalData.SPACIAL_RED_LABLE.text = jmt.GlobalData.SPACIAL_OPTION_NUM + "/" + jmt.GlobalData.SPACIAl_OPTION_TOTAL;
+                //提交选项时，如果计数和总数相等 说明完成，清空
+                if (jmt.GlobalData.SPACIAL_OPTION_NUM >= jmt.GlobalData.SPACIAl_OPTION_TOTAL) {
+                    jmt.GlobalData.SPACIAl_OPTION_TOTAL = null;
+                    jmt.GlobalData.SPACIAL_OPTION_NUM = null;
+                    jmt.GlobalData.SPACIAL_RED_LABLE = null;
+                }
+            }
+            //提交选项，停止倒计时闹钟音效
+            if (this.optype == jmt.Content.OPTYPE_NORMAL && this.optime > 0) {
+                jmt.util.Sound.stopAllSound();
+            }
+            // jmt.Print.log(33333333333);
+            var apiUtil = new ApiUtil();
+            apiUtil.postOption(this.currentitem.opid, jmt.Data.chapterinfo, this.coninfo, Handler.create(this, this.showOptionResult, [args]));
+        }
+    };
+    OptionView.prototype.OnPostOption = function () {
+        var opids = [];
+        for (var i = 0; i < this.optionList.length; i++) {
+            var item = this.optionList.getItem(i);
+            if (item.ischeck) {
+                opids.push(item.opid);
+            }
+        }
+        var apiUtil = new ApiUtil();
+        var opidstr = opids.join(',');
+        // jmt.Print.log(444444444);
+        apiUtil.postOption(opidstr, jmt.Data.chapterinfo, this.coninfo, Handler.create(this, this.showOptionResult));
+    };
+    OptionView.prototype.showOptionResult = function (args, res) {
+        if (!res) {
+            res = args;
+        }
+        // console.log('提交选项');
+        // console.log(args);
+        // console.log(res);
+        if (res.payinfo) {
+            if (!args || !args.close) {
+                var extdata = {};
+                if (this.currentitem) {
+                    extdata = { opid: this.currentitem.opid };
+                }
+                var apiUtil1 = new ApiUtil();
+                apiUtil1.Stat(jmt.Stat.PAGE_OPTION, jmt.Stat.ACT_OPTION_BUY, jmt.Data.chapterinfo.chapterid, this.coninfo.conid, jmt.Data.chapterinfo.branchid); //统计
+                this.checkStatus(res.payinfo);
+            }
+        }
+        else {
+            if (args) {
+                var extdata = {};
+                if (this.currentitem) {
+                    extdata = { opid: this.currentitem.opid };
+                }
+                if (args.showshare === 1) {
+                    var apiUtil1 = new ApiUtil();
+                    apiUtil1.Stat(jmt.Stat.PAGE_OPTION, jmt.Stat.ACT_SHOWSHARE, jmt.Data.chapterinfo.chapterid, this.coninfo.conid, jmt.Data.chapterinfo.branchid, extdata); //统计
+                }
+                else if (args.showad === 1) {
+                    var apiUtil1 = new ApiUtil();
+                    apiUtil1.Stat(jmt.Stat.PAGE_OPTION, jmt.Stat.ACT_SHOWAD, jmt.Data.chapterinfo.chapterid, this.coninfo.conid, jmt.Data.chapterinfo.branchid, extdata); //统计
+                }
+            }
+            //回调父级页面
+            this.closeComplete(res);
+        }
+        // this.selectedHandler.runWith(res);    
+    };
+    //选择超时
+    OptionView.prototype.selectTimeOut = function () {
+        if (this.optype == jmt.Content.OPTYPE_MULTI) {
+            //多选
+        }
+        else {
+            jmt.util.Sound.stopAllSound();
+            var item = this.optionList.getItem(0);
+            // jmt.Print.log(55555555555);
+            var apiUtil = new ApiUtil();
+            apiUtil.postOption(item.opid, jmt.Data.chapterinfo, this.coninfo, Handler.create(this, this.showOptionResult));
+        }
+    };
+    // close():void{
+    //     Laya.Tween.to(this.mainBox,{alpha:0},100,null,Handler.create(this,this.closeComplete));
+    // }
+    OptionView.prototype.closeComplete = function (res) {
+        if (this.optype == jmt.Content.OPTYPE_MULTI) {
+            jmt.util.Sound.stopSound(jmt.Resource.SOUND_OPTION_MULTI);
+        }
+        if (this.optype == jmt.Content.OPTYPE_SERIES) {
+            jmt.util.Sound.stopSound(jmt.Resource.SOUND_OPTION_SERIES);
+        }
+        if (this.optype == jmt.Content.OPTYPE_NORMAL && this.optime > 0) {
+            jmt.util.Sound.stopSound(jmt.Resource.SOUND_TIME_DOWN);
+        }
+        if (this.selectedHandler) {
+            this.selectedHandler.runWith(res);
+        }
+        this.close();
+        // if (this.timeBox) {
+        //     this.timeBox.destroy();
+        // }
+        // if (this.optionList) {
+        //     this.optionList.removeChildren();
+        //     this.destroy(true);
+        // }
+    };
+    OptionView.prototype.onClosed = function () {
+        _super.prototype.onClosed.call(this);
+        // jmt.Resource.clearTextureRes(jmt.Skin.OPTION_NORMAL_BTN);
+        // jmt.Resource.clearTextureRes(jmt.Skin.OPTION_SELECTED_BTN);
+        // jmt.Resource.clearTextureRes(jmt.Skin.OPTION_MULTI_NORMAL_BTN);
+        // jmt.Resource.clearTextureRes(jmt.Skin.OPTION_MULTI_SELECTED_BTN);
+        // this.removeSelf();
+        this.destroy(true);
+    };
+    return OptionView;
+}(ui.dialog.OptionUI));
+//# sourceMappingURL=OptionView.js.map

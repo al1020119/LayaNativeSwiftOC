@@ -1,0 +1,51 @@
+var XcryUtil = /** @class */ (function () {
+    function XcryUtil() {
+    }
+    // 加密函数
+    // static c(code):string{    
+    //     var c=String.fromCharCode(code.charCodeAt(0)+code.length);  
+    //     for(var i=1;i<code.length;i++){  
+    //         c+=String.fromCharCode(code.charCodeAt(i)+code.charCodeAt(i-1));  
+    //     }  
+    //     return escape(c);  
+    // }
+    // 解密函数
+    XcryUtil.uc = function (code) {
+        code = unescape(code);
+        var c = String.fromCharCode(code.charCodeAt(0) - code.length);
+        for (var i = 1; i < code.length; i++) {
+            c += String.fromCharCode(code.charCodeAt(i) - c.charCodeAt(i - 1));
+        }
+        return c;
+    };
+    XcryUtil.md5 = function (text) {
+        // return hex_md5(text);
+        return CryptoJS.MD5(text).toString();
+    };
+    XcryUtil.encrypt = function (text) {
+        var key = CryptoJS.enc.Hex.parse(XcryUtil.uc(XcryUtil.k)); //md5('123456')
+        var iv = CryptoJS.enc.Hex.parse(XcryUtil.uc(XcryUtil.v));
+        if (typeof (text) == 'object') {
+            //对象格式的转成json字符串
+            text = JSON.stringify(text);
+        }
+        var opinion = { iv: iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 };
+        var encrypted = CryptoJS.AES.encrypt(text, key, opinion);
+        encrypted = encrypted.toString();
+        // console.log(encrypted);
+        return encrypted;
+    };
+    // aes解密
+    XcryUtil.decrypt = function (text) {
+        var key = CryptoJS.enc.Hex.parse(XcryUtil.uc(XcryUtil.k)); //md5('123456')
+        var iv = CryptoJS.enc.Hex.parse(XcryUtil.uc(XcryUtil.v));
+        var opinion = { iv: iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 };
+        var decrypted = CryptoJS.AES.decrypt(text, key, opinion);
+        decrypted = decrypted.toString(CryptoJS.enc.Utf8);
+        return decrypted;
+    };
+    XcryUtil.k = '%84%9Agd%94%C5%CA%9Bmomggj%95%9Ap%9C%C9%94%93%9Bqr%9E%97%94%95jh%94%9C';
+    XcryUtil.v = '%84%9D%9F%9Dicel%9D%C7%9A%9E%96%94%C9%9Bk%9B%97d%98%95%92%97il%99%C4%9Aln%9B';
+    return XcryUtil;
+}());
+//# sourceMappingURL=XcryUtil.js.map

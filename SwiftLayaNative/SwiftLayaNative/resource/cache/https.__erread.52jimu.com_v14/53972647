@@ -1,0 +1,1173 @@
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var ApiUtil = /** @class */ (function (_super) {
+    __extends(ApiUtil, _super);
+    function ApiUtil() {
+        return _super.call(this) || this;
+    }
+    //平台，预览开始阅读，拿到章节信息
+    ApiUtil.prototype.PreiewReadingStar = function (novelid, chapterid, sceneid, conid, complete, error) {
+        var apiurl = jmt.Api.getApi(jmt.Api.PREVIEW_STAR_READ);
+        var params = "novelid=" + novelid + "&chapterid=" + chapterid + "&sceneid=" + sceneid + "&conid=" + conid;
+        //调试模式，传用get方式传递，方便和后台调试接口
+        if (jmt.Config.DEBUG) {
+            // jmt.Print.log('第一个接口连接');
+            // Bridge.instans.copyToClipboard(apiurl+'&'+ params);
+            this.get(apiurl + '&' + params, Handler.create(this, this.onComplete, [complete, error]));
+            return;
+        }
+        this.post(apiurl, params, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    //平台，预览章节内容
+    ApiUtil.prototype.PreiewChapterInfo = function (novelid, chapterid, sceneid, conid, nbindex, complete, error) {
+        if (nbindex === void 0) { nbindex = 0; }
+        var apiurl = jmt.Api.getApi(jmt.Api.PREVIEW_GET_CHAPTERINFO);
+        var params = "novelid=" + novelid + "&chapterid=" + chapterid + "&sceneid=" + sceneid + "&conid=" + conid + "&nbindex=" + nbindex;
+        //调试模式，传用get方式传递，方便和后台调试接口
+        if (jmt.Config.DEBUG) {
+            // jmt.Print.log('第二个接口连接');
+            // Bridge.instans.copyToClipboard(apiurl+'&'+ params);
+            this.get(apiurl + '&' + params, Handler.create(this, this.onComplete, [complete, error]));
+            return;
+        }
+        this.post(apiurl, params, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    //平台，给作品点赞
+    ApiUtil.prototype.GiveNovelStar = function (type, conid, extid, liketype, complete, error) {
+        var apiurl = jmt.Api.getApi(jmt.Api.GIVE_NOVEL_STAR);
+        var params = "type=" + type + "&conid=" + conid + "&extid=" + extid + "&liketype=" + liketype;
+        //调试模式，传用get方式传递，方便和后台调试接口
+        if (jmt.Config.DEBUG) {
+            this.get(apiurl + '&' + params, Handler.create(this, this.onComplete, [complete, error]));
+            return;
+        }
+        this.post(apiurl, params, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    //平台，加入书架
+    ApiUtil.prototype.JoinBookshelfApi = function (type, conid, cancel, complete, error) {
+        var apiurl = jmt.Api.getApi(jmt.Api.JOIN_BOOKSHELF);
+        var params = "type=" + type + "&conid=" + conid + "&cancel=" + cancel;
+        //调试模式，传用get方式传递，方便和后台调试接口
+        if (jmt.Config.DEBUG) {
+            this.get(apiurl + '&' + params, Handler.create(this, this.onComplete, [complete, error]));
+            return;
+        }
+        this.post(apiurl, params, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    //平台，关注作者
+    ApiUtil.prototype.followAuthorApi = function (fuid, cancel, complete, error) {
+        var apiurl = jmt.Api.getApi(jmt.Api.ATTENTION_AUTHOR);
+        var params = "fuid=" + fuid + "&cancel=" + cancel;
+        this.post(apiurl, params, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    //请求游戏配置信息
+    ApiUtil.prototype.getGameConfig = function (complete, error) {
+        var apiurl = jmt.Api.getApi(jmt.Api.GET_GAME_CONFIG);
+        var params = '';
+        this.post(apiurl, params, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    //QQ轻游戏邀请的好友进入游戏，拿到扩展信息，传递给服务器
+    ApiUtil.prototype.QqInviteFriendsIntoGame = function (data, complete, error) {
+        var apiurl = jmt.Api.getApi(jmt.Api.QQ_INVITE_FRIENDS_INTO_GAME);
+        //AES加密
+        data = encodeURIComponent(XcryUtil.encrypt(data));
+        this.post(apiurl, "data=" + data, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    // QQ轻游戏单章节付费改为看广告+分享
+    ApiUtil.prototype.QqChapterUnlock = function (chapterid, complete, error) {
+        var apiurl = jmt.Api.getApi(jmt.Api.QQ_CHAPTER_UNLOCK);
+        var params = "chapterid=" + chapterid;
+        this.post(apiurl, params, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    // 完成阅读
+    ApiUtil.prototype.readComplete = function (branchid, complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.READ_COMPLETE);
+        var params = "novelid=" + jmt.Data.novelinfo.novelid;
+        if (branchid) {
+            params += "&branchid=" + branchid;
+        }
+        this.post(apiurl, params, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    // 统计
+    ApiUtil.prototype.Stat = function (pageid, actid, chapterid, conid, branchid, extdata, complete, error) {
+        if (chapterid === void 0) { chapterid = 0; }
+        if (conid === void 0) { conid = 0; }
+        if (branchid === void 0) { branchid = 0; }
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.STAT_LOG);
+        var params = "pageid=" + pageid + "&actid=" + actid;
+        if (chapterid) {
+            params = "&chapterid=" + chapterid;
+        }
+        if (conid) {
+            params = "&conid=" + conid;
+        }
+        if (branchid) {
+            params = "&branchid=" + branchid;
+        }
+        if (extdata) {
+            params += "&extdata=" + JSON.stringify(extdata);
+        }
+        this.post(apiurl, params, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    // QQ玩一玩的分享数据内容
+    ApiUtil.prototype.qqShareDataInfo = function (type, complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.SHARE_DATA_INFO);
+        var params = "novelid=" + jmt.Data.novelinfo.novelid;
+        if (type) {
+            params += "&type=" + type;
+        }
+        this.post(apiurl, params, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    // QQ玩一玩Icon添加到桌面 领取奖励
+    ApiUtil.prototype.addDeskGet = function (taskid, complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.ADD_DESK_GET);
+        var data = { taskid: taskid };
+        data = JSON.stringify(data);
+        //AES加密
+        data = encodeURIComponent(XcryUtil.encrypt(data));
+        this.post(apiurl, "data=" + data, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    // QQ玩一玩Icon添加到桌面检查
+    ApiUtil.prototype.checkWywIsAddDesk = function (taskid, complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.CHECK_WYW_IS_ADD_DESK);
+        var params = '';
+        if (taskid) {
+            params += 'taskid=' + taskid;
+        }
+        this.post(apiurl, params, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    /**
+     * 加快等待时间
+     *
+     */
+    ApiUtil.prototype.reduceWaitTime = function (chapterid, conid, actype, complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.REDUCE_WAIT_TIME);
+        var data = { chapterid: chapterid, conid: conid };
+        if (actype) {
+            data['actype'] = actype;
+        }
+        data = JSON.stringify(data);
+        //AES加密
+        data = encodeURIComponent(XcryUtil.encrypt(data));
+        this.post(apiurl, "data=" + data, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    /**
+     * 辩驳提示，点击提示按钮，请求接口，获取错误碎片
+     *
+     */
+    ApiUtil.prototype.getErrorTatter = function (chapterid, conid, branchid, actype, complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.ERROR_TATTER);
+        var params = "chapterid=" + chapterid + "&conid=" + conid + "&branchid=" + branchid;
+        if (actype) {
+            params += '&actype=' + actype;
+        }
+        this.post(apiurl, params, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    /**
+     * 推理提示，点击提示按钮，请求接口，获取正确答案
+     *
+     */
+    ApiUtil.prototype.getRightClue = function (chapterid, conid, actype, complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.RIGHT_CLUE);
+        var params = "chapterid=" + chapterid + "&conid=" + conid;
+        if (actype) {
+            params += '&actype=' + actype;
+        }
+        this.post(apiurl, params, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    /**
+     * 检查购买分享状态，分享类型（1-章节，2-选项，3-推理，4-追问，5死亡）
+     *
+     */
+    ApiUtil.prototype.checkBuyShare = function (type, chapterid, branchid, conid, opid, complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.CHECK_BUY_SHARE);
+        var params = "type=" + type + "&chapterid=" + chapterid;
+        if (branchid) {
+            params += '&branchid=' + branchid;
+        }
+        if (conid) {
+            params += '&conid=' + conid;
+        }
+        if (opid) {
+            params += '&opid=' + opid;
+        }
+        this.post(apiurl, params, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    /**
+     * 付费分享
+     * 看视频成功，分享成功调用接口
+     */
+    ApiUtil.prototype.ckeckVideoShareComplete = function (type, chapterid, branchid, actype, conid, opid, index, complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.CHECK_VIDEO_SHARE_COMPLETE);
+        chapterid = parseInt(chapterid);
+        var data = { type: type, chapterid: chapterid };
+        if (actype) {
+            data['actype'] = actype;
+        }
+        if (branchid) {
+            data['branchid'] = branchid;
+        }
+        if (conid) {
+            data['conid'] = conid;
+        }
+        if (opid) {
+            data['opid'] = opid;
+        }
+        if (index) {
+            data['index'] = index;
+        }
+        data = JSON.stringify(data);
+        //AES加密
+        data = encodeURIComponent(XcryUtil.encrypt(data));
+        this.post(apiurl, "data=" + data, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    /**
+    * 解锁存档位
+    * @param typeIndex type：付费解锁还是看广告解锁的  index：解锁的索引位置
+    */
+    ApiUtil.prototype.unlockStore = function (typeIndex, complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.UNLOCK_STORE);
+        var data = { actype: typeIndex.actype, index: typeIndex.index };
+        data = JSON.stringify(data);
+        //AES加密
+        data = encodeURIComponent(XcryUtil.encrypt(data));
+        this.post(apiurl, "data=" + data, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    /**
+     * 付费所有套餐
+     */
+    ApiUtil.prototype.getPayPackage = function (complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.PROP_PACKAGE_PAY);
+        this.post(apiurl, '', Handler.create(this, this.onComplete, [complete, error]));
+    };
+    /**
+     * 加载资源
+     * @param chapterid
+     * @param complete
+     */
+    ApiUtil.prototype.loadRes = function (chapterid, complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.LOAD_RES);
+        this.post(apiurl, 'root=1&chapterid=' + chapterid, Handler.create(this, this.onComplete, [complete, error, { restype: 1 }]));
+    };
+    /**
+     * 目录列表
+     * @param complete
+     */
+    ApiUtil.prototype.getCheckPoint = function (unlock, complete, error) {
+        if (unlock === void 0) { unlock = 0; }
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.CHECKPOINT);
+        this.post(apiurl, 'unlock=' + unlock, Handler.create(this, this.onComplete, [complete, error, { restype: 1 }]));
+    };
+    /**
+     * 小说信息
+     * @param complete
+     */
+    ApiUtil.prototype.getNovelInfo = function (complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        //调试模式，传用get方式传递，方便和后台调试接口
+        if (jmt.Config.DEBUG) {
+            // jmt.Print.log('连接');
+            // Bridge.instans.copyToClipboard(apiurl);
+            // this.get(apiurl, Handler.create(this,this.onComplete,[complete,error]));
+            // return;
+        }
+        var apiurl = jmt.Api.getApi(jmt.Api.NOVEL_INFO);
+        this.post(apiurl, '', Handler.create(this, this.onComplete.bind(ApiUtil), [complete, error]));
+    };
+    /**
+     * 公告
+     * @param complete
+     */
+    ApiUtil.prototype.getNotice = function (complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.NOTICE_BOARD);
+        this.post(apiurl, '', Handler.create(this, this.onComplete, [complete, error]));
+    };
+    /**
+     * 消息数
+     * @param complete
+     */
+    ApiUtil.prototype.getMsgCount = function (complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        //未登录状态，不请求该接口
+        if (!jmt.Config.ISLOGIN) {
+            return;
+        }
+        var apiurl = jmt.Api.getApi(jmt.Api.RED_POINT);
+        this.post(apiurl, '', Handler.create(this, this.onComplete, [complete, error]));
+    };
+    /**
+     * 反馈
+     * @param complete
+     */
+    ApiUtil.prototype.feedBack = function (content, contact, complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.FEEDBACK);
+        var params = 'content=' + encodeURIComponent(content);
+        params += '&contact=' + encodeURIComponent(contact);
+        this.post(apiurl, params, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    /**
+     * 微信小程序支付回调
+     * @param openid
+     * @param openkey
+     * @param orderid
+     * @param goodsid
+     * @param itemid
+     * @param complete
+     * @param error
+     */
+    ApiUtil.prototype.wxPayback = function (orderid, goodsid, money, complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.ORDER_PAYBACK_WX);
+        var data = { goodsid: goodsid, money: money, orderid: orderid };
+        data = JSON.stringify(data);
+        // jmt.Print.log(apiurl);
+        // jmt.Print.log(data);
+        //AES加密
+        data = encodeURIComponent(XcryUtil.encrypt(data));
+        this.post(apiurl, "data=" + data, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    /**
+     * 玩一玩支付回调
+     * @param openid
+     * @param openkey
+     * @param orderid
+     * @param goodsid
+     * @param itemid
+     * @param complete
+     * @param error
+     */
+    ApiUtil.prototype.wywPayback = function (openid, openkey, orderid, goodsid, itemid, complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.ORDER_PAYBACK_WYW);
+        var data = { openid: openid, openkey: openkey, orderid: orderid, goodsid: goodsid };
+        if (itemid) {
+            data.itemid = itemid;
+        }
+        data = JSON.stringify(data);
+        // jmt.Print.log(apiurl);
+        // jmt.Print.log(data);
+        //AES加密
+        data = encodeURIComponent(XcryUtil.encrypt(data));
+        this.post(apiurl, "data=" + data, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    /**
+     * QQ玩一玩登录
+     * @param complete
+     */
+    ApiUtil.prototype.WywLogin = function (openid, openkey, nickname, sex, headurl, complete, error) {
+        if (headurl === void 0) { headurl = ''; }
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.WANYIWAN_LOGIN);
+        var params = 'openid=' + openid;
+        params += '&openkey=' + openkey;
+        params += '&nickname=' + nickname;
+        params += '&headurl=' + headurl;
+        params += '&sex=' + sex;
+        if (WywUtil.onLimixiu()) {
+            var extendInfo = GameStatusInfo.gameParam;
+            params += '&extinfo=' + encodeURIComponent(extendInfo);
+            // jmt.Print.log(params);
+            // jmt.Print.log('===============扩展字符==================');
+            // jmt.Print.log(extendInfo);
+        }
+        this.post(apiurl, params, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    /**
+     * 微信小程序登陆
+     * @param complete
+     */
+    ApiUtil.prototype.WxMiniLogin = function (jscode, encryptedData, rawData, iv, signature, complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.OAUTH_LOGIN);
+        var params = 'jscode=' + jscode;
+        params += '&encryptedData=' + encodeURIComponent(encryptedData);
+        params += '&rawData=' + encodeURIComponent(rawData);
+        params += '&iv=' + iv;
+        params += '&signature=' + signature;
+        // if(WxUtil.onWxIOS){
+        var openInfo = wx.getLaunchOptionsSync();
+        if (openInfo.query) {
+            var extendInfo = JSON.stringify(openInfo.query);
+            params += '&extinfo=' + encodeURIComponent(extendInfo);
+        }
+        // }
+        this.post(apiurl, params, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    /**
+     * 获取用户sessionkey
+     * @param complete
+     */
+    ApiUtil.prototype.tokenLogin = function (complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.TOKEN_LOGIN);
+        var params = '';
+        this.post(apiurl, params, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    /**
+     * 开始阅读
+     * @param replay
+     * @param complete
+     */
+    ApiUtil.prototype.startReading = function (replay, complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.START_READING);
+        var params = null;
+        if (replay) {
+            params = 'replay=1';
+        }
+        //调试模式，传用get方式传递，方便和后台调试接口
+        if (jmt.Config.DEBUG) {
+            // jmt.Print.log('连接2');
+            // Bridge.instans.copyToClipboard(apiurl+'&'+ params);
+            // this.get(apiurl+'&'+ params, Handler.create(this,this.onComplete,[complete,error]));
+            // return;
+        }
+        // jmt.Print.log(apiurl);
+        this.post(apiurl, params, Handler.create(this, this.onComplete.bind(ApiUtil), [complete, error]));
+    };
+    /**
+     * 章节信息
+     * @param chapterid
+     * @param complete
+     */
+    ApiUtil.prototype.getChapterInfo = function (chapterid, complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.CHAPTER_INFO);
+        this.post(apiurl, 'chapterid=' + chapterid, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    /**
+     * 获取小程序余额
+     * @param chapterid
+     * @param complete
+     */
+    ApiUtil.prototype.checkMiniBalance = function (complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.MINI_BALANCE);
+        this.post(apiurl, '', Handler.create(this, this.onComplete, [complete, error]));
+    };
+    /**
+     * 下一章章节信息/结尾判断
+     * @param chapterid
+     * @param complete
+     */
+    ApiUtil.prototype.checkNextChapter = function (chapterinfo, complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.NEXT_CHAPTER);
+        var params = 'chapterid=' + chapterinfo.chapterid;
+        params += '&branchid=' + chapterinfo.branchid;
+        if (chapterinfo.branchinfo) {
+            params += '&type=' + chapterinfo.branchinfo.type;
+        }
+        this.post(apiurl, params, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    /**
+     * 支线副本结束检查
+     * @param chapterinfo
+     * @param complete
+     */
+    ApiUtil.prototype.checkBranchEnd = function (chapterinfo, complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.BRANCH_END_CHECK);
+        var params = 'branchid=' + chapterinfo.branchid;
+        if (chapterinfo.chapterid) {
+            params += '&chapterid=' + chapterinfo.chapterid;
+        }
+        if (chapterinfo.branchinfo) {
+            params += '&type=' + chapterinfo.branchinfo.type;
+        }
+        this.post(apiurl, params, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    /**
+     * 章节内容
+     * @param chapterid
+     * @param complete
+     */
+    ApiUtil.prototype.getChapterContent = function (chapterid, nbindex, complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var params = "chapterid=" + chapterid + "&nbindex=" + nbindex;
+        var apiurl = jmt.Api.getApi(jmt.Api.CHAPTER_CONT);
+        //调试模式，传用get方式传递，方便和后台调试接口
+        if (jmt.Config.DEBUG) {
+            // jmt.Print.log('第一个接口连接');
+            // Bridge.instans.copyToClipboard(apiurl+'&'+ params);
+            this.get(apiurl + '&' + params, Handler.create(this, this.onComplete, [complete, error]));
+            return;
+        }
+        this.post(apiurl, params, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    /**
+     * 章节日志
+     * @param chapterid
+     * @param complete
+     */
+    ApiUtil.prototype.getReadLog = function (novelid, page, pagesize, complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var params = "novelid=" + novelid + "&page=" + page + "&pagesize=" + pagesize;
+        var apiurl = jmt.Api.getApi(jmt.Api.READ_LOG);
+        this.post(apiurl, params, Handler.create(this, this.onComplete, [complete, error, { restype: 1 }]));
+    };
+    /**
+     * 属性列表
+     * @param complete
+     */
+    ApiUtil.prototype.getSkuValue = function (complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.SKU_VALUE);
+        this.post(apiurl, '', Handler.create(this, this.onComplete, [complete, error]));
+    };
+    /**
+     * 角色图鉴列表
+     * @param complete
+     */
+    ApiUtil.prototype.roleCoverList = function (complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.ROLE_COVER_LIST);
+        this.post(apiurl, '', Handler.create(this, this.onComplete, [complete, error, { restype: 1 }]));
+    };
+    /**
+     * 存档列表
+     * @param complete
+     */
+    ApiUtil.prototype.storeList = function (complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.STORE_LIST);
+        this.post(apiurl, '', Handler.create(this, this.onComplete, [complete, error, { restype: 1 }]));
+    };
+    /**
+     * 同步存档
+     * @param storeinfo
+     * @param readloglist
+     * @param complete
+     */
+    ApiUtil.prototype.syncReading = function (issession, storeinfo, readloglist, complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.SYNC_READING);
+        if (!storeinfo || !storeinfo.chapterid || !storeinfo.conid) {
+            return;
+        }
+        var params = 'index=0';
+        var storeinfostr = encodeURIComponent(XcryUtil.encrypt(JSON.stringify(storeinfo)));
+        var readlogstr = JSON.stringify(readloglist);
+        params += '&issession=' + issession;
+        params += '&storeinfo=' + storeinfostr;
+        params += '&readlist=' + readlogstr;
+        //调试模式，传用get方式传递，方便和后台调试接口
+        // if(jmt.Config.DEBUG){
+        //     this.get(apiurl+'&'+ params, Handler.create(this,this.onComplete,[complete,error]));
+        //     return;
+        // }
+        this.post(apiurl, params, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    /**
+     * 存档
+     * @param storeinfo
+     * @param readloglist
+     * @param index
+     * @param title
+     * @param storeid
+     * @param complete
+     */
+    ApiUtil.prototype.storeReading = function (storeinfo, readloglist, index, title, storeid, complete, error) {
+        if (index === void 0) { index = 0; }
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.STORE_READING);
+        if (!storeinfo || !storeinfo.chapterid || !storeinfo.conid) {
+            return;
+        }
+        if (title) {
+            storeinfo.title = title;
+        }
+        var params = 'index=' + index;
+        var storeinfostr = encodeURIComponent(XcryUtil.encrypt(JSON.stringify(storeinfo)));
+        var readlogstr = encodeURIComponent(JSON.stringify(readloglist));
+        params += '&storeinfo=' + storeinfostr;
+        params += '&readlist=' + readlogstr;
+        this.post(apiurl, params, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    /**
+     * 重读本章
+     * @param rootchapterid
+     * @param complete
+     * @param error
+     */
+    ApiUtil.prototype.replayChapter = function (rootchapterid, complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.REPLAY_CHAPTER);
+        var params = 'chapterid=' + rootchapterid;
+        this.post(apiurl, params, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    /**
+     * 复活
+     * @param chapterid
+     * @param branchid
+     * @param complete
+     * @param error
+     */
+    ApiUtil.prototype.reLive = function (chapterid, branchid, complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.RELIVE);
+        var data = { chapterid: chapterid, branchid: branchid };
+        data = JSON.stringify(data);
+        //AES加密
+        data = encodeURIComponent(XcryUtil.encrypt(data));
+        this.post(apiurl, "data=" + data, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    /**
+     * 读档
+     * @param storeid
+     * @param complete
+     */
+    ApiUtil.prototype.readStore = function (storeid, complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.READ_STORE);
+        var params = 'storeid=' + storeid;
+        this.post(apiurl, params, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    /**
+     * 支线检查点
+     * @param chapterid
+     * @param conid
+     * @param complete
+     */
+    ApiUtil.prototype.checkBranch = function (chapterid, conid, complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.BRANCH_CHECK);
+        var params = 'chapterid=' + chapterid + '&conid=' + conid;
+        this.post(apiurl, params, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    /**
+     * 角色检查
+     * @param type
+     * @param chapterinfo
+     * @param coninfo
+     * @param complete
+     */
+    ApiUtil.prototype.openRole = function (type, chapterinfo, coninfo, complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.OPEN_ROLE);
+        var params = 'type=' + type;
+        if (coninfo.roleid) {
+            params += '&roleid=' + coninfo.roleid;
+        }
+        if (coninfo.conid) {
+            params += '&conid=' + coninfo.conid;
+        }
+        if (coninfo.conindex) {
+            params += '&conindex=' + coninfo.conindex;
+        }
+        if (chapterinfo.rootchapterid) {
+            params += '&rootchapterid=' + chapterinfo.rootchapterid;
+        }
+        if (chapterinfo.chapterid) {
+            params += '&chapterid=' + chapterinfo.chapterid;
+        }
+        if (chapterinfo.branchid) {
+            params += '&branchid=' + chapterinfo.branchid;
+        }
+        this.post(apiurl, params, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    /**
+     * 解锁角色
+     * @param type
+     * @param chapterinfo
+     * @param coninfo
+     * @param complete
+     */
+    ApiUtil.prototype.unlockRole = function (chapterinfo, coninfo, complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        //未登录状态，不请求该接口
+        if (!jmt.Config.ISLOGIN) {
+            return;
+        }
+        var apiurl = jmt.Api.getApi(jmt.Api.UNLOCK_ROLE);
+        var roleids = [];
+        if (coninfo.roledata) {
+            if (coninfo.roledata.say) {
+                var roleid = coninfo.roledata.say.roleid;
+                if (!jmt.Data.unlockrole[roleid]) {
+                    //已解锁的不重新请求
+                    roleids.push(roleid);
+                }
+            }
+            if (coninfo.roledata.to) {
+                for (var i = 0; i < coninfo.roledata.to.length; i++) {
+                    var ro = coninfo.roledata.to[i];
+                    if (!jmt.Data.unlockrole[ro.roleid]) {
+                        //已解锁的不重新请求
+                        roleids.push(ro.roleid);
+                    }
+                }
+            }
+        }
+        if (roleids.length < 1) {
+            return;
+        }
+        var params = 'roleid=' + coninfo.roleid;
+        if (coninfo.conid) {
+            params += '&conid=' + coninfo.conid;
+        }
+        if (coninfo.conindex) {
+            params += '&conindex=' + coninfo.conindex;
+        }
+        if (chapterinfo.rootchapterid) {
+            params += '&rootchapterid=' + chapterinfo.rootchapterid;
+        }
+        if (chapterinfo.chapterid) {
+            params += '&chapterid=' + chapterinfo.chapterid;
+        }
+        if (chapterinfo.branchid) {
+            params += '&branchid=' + chapterinfo.branchid;
+        }
+        this.post(apiurl, params, Handler.create(this, this.onComplete, [complete, error, { restype: 1 }]));
+    };
+    /**
+     * 属性检查
+     * @param chapterid
+     * @param conid
+     * @param complete
+     */
+    ApiUtil.prototype.checkSku = function (chapterid, conid, complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.SKU_CHECK);
+        var params = 'chapterid=' + chapterid + '&conid=' + conid;
+        this.post(apiurl, params, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    /**
+     * 属性检查
+     * @param chapterid
+     * @param conid
+     * @param complete
+     */
+    ApiUtil.prototype.checkAnaly = function (chapterid, conid, complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.ANALY_CHECK);
+        var params = 'chapterid=' + chapterid + '&conid=' + conid;
+        this.post(apiurl, params, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    /**
+     * 下线检查
+     * @param chapterid
+     * @param conid
+     * @param complete
+     */
+    ApiUtil.prototype.checkWait = function (chapterid, conid, complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.WAIT_CHECK);
+        var params = 'chapterid=' + chapterid + '&conid=' + conid;
+        this.post(apiurl, params, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    /**
+     * 设置角色名
+     * @param conid
+     * @param roleid
+     * @param rolename
+     * @param complete
+     */
+    ApiUtil.prototype.reName = function (conid, roleid, rolename, complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.RENAME);
+        var params = 'conid=' + conid + '&roleid=' + roleid + '&name=' + encodeURIComponent(rolename);
+        this.post(apiurl, params, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    /**
+     * 收集碎片
+     * @param chapterid
+     * @param clueid
+     * @param conid
+     * @param roleid
+     * @param opid
+     * @param complete
+     */
+    ApiUtil.prototype.collectClue = function (chapterid, clueid, conid, roleid, opid, complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.CLUE_COLLECT);
+        var params = 'chapterid=' + chapterid + '&clueid=' + clueid + '&conid=' + conid + '&roleid=' + roleid;
+        if (opid) {
+            params += '&opid=' + opid;
+        }
+        this.post(apiurl, params, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    /**
+     * 分析碎片
+     * @param clueids
+     * @param complete
+     */
+    ApiUtil.prototype.analysisClue = function (clueids, complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.CLUE_ANALYSIS);
+        var clueidstr = JSON.stringify(clueids);
+        var params = 'clueids=' + clueidstr;
+        this.post(apiurl, params, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    /**
+     * 删除碎片
+     * @param clueids
+     * @param complete
+     */
+    ApiUtil.prototype.delClue = function (clueids, complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.CLUE_DEL);
+        var clueidstr = JSON.stringify(clueids);
+        var params = 'clueids=' + clueidstr;
+        this.post(apiurl, params, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    /**
+     * 碎片列表
+     * @param complete
+     */
+    ApiUtil.prototype.getClueList = function (chapterid, conid, complete, error) {
+        if (chapterid === void 0) { chapterid = 0; }
+        if (conid === void 0) { conid = 0; }
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.CLUE_LIST);
+        var params = 'chapterid=' + chapterid + '&conid=' + conid;
+        this.post(apiurl, params, Handler.create(this, this.onComplete, [complete, error, { restype: 1 }]));
+    };
+    /**
+     * 推理列表
+     * @param complete
+     */
+    ApiUtil.prototype.getAnalysisList = function (complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.CLUE_ANALYSIS_LIST);
+        this.post(apiurl, '', Handler.create(this, this.onComplete, [complete, error]));
+    };
+    /**
+     * 日志列表
+     * @param chapterid
+     * @param complete
+     */
+    ApiUtil.prototype.readlogList = function (chapterid, complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.CLUE_ANALYSIS_LIST);
+        var params = 'chapterid=' + chapterid;
+        this.post(apiurl, params, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    /**
+     * 提交选项
+     * @param opid
+     * @param chapterinfo
+     * @param coninfo
+     * @param notcheck
+     * @param complete
+     * @param error
+     */
+    ApiUtil.prototype.postOption = function (opid, chapterinfo, coninfo, complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        //如果是分享的浏览器 链接，跳转app下载页面
+        if (jmt.Config.ISSHAREBROWSER) {
+            DownloadAppCheckIsExsit.checkAppIsOpen();
+            return;
+        }
+        // 判断是否登录，未登录调取android登录
+        if (!jmt.Config.ISLOGIN) {
+            Bridge.instans.openToast('您还未登录哦！');
+            Bridge.instans.openLogin();
+            return;
+        }
+        var apiurl = jmt.Api.getApi(jmt.Api.POST_OPTION);
+        var params = 'opid=' + opid;
+        if (coninfo.conid) {
+            params += '&conid=' + coninfo.conid;
+        }
+        if (coninfo.conindex) {
+            params += '&conindex=' + coninfo.conindex;
+        }
+        if (chapterinfo.rootchapterid) {
+            params += '&rootchapterid=' + chapterinfo.rootchapterid;
+        }
+        if (chapterinfo.chapterid) {
+            params += '&chapterid=' + chapterinfo.chapterid;
+        }
+        if (chapterinfo.branchid) {
+            params += '&branchid=' + chapterinfo.branchid;
+        }
+        this.post(apiurl, params, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    /**
+     * 创建订单
+     * @param goodsid
+     * @param paytype
+     * @param complete
+     * @param error
+     */
+    ApiUtil.prototype.createOrder = function (goodsid, paytype, chapterid, branchid, conid, complete, error) {
+        // this.completeHandler = complete;
+        // this.errorHandler = error;
+        var apiurl = jmt.Api.getApi(jmt.Api.CREATE_ORDER);
+        var params = 'goodsid=' + goodsid;
+        params += '&paytype=' + paytype;
+        if (chapterid) {
+            params += '&chapterid=' + chapterid;
+        }
+        if (conid) {
+            params += '&conid=' + conid;
+        }
+        if (branchid) {
+            params += '&branchid=' + branchid;
+        }
+        // params += '&paynow=1';//返回调起第三方信息
+        this.post(apiurl, params, Handler.create(this, this.onComplete, [complete, error]));
+    };
+    // protected onError(e: any): void {
+    //     if (this.errcallback!=null) {
+    //         this.errcallback.apply(this.caller,[{code:500,msg:e}]);
+    //     }else{
+    //         if (jmt.Config.DEBUG) {
+    //             console.log(e);
+    //         }
+    //     }        
+    // }
+    ApiUtil.prototype.onComplete = function (completecall, errorcall, args, res) {
+        // try {
+        if (res == undefined) {
+            res = args;
+            args = null;
+        }
+        //console.log(res);
+        // var res = this.http.data;
+        if (res == '' || res == null || !res[0]) {
+            if (errorcall) {
+                errorcall.runWith(res);
+            }
+            else {
+                //平台，为了兼容零下记忆
+                if (jmt.Config.NOVELID == 10000) {
+                    // jmt.Print.log(111111111);
+                    jmt.common.Toast.error('网络不佳，请检查后再尝试哦！');
+                }
+                else {
+                    //判断是不是平台,100是平台
+                    if (jmt.Config.PLATFORM == 100) {
+                        // jmt.Print.log(2222222);
+                        Bridge.instans.openToast('网络不佳，请检查后再尝试哦！');
+                    }
+                    else {
+                        // jmt.Print.log(3333333333);
+                        jmt.common.Toast.error('网络不佳，请检查后再尝试哦！');
+                    }
+                }
+            }
+        }
+        else {
+            res = res[0];
+            if (res.code == 1) {
+                if (completecall) {
+                    if (res.crypt == 1) {
+                        res.data = XcryUtil.decrypt(res.data);
+                        res.data = JSON.parse(res.data);
+                        // console.log(res.data);
+                    }
+                    else {
+                        // jmt.Print.log(res.data);
+                    }
+                    if (args && args.restype == 1) {
+                        completecall.runWith([res.data]);
+                    }
+                    else {
+                        if (res.data[0]) {
+                            completecall.runWith([res.data[0]]);
+                        }
+                        else {
+                            // jmt.common.Toast.msg('数据格式错误');
+                            completecall.run();
+                        }
+                    }
+                }
+                else {
+                    // if (jmt.Config.DEBUG) {
+                    //     console.log(args);
+                    // }
+                }
+            }
+            else {
+                if (res.msg && res.msg != '') {
+                    if (!errorcall) {
+                        //平台，为了兼容零下记忆
+                        if (jmt.Config.NOVELID == 10000) {
+                            jmt.common.Toast.error(res.msg);
+                        }
+                        else {
+                            //判断是不是平台,100是平台
+                            if (jmt.Config.PLATFORM == 100) {
+                                Bridge.instans.openToast(res.msg);
+                            }
+                            else {
+                                jmt.common.Toast.error(res.msg);
+                            }
+                        }
+                    }
+                }
+                else if (res && res.msg == '') {
+                    // jmt.common.Toast.error('未知错误: api');
+                }
+                //平台，为了兼容零下记忆
+                if (jmt.Config.NOVELID == 10000) {
+                    if (res.code == jmt.Response.USER_LOGIN_ERROR || res.code == jmt.Response.USER_NO_LOGIN || res.code == jmt.Response.USER_OTHER_LOGIN) {
+                        //退出用户
+                        jmt.Data.delUser();
+                        Dialog.manager.closeAll();
+                        jmt.util.Common.clearStage();
+                        var mainView = new MainView();
+                        Laya.stage.addChild(mainView);
+                    }
+                    else {
+                        if (errorcall) {
+                            errorcall.runWith(res);
+                        }
+                    }
+                }
+                else {
+                    //平台
+                    if (res.code == jmt.Response.USER_LOGIN_ERROR || res.code == jmt.Response.USER_NO_LOGIN || res.code == jmt.Response.USER_OTHER_LOGIN) {
+                        //登陆过期
+                        if (res.code == jmt.Response.USER_LOGIN_ERROR) {
+                            Bridge.instans.openToast('登录过期，请重新登陆哦！');
+                            Bridge.instans.openLogin();
+                        }
+                        //未登录
+                        if (res.code == jmt.Response.USER_NO_LOGIN) {
+                            Bridge.instans.openToast('您还未登录哦！');
+                            Bridge.instans.openLogin();
+                        }
+                        //用户在其他设备上登陆
+                        if (res.code == jmt.Response.USER_OTHER_LOGIN) {
+                            Bridge.instans.openToast('您在其他设备上登陆了哦！');
+                            Bridge.instans.closeRead(); //退出登陆
+                        }
+                    }
+                    else {
+                        if (errorcall) {
+                            errorcall.runWith(res);
+                        }
+                    }
+                }
+            }
+        }
+    };
+    return ApiUtil;
+}(HttpUtil));
+// // 点击按钮，分享逻辑
+//         onShare(): void{
+//             this.close();
+//             BK.Share.share({
+//             qqImgUrl: 'http://hudong.qq.com/docs/engine/img/848B76B5530AA7EE7B38E9A1267D7086.png',
+//             socialPicPath: 'GameRes://qqshare.png.png',
+//             title: '再玩游戏，剁手！',
+//             summary: '这游戏有毒啊，这游戏有毒啊，这游戏有毒啊，这游戏有毒啊，这游戏有毒啊，这游戏有毒啊，这游戏有毒啊，这游戏有毒啊', 
+//             extendInfo: '',
+//             success: this.VScomplete
+//         });
+//         }
+//         // QQ玩一玩看视频逻辑
+//         // 点击按钮，看视频逻辑
+//         onLookVideo(): void{
+//             this.close();
+//             var videoAd = BK.Advertisement.createVideoAd();
+//             var ags = {type:this.type, chapterid:this.chapterid, branchid:this.branchid, actype: this.actype, conid:this.conid, opid: this.opid, index:this.storeIndex};
+//             videoAd.onPlayFinish(this.VScomplete.bind(lookVedioOrShare,ags));
+//             videoAd.show();       
+//         }
+//         VScomplete(rs): void{
+//             var apiUtil = new ApiUtil();
+//             apiUtil.ckeckVideoShareComplete(rs.type, rs.chapterid, rs.branchid, rs.actype, rs.conid, rs.opid, rs.index, Handler.create(lookVedioOrShare, lookVedioOrShare.prototype.goCallBack));
+//         }
+//         goCallBack(res):void{
+//             this.complateCallBack.run();
+//         }
+// onLookVideo(): void{
+//             this.close();
+//             var videoAd = BK.Advertisement.createVideoAd();
+//             videoAd.onPlayFinish(this.Vcomplete.bind(this,this.ags));
+//             videoAd.show();
+//         }
+//         Vcomplete(rs): void{
+//             var apiUtil = new ApiUtil();
+//             apiUtil.ckeckVideoShareComplete(rs.type, rs.chapterid, rs.branchid, rs.actype, rs.conid, rs.opid, rs.index, Handler.create(this, this.goCallBack, [rs.back]));
+//         }
+//         goCallBack(res, back):void{
+//             console.log(res,back);
+//             back.run();
+//         }
+//  this.ags = {type:this.type, chapterid:this.chapterid, branchid:this.branchid, 
+//                         actype: this.actype, conid:this.conid, opid: this.opid, index:this.storeIndex,back:this.complateCallBack};
+//# sourceMappingURL=ApiUtil.js.map

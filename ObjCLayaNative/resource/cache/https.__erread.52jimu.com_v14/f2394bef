@@ -1,0 +1,303 @@
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+/**
+* 多立绘盒子
+*/
+var MultiRoleBox = /** @class */ (function (_super) {
+    __extends(MultiRoleBox, _super);
+    function MultiRoleBox(view) {
+        var _this = _super.call(this) || this;
+        _this.boxList = [];
+        _this.roleNum = 0;
+        _this.roleMap = {};
+        _this.lurenpos = 0;
+        _this._movespeed = 500;
+        _this._delspeed = 200;
+        _this._showspeed = 400;
+        view.addChild(_this);
+        _this.top = 0;
+        _this.bottom = 0;
+        _this.left = 0;
+        _this.right = 0;
+        return _this;
+    }
+    Object.defineProperty(MultiRoleBox.prototype, "showspeed", {
+        set: function (value) {
+            this._showspeed = value;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(MultiRoleBox.prototype, "movespeed", {
+        set: function (value) {
+            this._movespeed = value;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(MultiRoleBox.prototype, "delspeed", {
+        set: function (value) {
+            this._delspeed = value;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    MultiRoleBox.prototype.beroleMap = function (list) {
+        this.roleMap = {};
+        for (var i = 0; i < list.length; i++) {
+            var role = list[i];
+            var roleid = role.roleid;
+            role.index = i;
+            this.roleMap[roleid] = role;
+        }
+    };
+    MultiRoleBox.prototype.existRole = function (roleid) {
+        if (this.roleMap) {
+            if (this.roleMap[roleid]) {
+                return this.roleMap[roleid].index;
+            }
+        }
+        return null;
+    };
+    // 移除
+    MultiRoleBox.prototype.removeRole = function () {
+        for (var key in this.boxList) {
+            if (this.boxList.hasOwnProperty(key)) {
+                var box = this.boxList[key];
+                if (!this.roleMap[box.roleid]) {
+                    //不存在下一个列表则移除
+                    delete this.boxList[key];
+                    box.remove(this._delspeed);
+                }
+            }
+        }
+    };
+    MultiRoleBox.prototype.clearRole = function () {
+        this.lurenpos = 0;
+        this.roleMap = {};
+        this.roleNum = 0;
+        for (var key in this.boxList) {
+            if (this.boxList.hasOwnProperty(key)) {
+                var box = this.boxList[key];
+                delete this.boxList[key];
+                box.remove(this._delspeed);
+            }
+        }
+    };
+    MultiRoleBox.prototype.changeRoleEmoji = function (roleid, emoji) {
+        if (emoji === void 0) { emoji = 'emoji_0'; }
+        var existbox = null;
+        if (this.boxList && this.boxList[roleid]) {
+            existbox = this.boxList[roleid];
+            if (existbox.covertype == 1) {
+                if (existbox.emoji != emoji) {
+                    existbox.changeEmoji(emoji);
+                }
+            }
+        }
+    };
+    MultiRoleBox.prototype.stopSaying = function (roleid) {
+        var existbox = null;
+        if (this.boxList && this.boxList[roleid]) {
+            existbox = this.boxList[roleid];
+            if (existbox.covertype == 1) {
+                var emojiarr = existbox.emoji.split('_');
+                if (emojiarr.length > 2) {
+                    var emoji = existbox.emoji.substr(0, existbox.emoji.length - 2);
+                    existbox.changeEmoji(emoji);
+                }
+            }
+        }
+    };
+    MultiRoleBox.prototype.addRoleList = function (list) {
+        if (!list) {
+            return;
+        }
+        this.roleNum = list.length;
+        this.beroleMap(list); //
+        this.removeRole(); //
+        // console.log('角色cover列表');
+        // console.log(list);
+        for (var key in this.roleMap) {
+            if (this.roleMap.hasOwnProperty(key)) {
+                var role = this.roleMap[key];
+                var existbox = null;
+                if (this.boxList && this.boxList[role.roleid]) {
+                    existbox = this.boxList[role.roleid];
+                }
+                if (!existbox) {
+                    //不存在则添加
+                    // console.log("not existbox: ");
+                    // console.log(role);
+                    if (role.spine && role.spine != '') {
+                        //添加骨骼动画立绘
+                        this.addRole(role, role.spine, role.emoji);
+                    }
+                    else if (role.cover && role.cover != '') {
+                        //添加图片立绘
+                        this.addRole(role, role.cover, '', true);
+                    }
+                }
+                else {
+                    //已存在，改变表情动作
+                    if (role.cover && role.cover != '') {
+                        // console.log("existbox: ");
+                        // console.log(role);
+                        //图片立绘替换表情图片
+                        existbox.changeEmoji(role.cover);
+                    }
+                    else {
+                        if (existbox.emoji != role.emoji) {
+                            //骨骼动画立绘改变表情
+                            existbox.changeEmoji(role.emoji);
+                        }
+                    }
+                    //已存在，改变位置
+                    if (this.roleNum == 1) {
+                        if (existbox.index != role.index) {
+                            existbox.moveMiddle(this._movespeed, role.front);
+                        }
+                        else {
+                            //
+                        }
+                    }
+                    else if (this.roleNum == 2) {
+                        if (role.index == 0) {
+                            existbox.moveLeft(1, this._movespeed, role.front);
+                        }
+                        else if (role.index == 1) {
+                            existbox.moveRight(1, this._movespeed, role.front);
+                        }
+                    }
+                    else if (this.roleNum == 3) {
+                        if (role.index == 0) {
+                            existbox.moveLeft(0, this._movespeed, role.front);
+                        }
+                        else if (role.index == 1) {
+                            existbox.moveMiddle(this._movespeed, role.front);
+                        }
+                        else if (role.index == 2) {
+                            existbox.moveRight(0, this._movespeed, role.front);
+                        }
+                    }
+                    if (role.front == 1) {
+                        existbox.zOrder = 9;
+                    }
+                    else {
+                        existbox.zOrder = 0;
+                    }
+                }
+            }
+        }
+    };
+    MultiRoleBox.prototype.addRole = function (role, sk, emoji, imgrole) {
+        // var sk = 'http://res.er.52jimu.com/role/9d/5c/9d5cbd3f25fabcb3ae53c7c1da7d81b4.sk';
+        // var skimg = 'http://res.er.52jimu.com/role/9d/5c/9d5cbd3f25fabcb3ae53c7c1da7d81b4.png';
+        if (this) {
+            var x = this.width / 2;
+            if (this.roleNum == 1 && role.type == 2) {
+                if (this.lurenpos == 0) {
+                    x = 0 - this.width / 4;
+                }
+                else {
+                    x = this.width + this.width / 4;
+                }
+            }
+            else if (this.roleNum == 2) {
+                if (role.index == 0) {
+                    x = 0 - this.width / 4;
+                }
+                else if (role.index == 1) {
+                    x = this.width + this.width / 4;
+                }
+            }
+            else if (this.roleNum == 3) {
+                if (role.index == 0) {
+                    x = 0 - this.width / 4;
+                }
+                else if (role.index == 2) {
+                    x = this.width + this.width / 4;
+                }
+            }
+        }
+        if (imgrole) {
+            // console.log('imgrole:'+imgrole);
+            // console.log(role);
+            //添加图片立绘
+            var imgrolebox = new ImgRoleBox(this, role, x, this.height);
+            imgrolebox.load(sk, Handler.create(this, this.moveRole));
+            imgrolebox.bottom = 0;
+            imgrolebox.zOrder = 0;
+            this.boxList[role.roleid] = imgrolebox;
+        }
+        else {
+            //添加骨骼动画立绘
+            var rolebox = new SpineRoleBox(this, role, x, this.height);
+            rolebox.showspeed = this._showspeed;
+            rolebox.load(sk, emoji, Handler.create(this, this.moveRole));
+            rolebox.bottom = 0;
+            rolebox.zOrder = 0;
+            this.boxList[role.roleid] = rolebox;
+        }
+    };
+    MultiRoleBox.prototype.moveRole = function (obj) {
+        // console.log('============moveRole===============');
+        // console.log(this.roleNum);
+        // console.log(obj);
+        if (obj.roleinfo.front == 1) {
+            obj.zOrder = 9;
+        }
+        else {
+            obj.zOrder = 0;
+        }
+        if (this.roleNum == 1) {
+            // console.log("=============="+obj.type+"=============");
+            if (obj.type == 2) {
+                if (this.lurenpos == 0) {
+                    obj.moveLeft(1, this._movespeed, obj.roleinfo.front);
+                    this.lurenpos = 1;
+                }
+                else {
+                    obj.moveRight(1, this._movespeed, obj.roleinfo.front);
+                    this.lurenpos = 0;
+                }
+            }
+            else {
+                // console.log("==============obj.moveMiddle=============");
+                obj.moveMiddle(this._movespeed, obj.roleinfo.front);
+            }
+        }
+        else if (this.roleNum == 2) {
+            if (obj.index == 0) {
+                obj.moveLeft(1, this._movespeed, obj.roleinfo.front);
+            }
+            else if (obj.index == 1) {
+                obj.moveRight(1, this._movespeed, obj.roleinfo.front);
+            }
+        }
+        else if (this.roleNum == 3) {
+            if (obj.index == 0) {
+                obj.moveLeft(0, this._movespeed, obj.roleinfo.front);
+            }
+            else if (obj.index == 1) {
+                obj.moveMiddle(this._movespeed, obj.roleinfo.front);
+            }
+            else if (obj.index == 2) {
+                obj.moveRight(0, this._movespeed, obj.roleinfo.front);
+            }
+        }
+    };
+    return MultiRoleBox;
+}(Laya.Box));
+//# sourceMappingURL=RoleCoverBox.js.map

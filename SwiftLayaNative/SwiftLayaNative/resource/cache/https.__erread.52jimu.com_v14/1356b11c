@@ -1,0 +1,508 @@
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var MainView = /** @class */ (function (_super) {
+    __extends(MainView, _super);
+    function MainView(complete) {
+        var _this = _super.call(this) || this;
+        _this.name = 'MainView';
+        _this.bgImg.width = 720;
+        _this.bgImg.height = 1280;
+        //游戏版本号
+        _this.game_version.text = jmt.Config.VERSION;
+        //清除start页面的背景图片
+        jmt.common.ImgManager.closeClear([jmt.Skin.STARUP_BG]);
+        _this.height = Laya.stage.height;
+        // console.log('主页面');
+        // console.log(this.height);
+        _this.bgImg.height = _this.height;
+        _this.bgImg.skin = jmt.Skin.MAIN_BG; //jmt.Skin.MAIN_BG
+        //玩一玩添加到桌面
+        if (WywUtil.onLimixiu()) {
+            var wywJoinDesk = new game.JoinDesk();
+            _this.addChild(wywJoinDesk);
+            wywJoinDesk.pos(130, 52);
+        }
+        //微信去掉健康游戏提示
+        if (Laya.Browser.onMiniGame) {
+            _this.promptText.visible = false;
+        }
+        if (complete) {
+            _this.completeHandler = complete;
+        }
+        _this.btnMsg.on(LayaEvent.CLICK, _this, _this.getMsg, [1]);
+        // this.btnShowPay.on(LayaEvent.CLICK,this,this.showPay);
+        // this.btnShowAd.on(LayaEvent.CLICK,this,this.showAd);
+        _this.checkLogin(); //检查登录
+        // if (!jmt.Config.DEBUG) {
+        //播放背景音乐, 循环播放
+        jmt.util.Sound.playMusic(jmt.Resource.MAIN_BGM, jmt.Resource.RESTYPE_BGM, 0);
+        // }
+        _this.showFog();
+        _this.partBox = new jmt.common.PartBox(_this);
+        _this.partBox.loadPart(5, 0, Laya.stage.height - 500);
+        return _this;
+        // this.partBox.loadPart(3);
+    }
+    MainView.prototype.getMsg = function (autoOrClick) {
+        var apiUtil = new ApiUtil();
+        apiUtil.getNotice(Handler.create(this, this.showNotice, [{ auto: autoOrClick }]));
+    };
+    MainView.prototype.showNotice = function (args, res) {
+        if (args.auto) {
+            //点击显示公告
+            if (res) {
+                var noticeView = new NoticeView();
+                noticeView.popup();
+            }
+            else {
+                jmt.common.Toast.msg('没有最新公告哦!', this);
+            }
+        }
+        else if (res) {
+            //第一次自动显示公告
+            var noticeView = new NoticeView(res);
+            noticeView.popup();
+            jmt.Data.setTips(jmt.Data.TIPS_TYPE_NOTICE);
+        }
+    };
+    // randomFog(): string{
+    //     let fogSkinTpe: number = jmt.util.Common.getRandom(0, 2);
+    //     let fogSkin: string;
+    //     if(fogSkinTpe == 0){
+    //         fogSkin = 'main_interface_whole_fog.png';
+    //     }
+    //     if(fogSkinTpe == 1){
+    //         fogSkin = 'main_interface_person_fog.png';
+    //     }
+    //     if(fogSkinTpe == 2){
+    //         fogSkin = 'main_interface_bot_fog.png';
+    //     }
+    //     console.log(fogSkinTpe);
+    //     return fogSkin;
+    // }
+    MainView.prototype.showFog = function () {
+        // this.fogImg1.alpha=0;
+        this.fogImg1.x = 0;
+        // this.fogImg2.alpha=0;
+        this.fogImg2.x = -this.width;
+        this.fogImg1.skin = jmt.Skin.MAIN_FOG1; //jmt.Skin.MAIN_FOG1
+        this.fogImg2.skin = jmt.Skin.MAIN_FOG2; //jmt.Skin.MAIN_FOG2
+        Laya.Tween.to(this.fogImg1, { x: this.width + 1 }, 5000, null, Handler.create(this, this.moveFog));
+        Laya.Tween.to(this.fogImg2, { x: this.width + 1 }, 10000, null, Handler.create(this, this.moveFog2));
+    };
+    MainView.prototype.moveFog = function () {
+        if (this.fogImg1.x > this.width) {
+            this.fogImg1.x = -this.width;
+        }
+        Laya.Tween.to(this.fogImg1, { x: this.width + 1 }, 10000, null, Handler.create(this, this.moveFog));
+    };
+    MainView.prototype.moveFog2 = function () {
+        if (this.fogImg2.x > this.width) {
+            this.fogImg2.x = -this.width;
+        }
+        Laya.Tween.to(this.fogImg2, { x: this.width + 1 }, 10000, null, Handler.create(this, this.moveFog2));
+    };
+    MainView.prototype.readStore = function () {
+        if (jmt.Config.DEBUG && jmt.Data.uid < 1 && jmt.Data.debug_uid > 0) {
+            jmt.Data.uid = jmt.Data.debug_uid;
+        }
+        var apiUtil = new ApiUtil();
+        apiUtil.Stat(jmt.Stat.PAGE_HOME, jmt.Stat.ACT_HOME_READSTORE);
+        var storeView = new StoreView(0, 'yes');
+        storeView.popup();
+    };
+    MainView.prototype.OnSys = function () {
+        if (jmt.Config.DEBUG && jmt.Data.uid < 1 && jmt.Data.debug_uid > 0) {
+            jmt.Data.uid = jmt.Data.debug_uid;
+        }
+        var apiUtil = new ApiUtil();
+        apiUtil.Stat(jmt.Stat.PAGE_HOME, jmt.Stat.ACT_HOME_SETTING);
+        var sysView = new SettingView();
+        sysView.popup();
+    };
+    MainView.prototype.OnCover = function () {
+        if (jmt.Config.DEBUG && jmt.Data.uid < 1 && jmt.Data.debug_uid > 0) {
+            jmt.Data.uid = jmt.Data.debug_uid;
+        }
+        var apiUtil = new ApiUtil();
+        apiUtil.Stat(jmt.Stat.PAGE_HOME, jmt.Stat.ACT_HOME_COVER);
+        var coverBox = new RoleCoverView(1);
+        coverBox.popup();
+    };
+    MainView.prototype.showLoginBtn = function () {
+        if (this.btnLogin) {
+            this.btnLogin.visible = false;
+        }
+        if (!this.btnStart) {
+            this.btnStart = new Laya.Button(jmt.Skin.BTN_MAIN_START);
+            this.btnStart.stateNum = 2;
+            this.btnRestart = new Laya.Button(jmt.Skin.BTN_MAIN_RESTART);
+            this.btnRestart.stateNum = 2;
+            this.btnRoleCover = new Laya.Button(jmt.Skin.BTN_MAIN_ROLECOVER);
+            this.btnRoleCover.stateNum = 2;
+            // this.btnSetting = new Laya.Button(jmt.Skin.BTN_MAIN_SET);
+            // this.btnSetting.stateNum=2;
+            this.btnReadStore = new Laya.Button(jmt.Skin.BTN_MAIN_READSTORE);
+            this.btnReadStore.stateNum = 2;
+            this.btnBox.addChild(this.btnStart);
+            this.btnBox.addChild(this.btnRestart);
+            this.btnBox.addChild(this.btnRoleCover);
+            // this.btnBox.addChild(this.btnSetting);
+            this.btnBox.addChild(this.btnReadStore);
+            this.btnStart.centerX = 0;
+            this.btnRoleCover.centerX = 0;
+            // this.btnSetting.centerX=0;
+            this.btnReadStore.centerX = 0;
+            this.btnStart.top = 7;
+            this.btnReadStore.top = 160;
+            this.btnRoleCover.top = 314;
+            // this.btnSetting.top=467;
+            this.btnRestart.top = 13;
+            this.btnRestart.right = 50;
+            this.btnStart.on(LayaEvent.CLICK, this, this.StartReading);
+            this.btnRestart.on(LayaEvent.CLICK, this, this.ReStart);
+            this.btnRoleCover.on(LayaEvent.CLICK, this, this.OnCover);
+            // this.btnSetting.on(LayaEvent.CLICK,this,this.OnSys);
+            this.btnReadStore.on(LayaEvent.CLICK, this, this.readStore);
+            if (this.btnStart) {
+                if (jmt.Data.novelinfo && jmt.Data.novelinfo.isreading) {
+                    this.btnStart.skin = jmt.Skin.BTN_MAIN_CONTINUE;
+                    this.btnRestart.visible = true;
+                }
+                else {
+                    this.btnStart.skin = jmt.Skin.BTN_MAIN_START;
+                    this.btnRestart.visible = false;
+                }
+            }
+        }
+    };
+    MainView.prototype.showNotLoginBtn = function () {
+        if (!this.btnLogin) {
+            this.btnLogin = new Laya.Button(jmt.Skin.BTN_MAIN_LOGIN);
+            this.btnLogin.stateNum = 2;
+            // this.btnSetting = new Laya.Button(jmt.Skin.BTN_MAIN_SET);
+            // this.btnSetting.stateNum=2;
+            this.btnBox.addChild(this.btnLogin);
+            // this.btnBox.addChild(this.btnSetting);
+            this.btnLogin.centerX = 0;
+            // this.btnSetting.centerX=0;
+            this.btnLogin.y = 160;
+            // this.btnSetting.y=314;
+            this.btnLogin.on(LayaEvent.CLICK, this, this.checkLogin);
+            // this.btnSetting.on(LayaEvent.CLICK,this,this.OnSys);
+        }
+        else {
+            this.btnLogin.visible = true;
+            // this.btnSetting.visible=true;
+        }
+    };
+    /**
+     * 初始化数据
+     */
+    MainView.prototype.initData = function (goin) {
+        // jmt.Print.log('initData');
+        //jmt.Print.log(jmt.Data.userinfo);
+        if (goin === void 0) { goin = false; }
+        //获取微信用户设备信息
+        WxUtil.getDeviceInfo();
+        if (WywUtil.onLimixiu()) {
+            WywUtil.setQQUserHeadUrl();
+        }
+        var apiUtil = new ApiUtil();
+        apiUtil.getNovelInfo(Handler.create(this, this.initNovel));
+        // 显示公告按钮
+        Load.style(this.btnMsg, 'alpha', 0, 1);
+        // 登陆成功，有系统公告，第一次弹出系统公告
+        var hastip = jmt.Data.hasTips(jmt.Data.TIPS_TYPE_NOTICE);
+        if (!hastip) {
+            this.getMsg(0);
+        }
+        // 请求购买的全局套餐数据
+        var apiUtil1 = new ApiUtil();
+        apiUtil1.getPayPackage(Handler.create(this, this.getPackageData));
+        //请求游戏配置信息
+        var apiUtil2 = new ApiUtil();
+        apiUtil2.getGameConfig(Handler.create(this, this.getGameConfigData));
+        // let chapterid = jmt.util.Common.getQuery('chapterid');
+        // if (goin && chapterid) {
+        //     let apiUtil2 = new ApiUtil();
+        //     apiUtil2.getChapterInfo(chapterid,Handler.create(this,this.initGo));
+        // }            
+        //QQ邀请好友进入游戏，把扩展信息传递给服务器，才能邀请好友成功
+        // if(WywUtil.onLimixiu()){
+        //     let extendInfo = GameStatusInfo.gameParam;
+        //     jmt.Print.log('分享的扩展信=============');
+        //     jmt.Print.log(extendInfo);
+        //     if(extendInfo){
+        //         let apiUtil = new ApiUtil();
+        //         apiUtil.QqInviteFriendsIntoGame(extendInfo);
+        //     }
+        // }
+    };
+    MainView.prototype.getGameConfigData = function (res) {
+        if (res) {
+            jmt.GlobalData.QQ_TALK = res.config.qqgroup;
+        }
+    };
+    MainView.prototype.checkStatuce = function (res) {
+        if (res) {
+            //QQ判断轻游戏判断是否从安卓桌面icon启动游戏
+            jmt.GlobalData.CHECK_QQ_ADD_DESK = res.finish;
+            if (!jmt.GlobalData.CHECK_QQ_ADD_DESK) {
+                WywUtil.isDeskIconOpen(1);
+            }
+        }
+    };
+    MainView.prototype.getPackageData = function (res) {
+        jmt.GlobalData.PACKGE = res;
+        if (jmt.GlobalData.PACKGE && jmt.GlobalData.PACKGE.all) {
+            if (!jmt.GlobalData.PACKGE.all.isbuy) {
+                // 请求QQ玩一玩Icon添加到桌面状态
+                if (WywUtil.onLimixiu()) {
+                    var apiUtil2 = new ApiUtil();
+                    apiUtil2.checkWywIsAddDesk(1, Handler.create(this, this.checkStatuce));
+                }
+                // this.btnBox.top = this.btnBox.top-80;
+                // this.promptText.bottom = 166+50;
+                Load.move(this.btnBox, 'top', this.btnBox.top, this.btnBox.top - 80);
+                Load.move(this.promptText, 'bottom', this.promptText.bottom, 166 + 50);
+                //QQbanner广告
+                WywUtil.addQQbanner();
+                //微信banner广告
+                WxUtil.addWxBanner();
+            }
+        }
+    };
+    /**
+     * 登录成功回调
+     * @param res
+     */
+    MainView.prototype.loginComplete = function (res) {
+        // jmt.Console.log('loginComplete');
+        // jmt.Console.log(res);
+        if (res) {
+            jmt.Data.setUser(res);
+            this.showLoginBtn();
+            this.initData();
+        }
+        else {
+            jmt.common.Toast.error('登录失败');
+            this.showNotLoginBtn();
+        }
+    };
+    MainView.prototype.loginError = function (res) {
+        var msg = res && res.msg ? res.msg : '登录错误';
+        jmt.common.Toast.error(msg);
+        var apiUtil = new ApiUtil();
+        apiUtil.Stat(jmt.Stat.PAGE_HOME, jmt.Stat.ACT_LOGIN_ERROR);
+        if (Laya.Browser.onMiniGame) {
+            WxUtil.createLoginBtn();
+        }
+        else {
+            this.showNotLoginBtn();
+        }
+    };
+    MainView.prototype.oauthLogin = function () {
+        if (Laya.Browser.onMiniGame) {
+            WxUtil.checkOauthLogin(Handler.create(this, this.loginComplete), Handler.create(this, this.loginError));
+        }
+        else if (WywUtil.onLimixiu()) {
+            WywUtil.checkOauthLogin(Handler.create(this, this.loginComplete), Handler.create(this, this.loginError));
+        }
+        else {
+            jmt.common.Toast.msg('平台登录错误');
+            this.showNotLoginBtn();
+        }
+    };
+    MainView.prototype.checkLogin = function () {
+        // // ==============本地调试===============
+        var uid = jmt.util.Common.getQuery('uid');
+        var token = jmt.util.Common.getQuery('token');
+        if (uid && token) {
+            jmt.Data.uid = uid;
+            jmt.Data.token = token;
+            jmt.Data.userinfo = {
+                uid: uid,
+                token: token
+            };
+            this.checkToken(true);
+        }
+        else {
+            if (jmt.Config.DEBUG && jmt.Data.uid < 1 && jmt.Data.debug_uid > 0) {
+                jmt.Data.uid = jmt.Data.debug_uid;
+                jmt.Data.userinfo = { uid: jmt.Data.uid };
+                this.showLoginBtn();
+                this.initData();
+            }
+            else {
+                var uinfo = jmt.Data.getUser();
+                if (uinfo) {
+                    //TODO: wx.checkSession
+                    if (Laya.Browser.onMiniGame) {
+                        WxUtil.checkSession(this.checkToken.bind(this), this.oauthLogin.bind(this));
+                    }
+                    else {
+                        //检查token
+                        this.checkToken();
+                    }
+                }
+                else {
+                    this.oauthLogin();
+                }
+            }
+        }
+        // ===============上线==================
+        // var uinfo = jmt.Data.getUser();
+        // if (uinfo) {
+        //     //TODO: wx.checkSession
+        //     if (Laya.Browser.onMiniGame) {
+        //         WxUtil.checkSession(this.checkToken.bind(this),this.oauthLogin.bind(this));
+        //     }else{
+        //         //检查token
+        //         this.checkToken();
+        //     }                
+        // }else{
+        //     this.oauthLogin();
+        // }
+    };
+    MainView.prototype.checkToken = function (goin) {
+        if (goin === void 0) { goin = false; }
+        //检查token
+        var apiUtil = new ApiUtil();
+        apiUtil.tokenLogin(Handler.create(this, this.updateToken, [goin]), Handler.create(this, this.tokenError));
+    };
+    MainView.prototype.tokenError = function () {
+        //退出用户
+        jmt.Data.delUser();
+        Dialog.manager.closeAll();
+        this.oauthLogin();
+    };
+    /**
+     * 更新token
+     * @param res
+     */
+    MainView.prototype.updateToken = function (goin, res) {
+        if (res) {
+            var uinfo = jmt.Data.getUser();
+            uinfo.token = res.token;
+            if (res.mid) {
+                uinfo.mid = res.mid;
+            }
+            jmt.Data.setUser(uinfo);
+            this.showLoginBtn();
+            this.initData(goin);
+        }
+        else {
+            jmt.common.Toast.error('登录失败');
+            this.showNotLoginBtn();
+        }
+    };
+    // initGo(res):void{
+    //     if (res) {
+    //         let conid = jmt.util.Common.getQuery('conid');
+    //         if (conid) {
+    //             res.show_conid = conid;
+    //         }
+    //         let info = {chapterinfo: res};
+    //         this.initGame(info);
+    //     }
+    // }
+    MainView.prototype.StartReading = function () {
+        if (jmt.Data.uid < 1) {
+            jmt.common.Toast.error('未登录');
+            return;
+        }
+        jmt.util.Sound.playSound(jmt.Resource.SOUND_MAIN_START, jmt.Resource.RESTYPE_SOUND);
+        //开始阅读
+        if (jmt.Data.novelinfo) {
+            var apiUtil = new ApiUtil();
+            apiUtil.Stat(jmt.Stat.PAGE_HOME, jmt.Stat.ACT_HOME_START);
+            var apiUtil2 = new ApiUtil();
+            apiUtil2.startReading(null, Handler.create(this, this.initGame));
+        }
+        else {
+            jmt.common.Toast.error('数据初始化失败，请重试！');
+            var apiUtil = new ApiUtil();
+            apiUtil.getNovelInfo(Handler.create(this, this.initNovel));
+        }
+    };
+    MainView.prototype.ReStart = function () {
+        if (jmt.Data.uid < 1) {
+            jmt.common.Toast.error('未登录');
+            return;
+        }
+        var apiUtil = new ApiUtil();
+        apiUtil.Stat(jmt.Stat.PAGE_HOME, jmt.Stat.ACT_HOME_RESTART);
+        jmt.util.Sound.playSound(jmt.Resource.SOUND_MAIN_START, jmt.Resource.RESTYPE_SOUND);
+        var promptView = new PromptView('<span>从头开始，将</span><font color="red">覆盖</font><span>你之前阅读的自动记录存档，请谨慎选择。</span>', Handler.create(this, this.OnReStart), '从头开始');
+        promptView.popup();
+    };
+    MainView.prototype.OnReStart = function () {
+        //从头开始
+        if (jmt.Data.novelinfo) {
+            // jmt.Print.log('start');
+            // jmt.Print.log(jmt.Data.uid);
+            var apiUtil = new ApiUtil();
+            apiUtil.startReading(true, Handler.create(this, this.initGame));
+        }
+        else {
+            jmt.common.Toast.error('数据初始化失败，请重试！');
+            var apiUtil = new ApiUtil();
+            apiUtil.getNovelInfo(Handler.create(this, this.initNovel));
+        }
+    };
+    MainView.prototype.initNovel = function (info) {
+        if (info.novelid) {
+            jmt.Data.novelinfo = info;
+            if (this.btnStart) {
+                if (jmt.Data.novelinfo && jmt.Data.novelinfo.isreading) {
+                    this.btnStart.skin = jmt.Skin.BTN_MAIN_CONTINUE;
+                    this.btnRestart.visible = true;
+                }
+                else {
+                    this.btnStart.skin = jmt.Skin.BTN_MAIN_START;
+                    this.btnRestart.visible = false;
+                }
+            }
+        }
+        else {
+            jmt.common.Toast.error('获取数据失败');
+        }
+    };
+    MainView.prototype.initGame = function (info) {
+        // console.log('开始阅读');
+        // console.log(info);
+        jmt.Resource.clearTextureRes('res/atlas/skin/home.atlas');
+        jmt.Resource.clearTextureRes(this.bgImg.skin);
+        jmt.Resource.clearTextureRes(this.mainLogo.skin);
+        jmt.Resource.clearTextureRes(this.fogImg1.skin);
+        jmt.Resource.clearTextureRes(this.fogImg2.skin);
+        //清除banner广告
+        WywUtil.desQQbanner();
+        WxUtil.desWxBanner();
+        //TODO: 停止音乐
+        if (Laya.Browser.onMiniGame) {
+            WxUtil.stopBgm(1);
+        }
+        else if (WywUtil.onLimixiu()) {
+            WywUtil.stopMusic();
+        }
+        else {
+            SoundManager.stopMusic();
+        }
+        GameMain.initGame(info);
+    };
+    return MainView;
+}(ui.home.MainUI));
+//# sourceMappingURL=MainView.js.map

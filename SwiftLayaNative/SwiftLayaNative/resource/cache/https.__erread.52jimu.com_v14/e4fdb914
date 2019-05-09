@@ -1,0 +1,49 @@
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var WeatherSnow = /** @class */ (function (_super) {
+    __extends(WeatherSnow, _super);
+    function WeatherSnow(view) {
+        var _this = _super.call(this) || this;
+        _this.view = view;
+        _this.partname = 'part/Snowstorm.part';
+        Laya.loader.load(_this.partname, Handler.create(_this, _this.loaded), null, Loader.JSON);
+        return _this;
+    }
+    //加载成功
+    WeatherSnow.prototype.loaded = function (settings) {
+        this.part = new Particle2D(settings);
+        this.part.emitter.start();
+        this.part.play();
+        this.part.visible = false;
+        this.view.addChild(this.part);
+        this.part.x = Laya.stage.width / 2;
+        this.part.y = 0;
+    };
+    //显示
+    WeatherSnow.prototype.show = function () {
+        this.alpha = 0;
+        this.part.visible = true;
+        Laya.Tween.to(this.part, { alpha: 1 }, 2000);
+    };
+    //隐藏
+    WeatherSnow.prototype.hide = function () {
+        Laya.Tween.to(this.part, { alpha: 0 }, 2000, null, Handler.create(this, this.hideHandler));
+    };
+    WeatherSnow.prototype.hideHandler = function () {
+        this.part.visible = false;
+        this.part.alpha = 1;
+    };
+    return WeatherSnow;
+}(Laya.Sprite));
+//# sourceMappingURL=WeatherSnow.js.map

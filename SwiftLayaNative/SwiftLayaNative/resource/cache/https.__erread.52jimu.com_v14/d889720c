@@ -1,0 +1,329 @@
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var jmt;
+(function (jmt) {
+    var effect;
+    (function (effect) {
+        var Image = Laya.Image;
+        var Box = Laya.Box;
+        var Sprite = Laya.Sprite;
+        /**
+         * 显示属性增加
+         */
+        var PopuSku = /** @class */ (function () {
+            function PopuSku(textArray, complete) {
+                this.textIndex = 0;
+                this.textArray = textArray;
+                this.textNum = textArray.length;
+                if (complete) {
+                    this.completeHandler = complete;
+                }
+                // console.log(22222222222222);
+                this.showBar();
+                // console.log(11111111);
+            }
+            PopuSku.prototype.showBar = function () {
+                var _this = this;
+                var info = this.textArray[this.textIndex];
+                var text = info.text;
+                var color = '#dddddd';
+                var type = info.type;
+                var rolename = info.rolename;
+                if (info.color) {
+                    color = info.color;
+                }
+                var mainBox = new LayaBox();
+                Laya.stage.addChild(mainBox);
+                mainBox.width = 700;
+                mainBox.height = 91;
+                mainBox.centerX = 0;
+                mainBox.centerY = 0;
+                var bgImg = new LayaImage(jmt.Skin.SKU_PROMPT_BOX);
+                //平台，为了兼容零下记忆
+                if (jmt.Config.NOVELID != 10000) {
+                    // 平台自我属性为1， 0为为平台关系属性
+                    if (type == 1) {
+                        bgImg.skin = 'skin/niji/read_attributes_box.png';
+                    }
+                    else if (type == 0) {
+                        bgImg.skin = 'skin/niji/read_favorability_box.png';
+                        var nameBgImg = new LayaImage('skin/niji/read_favorability_name_box.png');
+                        nameBgImg.top = 0;
+                        nameBgImg.centerX = 0;
+                        mainBox.addChild(nameBgImg);
+                        if (rolename) {
+                            var roleNameLab = new Label();
+                            roleNameLab.text = rolename;
+                            roleNameLab.font = jmt.Skin.FONT;
+                            roleNameLab.fontSize = 19;
+                            roleNameLab.color = '#423200';
+                            roleNameLab.centerX = 0;
+                            roleNameLab.centerY = 0;
+                            nameBgImg.addChild(roleNameLab);
+                        }
+                    }
+                }
+                var titleText = new LayaLabel();
+                mainBox.addChild(bgImg);
+                //判断平台的nameBgImg是否存在
+                if (nameBgImg) {
+                    bgImg.top = nameBgImg.height;
+                }
+                else {
+                    bgImg.centerY = 0;
+                }
+                bgImg.centerX = 0;
+                bgImg.addChild(titleText);
+                titleText.width = mainBox.width;
+                titleText.height = mainBox.height;
+                titleText.centerX = 0;
+                titleText.centerY = 0;
+                titleText.text = text;
+                titleText.color = color;
+                titleText.font = jmt.Skin.FONT;
+                titleText.fontSize = 26;
+                // titleText.leading = 20;
+                titleText.align = 'center';
+                titleText.valign = 'middle';
+                // titleText.wordWrap = true;
+                var height = titleText.height;
+                //添加发光滤镜
+                //平台，为了兼容零下记忆
+                if (jmt.Config.NOVELID == 10000) {
+                    var glowFilter = new Laya.GlowFilter(color, 3, 0, 0);
+                    titleText.filters = [glowFilter];
+                }
+                this.textIndex++;
+                Laya.timer.once(500, this, function () {
+                    Laya.Tween.to(mainBox, { y: mainBox.y - 300, alpha: 0 }, 2000, null, Handler.create(_this, _this.hideBox, [{ target: mainBox }]));
+                });
+                Laya.timer.once(1000, this, function () {
+                    if (_this.textIndex < _this.textNum) {
+                        _this.showBar();
+                    }
+                    else {
+                        if (_this.completeHandler) {
+                            _this.completeHandler.run();
+                        }
+                    }
+                });
+            };
+            PopuSku.prototype.hideBox = function (args) {
+                args.target.removeSelf();
+                args.target.destroy(true);
+            };
+            return PopuSku;
+        }());
+        effect.PopuSku = PopuSku;
+        /**
+         * 过度效果
+         */
+        var OverScene = /** @class */ (function (_super) {
+            __extends(OverScene, _super);
+            function OverScene(type, complete, color) {
+                if (color === void 0) { color = '#000000'; }
+                var _this = _super.call(this) || this;
+                if (type == jmt.Content.EFFECT_OVER_SLOWWHITE || type == jmt.Content.EFFECT_OVER_FASTWHITE || type == jmt.Content.EFFECT_OVER_RUNWHITE) {
+                    //白屏过度
+                    color = '#ffffff';
+                }
+                if (complete) {
+                    _this.completeHandler = complete;
+                }
+                Laya.stage.addChild(_this);
+                _this.width = Laya.stage.width;
+                _this.height = Laya.stage.height;
+                _this.overImg = new Sprite();
+                _this.overImg.alpha = 0;
+                _this.overImg.graphics.drawRect(0, 0, _this.width, _this.height, color);
+                _this.addChild(_this.overImg);
+                _this.overImg.zOrder = 990;
+                var timeout = 1500;
+                if (type == jmt.Content.EFFECT_OVER_FASTBLACK || type == jmt.Content.EFFECT_OVER_FASTWHITE) {
+                    timeout = 10;
+                }
+                // if (jmt.Config.DEBUG) {
+                //     console.log(timeout);
+                // }            
+                Laya.Tween.to(_this.overImg, { alpha: 1 }, timeout, null, Handler.create(_this, _this.showComplete));
+                return _this;
+            }
+            OverScene.prototype.showComplete = function () {
+                if (this.completeHandler) {
+                    this.completeHandler.run(); //过度显示完毕回调，用于控制切换场景时间点
+                }
+                Laya.Tween.to(this.overImg, { alpha: 0 }, 1500, null, Handler.create(this, this.hideComplete));
+            };
+            OverScene.prototype.hideComplete = function () {
+                this.removeSelf();
+                this.destroy(true);
+            };
+            return OverScene;
+        }(Box));
+        effect.OverScene = OverScene;
+        /**
+         * 闪屏效果
+         */
+        var FlashScene = /** @class */ (function () {
+            function FlashScene(color) {
+                this.timespace = 60;
+                if (!color) {
+                    color = '#000000';
+                }
+                // this.flashImg = new Image(jmt.Skin.EFFECT_FLASH1);
+                this.flashImg = new Sprite();
+                this.flashImg.graphics.drawRect(0, 0, Laya.stage.width, Laya.stage.height, color);
+                Laya.stage.addChild(this.flashImg);
+                this.flashImg.zOrder = 990;
+                // this.flashImg.width = Laya.stage.width;
+                // this.flashImg.height = Laya.stage.height;
+                Laya.timer.once(this.timespace, this, this.showFlash2);
+            }
+            FlashScene.prototype.showFlash2 = function () {
+                this.flashImg.alpha = 0;
+                Laya.timer.once(this.timespace, this, this.showFlash3);
+            };
+            FlashScene.prototype.showFlash3 = function () {
+                this.flashImg.alpha = 1;
+                // this.flashImg.skin = jmt.Skin.EFFECT_FLASH2;
+                Laya.timer.once(this.timespace, this, this.showFlash4);
+            };
+            FlashScene.prototype.showFlash4 = function () {
+                this.flashImg.alpha = 0;
+                Laya.timer.once(this.timespace, this, this.showFlash5);
+            };
+            FlashScene.prototype.showFlash5 = function () {
+                // this.flashImg.skin = jmt.Skin.EFFECT_FLASH3;
+                Laya.timer.once(this.timespace, this, this.showFlash6);
+            };
+            FlashScene.prototype.showFlash6 = function () {
+                this.flashImg.alpha = 0;
+                this.flashImg.removeSelf();
+                this.flashImg.destroy();
+            };
+            return FlashScene;
+        }());
+        effect.FlashScene = FlashScene;
+        /**
+         * 睁眼效果
+         */
+        var OpenEyes = /** @class */ (function () {
+            function OpenEyes(spacetime, complete) {
+                if (spacetime === void 0) { spacetime = 800; }
+                this.spaceTime = 800;
+                if (complete) {
+                    this.completeHandler = complete;
+                }
+                this.spaceTime = spacetime;
+                this.eyeImg = new Image(jmt.Skin.EFFECT_EYE);
+                Laya.stage.addChild(this.eyeImg);
+                this.eyeImg.zOrder = 990;
+                this.eyeImg.height = Laya.stage.height;
+                this.eyeImg.width = Laya.stage.width * 1.5;
+                this.eyeImg.centerX = 0;
+                this.eyeImg.centerY = 0;
+                this.showEye();
+            }
+            OpenEyes.prototype.showEye = function () {
+                Laya.Tween.to(this.eyeImg, { height: Laya.stage.height * 4 }, this.spaceTime, null, Handler.create(this, this.showEye1));
+            };
+            OpenEyes.prototype.showEye1 = function () {
+                Laya.Tween.to(this.eyeImg, { height: Laya.stage.height }, this.spaceTime, null, Handler.create(this, this.showEye2));
+            };
+            OpenEyes.prototype.showEye2 = function () {
+                Laya.Tween.to(this.eyeImg, { height: Laya.stage.height * 8 }, this.spaceTime, null, Handler.create(this, this.showEye3));
+            };
+            OpenEyes.prototype.showEye3 = function () {
+                Laya.Tween.to(this.eyeImg, { height: Laya.stage.height * 4 }, this.spaceTime, null, Handler.create(this, this.showEye4));
+            };
+            OpenEyes.prototype.showEye4 = function () {
+                // var w=Laya.stage.height*8;
+                // var h=Laya.stage.width*8;
+                // var x=-(w-Laya.stage.width)/2;
+                Laya.Tween.to(this.eyeImg, { scaleX: 8, scaleY: 8 }, this.spaceTime + 200, null, Handler.create(this, this.showEye5));
+            };
+            OpenEyes.prototype.showEye5 = function () {
+                Laya.Tween.to(this.eyeImg, { alpha: 0 }, this.spaceTime + 200, null, Handler.create(this, this.showEye6));
+            };
+            OpenEyes.prototype.showEye6 = function () {
+                if (this.completeHandler) {
+                    this.completeHandler.run();
+                }
+                jmt.Resource.clearTextureRes(jmt.Skin.EFFECT_EYE);
+                this.eyeImg.removeSelf();
+                this.eyeImg.destroy();
+            };
+            return OpenEyes;
+        }());
+        effect.OpenEyes = OpenEyes;
+        /**
+         * 震屏效果
+         */
+        var ShakeScene = /** @class */ (function () {
+            function ShakeScene(view) {
+                this.num = 0;
+                this.maxNum = 10;
+                this.timespace = 50;
+                this.view = view;
+                this.Shake();
+            }
+            ShakeScene.prototype.Shake = function () {
+                var max = 100;
+                var min = 1;
+                var movex = this.view.x;
+                var movey = this.view.y;
+                var rannum = Math.floor(Math.random() * (max - min + 1) + min);
+                if (rannum > 50) {
+                    movex += 2;
+                }
+                else {
+                    movex -= 2;
+                }
+                var rannum = Math.floor(Math.random() * (max - min + 1) + min);
+                if (rannum > 50) {
+                    movey += 2;
+                }
+                else {
+                    movey -= 2;
+                }
+                if (movex < -3) {
+                    movex = -(movex);
+                }
+                else if (movex > 3) {
+                    movex = -(movex);
+                }
+                if (movey < -3) {
+                    movey = -(movey);
+                }
+                else if (movey > 3) {
+                    movey = -(movey);
+                }
+                //Laya.Tween.to(this.view,{x:movex,y:movey},100,null,Handler.create(this,this.Shake),null,null,true);
+                this.num++;
+                if (this.num < this.maxNum) {
+                    this.view.x = movex;
+                    this.view.y = movey;
+                    Laya.timer.once(this.timespace, this, this.Shake);
+                }
+                else {
+                    this.view.x = 0;
+                    this.view.y = 0;
+                }
+            };
+            return ShakeScene;
+        }());
+        effect.ShakeScene = ShakeScene;
+    })(effect = jmt.effect || (jmt.effect = {}));
+})(jmt || (jmt = {}));
+//# sourceMappingURL=Effect.js.map

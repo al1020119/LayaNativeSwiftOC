@@ -1,0 +1,3187 @@
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var game;
+(function (game) {
+    var Templet = Laya.Templet;
+    var Event = Laya.Event;
+    var Image = Laya.Image;
+    var Box = Laya.Box;
+    var Sprite = Laya.Sprite;
+    var Text = Laya.Text;
+    var Button = Laya.Button;
+    var Animation = Laya.Animation;
+    //新手引导圆圈缓动
+    var guadeCircleTween = /** @class */ (function () {
+        function guadeCircleTween(view) {
+            this.circleImg = new Image();
+            this.circleImg.skin = 'skin/tip/read_key_words_tutorial_circle.png';
+            this.circleImg.pivot(this.circleImg.width / 2, this.circleImg.height / 2);
+            view.addChild(this.circleImg);
+            this.goTween();
+        }
+        guadeCircleTween.prototype.goTween = function () {
+            Laya.Tween.to(this.circleImg, { scaleX: 0.5, scaleY: 0.5, alpha: 0.2 }, 1000, null, Handler.create(this, this.tweenCom));
+        };
+        guadeCircleTween.prototype.tweenCom = function () {
+            this.circleImg.scale(1, 1);
+            this.circleImg.alpha = 1;
+            this.goTween();
+        };
+        guadeCircleTween.prototype.clearTween = function () {
+            this.circleImg.removeSelf();
+            this.circleImg.destroy();
+        };
+        guadeCircleTween.prototype.pos = function (x, y) {
+            this.circleImg.pos(x, y, true);
+        };
+        return guadeCircleTween;
+    }());
+    game.guadeCircleTween = guadeCircleTween;
+    // 新手引导
+    var newGuide = /** @class */ (function () {
+        function newGuide(view, clickObjs) {
+            this.guideSteps = [
+                { displayArea: null, clickArea: null, tipImg: { url: "skin/tip/pieces_tutorial01.png", x: 0, y: 1354 }, TweenCircle: null, isClickTipImg: 1 },
+                { displayArea: [{ type: 'rect', x: 360, y: 800, w: 450, h: 320 }, { type: 'rect', x: 30, y: 180, w: 750, h: 450 }], clickArea: { type: 'rect', x: 420, y: 814, w: 200, h: 200 }, tipImg: { url: "skin/tip/pieces_tutorial02.png", x: 122, y: 884 }, TweenCircle: { x: 571, y: 970 }, isClickTipImg: 1 }
+            ];
+            this.guideStep = 0; //引导第几步了
+            this.interactionArea = [];
+            this.view = view;
+            for (var i = 0; i < this.guideSteps.length; i++) {
+                var obj = this.guideSteps[i];
+                obj.clickObj = clickObjs[i];
+            }
+            this.createUi();
+            this.nextStep();
+        }
+        newGuide.prototype.createUi = function () {
+            //创建引导容器
+            this.guideContainer = new Laya.Box();
+            this.guideContainer.cacheAs = "bitmap";
+            this.guideContainer.width = Laya.stage.width;
+            this.guideContainer.height = Laya.stage.height;
+            this.guideContainer.zOrder = 100;
+            this.view.addChild(this.guideContainer);
+            //绘制遮罩区，含透明度，可见游戏背景
+            this.maskArea = new Laya.Box();
+            this.maskArea.alpha = 0.8;
+            this.maskArea.graphics.drawRect(0, 0, Laya.stage.width, Laya.stage.height, "#000000");
+            this.guideContainer.addChild(this.maskArea);
+            //绘制一个区域，利用叠加模式，从遮罩区域抠出可交互区
+            // this.interactionArea = new Laya.Box();
+            // //设置叠加模式
+            // this.interactionArea.blendMode = "destination-out";
+            // this.guideContainer.addChild(this.interactionArea);
+            this.hitArea = new Laya.HitArea();
+            //绘制不可点击区域
+            this.hitArea.hit.drawRect(0, 0, Laya.stage.width, Laya.stage.height, "#000000");
+            this.guideContainer.hitArea = this.hitArea;
+            this.guideContainer.mouseEnabled = true;
+            //创建提示图片
+            this.tipContainer = new Laya.Image();
+            this.tipContainer.zOrder = 1;
+            this.guideContainer.addChild(this.tipContainer);
+            //创建缓动圆形
+            this.TweenCircle = new Sprite;
+            this.guideContainer.addChild(this.TweenCircle);
+        };
+        newGuide.prototype.nextStep = function () {
+            if (this.guideStep == this.guideSteps.length) {
+                this.view.removeChild(this.guideContainer);
+            }
+            else {
+                var step = this.guideSteps[this.guideStep++];
+                //绘制交互显示区域，利用叠加模式，从遮罩区域抠出可交互区
+                if (this.interactionArea) {
+                    for (var i = 0; i < this.interactionArea.length; i++) {
+                        this.interactionArea[i].graphics.clear();
+                        this.interactionArea[i].destroy();
+                        this.interactionArea = [];
+                    }
+                }
+                if (step.displayArea) {
+                    for (var i = 0; i < step.displayArea.length; i++) {
+                        var displayArea = step.displayArea[i];
+                        var interactionArea = new Laya.Sprite();
+                        // 设置叠加模式
+                        interactionArea.blendMode = "destination-out";
+                        this.guideContainer.addChild(interactionArea);
+                        if (displayArea.type === 'rect') {
+                            interactionArea.graphics.drawRect(displayArea.x, displayArea.y, displayArea.w, displayArea.h, "#000000");
+                            var newbox = new Laya.Image('skin/tip/mask.png');
+                            newbox.alpha = 0.8;
+                            // newbox.sizeGrid = '100,100,100,100';
+                            newbox.x = displayArea.x;
+                            newbox.y = displayArea.y;
+                            newbox.width = displayArea.w;
+                            newbox.height = displayArea.h;
+                            this.guideContainer.addChild(newbox);
+                            // interactionArea.width = displayArea.w;
+                            // interactionArea.height = displayArea.h;
+                        }
+                        if (displayArea.type === 'circle') {
+                            interactionArea.graphics.drawCircle(displayArea.x, displayArea.y, displayArea.radius, "#00000");
+                            // interactionArea.width = displayArea.radius;
+                            // interactionArea.height = displayArea.radius;
+                        }
+                        // interactionArea.x = displayArea.x;
+                        // interactionArea.y = displayArea.y;
+                        this.interactionArea.push(interactionArea);
+                    }
+                }
+                //绘制可点击区域
+                this.hitArea.unHit.clear();
+                if (step.clickArea) {
+                    if (step.clickArea.type == 'rect') {
+                        this.hitArea.unHit.drawRect(step.clickArea.x, step.clickArea.y, step.clickArea.w, step.clickArea.h, "#000000");
+                    }
+                    if (step.clickArea.type == 'circle') {
+                        this.hitArea.unHit.drawCircle(step.clickArea.x, step.clickArea.y, step.clickArea.radius, "#000000");
+                    }
+                }
+                //绘制引导图片
+                this.tipContainer.graphics.clear();
+                if (step.tipImg) {
+                    this.tipContainer.loadImage(step.tipImg.url);
+                    this.tipContainer.pos(step.tipImg.x, step.tipImg.y);
+                }
+                // 绘制圆形缓动按钮
+                if (this.TweenCircle) {
+                    this.TweenCircle.graphics.clear();
+                }
+                if (step.TweenCircle) {
+                    var tweenCircle = new game.guadeCircleTween(this.guideContainer);
+                    tweenCircle.pos(step.TweenCircle.x, step.TweenCircle.y);
+                    // this.TweenCircle.loadImage('skin/tip/read_key_words_tutorial_circle.png');
+                    // this.TweenCircle.x = step.TweenCircle.x;
+                    // this.TweenCircle.y = step.TweenCircle.y;
+                }
+                // 如果这个参数存在，代表点击交互区域才能继续下一步，否则就点击引导对话框图片
+                this.tipContainer.off("click", this, this.nextStep);
+                if (this.interactionArea[0]) {
+                    this.interactionArea[0].off("click", this, this.nextStep);
+                }
+                if (step.isClickTipImg) {
+                    // console.log(2222222);
+                    this.tipContainer.on("click", this, this.nextStep);
+                }
+                else if (step.clickObj) {
+                    step.clickObj.on("click", this, this.nextStep);
+                }
+            }
+        };
+        //清除可点击区域
+        newGuide.prototype.clearUnHit = function () {
+            this.hitArea.unHit.clear();
+        };
+        //改变交互显示区域
+        newGuide.prototype.changeInteractionArea = function () {
+            this.interactionArea.graphics.drawRect(0, 0, step.w, step.h, "#000000");
+        };
+        return newGuide;
+    }());
+    game.newGuide = newGuide;
+    // 新用户登录福利：（微信小程序+轻游戏）
+    var NewUserLogingBoon = /** @class */ (function (_super) {
+        __extends(NewUserLogingBoon, _super);
+        function NewUserLogingBoon() {
+            var _this = _super.call(this) || this;
+            _this.oneBei = 1;
+            _this.twoBei = 2;
+            _this.createDialog();
+            return _this;
+        }
+        NewUserLogingBoon.prototype.createDialog = function () {
+        };
+        return NewUserLogingBoon;
+    }(Dialog));
+    game.NewUserLogingBoon = NewUserLogingBoon;
+    // 在支线点，先弹出看视频广告，再进入支线
+    var intoBeforeLookVedio = /** @class */ (function () {
+        function intoBeforeLookVedio(type, callBackFn) {
+            if (callBackFn) {
+                this.callBackFn = callBackFn;
+            }
+            var isVS = jmt.QQresType.INTO_BEFORE_VEDIO;
+            var vsPrompt = new game.lookVedioOrShare('观看广告获得一次保命机会', '观看视频', jmt.QQresType.SETTIMEOUT_PROP, jmt.Data.chapterinfo.chapterid, 0, isVS, 0, 0, 0, Handler.create(this, this.inviteSuccess.bind(this)), 1);
+            if (type === jmt.QQresType.OPTION) {
+                vsPrompt.infoLabel.text = '观看广告获得一次保命机会！';
+            }
+            if (type === jmt.QQresType.QUESTION) {
+                vsPrompt.infoLabel.text = '观看广告获取一次辩驳提示！';
+            }
+            if (type === jmt.QQresType.CLUE) {
+                vsPrompt.infoLabel.text = '观看广告获取一次推理提示！';
+            }
+            vsPrompt.popup();
+        }
+        intoBeforeLookVedio.prototype.inviteSuccess = function (res) {
+            if (res) {
+                jmt.common.Toast.success('领取成功', 3000);
+            }
+            if (this.callBackFn) {
+                this.callBackFn();
+            }
+        };
+        return intoBeforeLookVedio;
+    }());
+    game.intoBeforeLookVedio = intoBeforeLookVedio;
+    // 阅读界面定时弹窗赠送道具
+    var setTimeProp = /** @class */ (function (_super) {
+        __extends(setTimeProp, _super);
+        function setTimeProp() {
+            var _this = _super.call(this) || this;
+            _this.downTime = 2.5 * 60 * 1000; //2.5*60*1000
+            // 阅读界面快进或者自动播放状态，弹窗时，停止快进或者自动播放
+            // if(stopReadingFast){
+            //     this.stopReadingFast = stopReadingFast;
+            // }
+            // 赠送道具从第二章开始
+            // if(jmt.Data.chapterinfo.index == 1){
+            //     return;
+            // }  
+            Laya.timer.loop(_this.downTime, _this, _this.isDialog);
+            return _this;
+        }
+        Object.defineProperty(setTimeProp, "instance", {
+            get: function () {
+                if (!setTimeProp._instance) {
+                    setTimeProp._instance = new setTimeProp();
+                }
+                return setTimeProp._instance;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        // private openBox(): void{
+        //     Laya.timer.loop(this.downTime, this , this.isDialog);
+        // }
+        // 阅读界面快进或者自动播放状态，弹窗时，停止快进或者自动播放
+        setTimeProp.prototype.stopFast = function (stopReadingFast) {
+            if (!this.stopReadingFast) {
+                this.stopReadingFast = stopReadingFast;
+            }
+        };
+        setTimeProp.prototype.isDialog = function () {
+            // 先判断阅读界面上是否有其他的弹窗
+            if (Dialog.manager._childs.length > 0) {
+                // Laya.timer.clear(this, this.isDialog);
+                return;
+            }
+            // 再判断是否是阅读界面，并且现在阅读界面上没有弹出任何选项
+            var isReadingView = Laya.stage.getChildAt(0);
+            var dialogManage;
+            if (isReadingView && isReadingView.name == 'ReadingView') {
+                for (var i = 0; i < isReadingView._childs.length; i++) {
+                    var elem = isReadingView._childs[i];
+                    if (elem.name == 'OptionView') {
+                        dialogManage = 1;
+                    }
+                }
+                if (dialogManage) {
+                    // Laya.timer.clear(this, this.isDialog);
+                    return;
+                }
+                this.createContent();
+            }
+        };
+        setTimeProp.prototype.createContent = function () {
+            // 随机数,用于随机头像
+            var type = this.getRandom(0, 3);
+            // 弹窗背景图片
+            var bgImg = new Image('skin/store/save_progress_prompt_box.png');
+            bgImg.height = 427;
+            this.addChild(bgImg);
+            // 弹窗顶部标题图片
+            var titleImg = new Image('skin/common/read_invite_title.png');
+            titleImg.centerX = 0;
+            titleImg.top = 35;
+            bgImg.addChild(titleImg);
+            // 弹窗中间的盒子
+            var middleBox = new Laya.HBox();
+            middleBox.centerX = 0;
+            middleBox.top = 150;
+            middleBox.space = 71;
+            middleBox.align = 'middle';
+            bgImg.addChild(middleBox);
+            // 中间盒子左边随机头像
+            var leftHeadImg = new Image();
+            if (type == 0) {
+                leftHeadImg.skin = 'skin/common/read_role01_icon.png';
+            }
+            if (type == 1) {
+                leftHeadImg.skin = 'skin/common/read_role02_icon.png';
+            }
+            if (type == 2) {
+                leftHeadImg.skin = 'skin/common/read_role03_icon.png';
+            }
+            if (type == 3) {
+                leftHeadImg.skin = 'skin/common/read_role04_icon.png';
+            }
+            middleBox.addChild(leftHeadImg);
+            // 中间盒子右边小盒子
+            var rightBox = new Laya.VBox();
+            rightBox.align = 'center';
+            rightBox.space = 1;
+            middleBox.addChild(rightBox);
+            var videoOrShareImg = new Image();
+            videoOrShareImg.skin = 'skin/common/read_invite_icon.png';
+            if (jmt.GlobalData.SETTIME_PROP_IS_SHARE_OR_VIDEO) {
+                videoOrShareImg.skin = 'skin/common/read_video_icon.png';
+            }
+            rightBox.addChild(videoOrShareImg);
+            var sendImg = new Image('skin/common/read_invite_mid.png');
+            rightBox.addChild(sendImg);
+            // 领取按钮
+            var getBtn = new Button();
+            getBtn.skin = 'skin/common/pieces_get.png';
+            getBtn.stateNum = 1;
+            getBtn.label = '领取';
+            getBtn.labelFont = jmt.Skin.FONT;
+            getBtn.labelSize = 34;
+            getBtn.labelColors = '#0E0E0E';
+            rightBox.addChild(getBtn);
+            // 点击按钮，请求接口，领取奖励
+            getBtn.on(Laya.Event.CLICK, this, this.getAward);
+            // 创建关闭按钮
+            var closeBtn = jmt.Config.closeIcon(bgImg);
+            closeBtn.on(Laya.Event.CLICK, this, this.closeBox);
+            this.popup();
+            // 停止阅读界面自动播放
+            if (this.stopReadingFast) {
+                this.stopReadingFast();
+            }
+            // 清除定时器执行函数
+            Laya.timer.clear(this, this.isDialog);
+        };
+        setTimeProp.prototype.closeBox = function () {
+            this.changeType();
+            // this.openBox();
+            Laya.timer.loop(this.downTime, this, this.isDialog);
+            this.close();
+        };
+        //  一次分享，一次看视频
+        setTimeProp.prototype.changeType = function () {
+            if (!jmt.GlobalData.SETTIME_PROP_IS_SHARE_OR_VIDEO) {
+                jmt.GlobalData.SETTIME_PROP_IS_SHARE_OR_VIDEO = 1;
+            }
+            else {
+                jmt.GlobalData.SETTIME_PROP_IS_SHARE_OR_VIDEO = 0;
+            }
+        };
+        setTimeProp.prototype.getRandom = function (startN, endN) {
+            var random = endN - startN + 1;
+            return Math.floor((Math.random() * random) + startN);
+        };
+        // 获取奖励
+        setTimeProp.prototype.getAward = function () {
+            // 看视频广告
+            if (jmt.GlobalData.SETTIME_PROP_IS_SHARE_OR_VIDEO) {
+                WywUtil.QQLookVideo(this.Vcomplete.bind(this), 8);
+                WxUtil.WxLookVideo(this.Vcomplete.bind(this), 8);
+                var apiUtil1 = new ApiUtil();
+                apiUtil1.Stat(jmt.Stat.PAGE_SUPER, jmt.Stat.ACT_SHOWAD);
+            }
+            else {
+                // 分享，先得到分享数据
+                var apiUtil = new ApiUtil();
+                apiUtil.qqShareDataInfo(jmt.QQresType.SETTIMEOUT_PROP, Handler.create(this, this.getShareDate));
+                var apiUtil2 = new ApiUtil();
+                apiUtil2.Stat(jmt.Stat.PAGE_SUPER, jmt.Stat.ACT_SHOWSHARE);
+            }
+        };
+        // 得到分享数据，分享
+        setTimeProp.prototype.getShareDate = function (res) {
+            if (res) {
+                res.extendInfoType = "" + jmt.QQresType.SETTIMEOUT_PROP;
+            }
+            WywUtil.QQshare(this.Vcomplete.bind(this), res);
+            WxUtil.WxShare(this.Vcomplete.bind(this), res);
+        };
+        setTimeProp.prototype.Vcomplete = function (succObj) {
+            var actype = 1;
+            if (succObj) {
+                if (succObj.data.ret == 0) {
+                    actype = 2;
+                    var apiUtil = new ApiUtil();
+                    apiUtil.ckeckVideoShareComplete(jmt.QQresType.SETTIMEOUT_PROP, jmt.Data.chapterinfo.chapterid, 0, actype, 0, 0, 0, Handler.create(this, this.LookOrShareComplete, [actype]));
+                }
+            }
+            else {
+                var apiUtil = new ApiUtil();
+                apiUtil.ckeckVideoShareComplete(jmt.QQresType.SETTIMEOUT_PROP, jmt.Data.chapterinfo.chapterid, 0, actype, 0, 0, 0, Handler.create(this, this.LookOrShareComplete, [actype]));
+            }
+        };
+        setTimeProp.prototype.LookOrShareComplete = function (res) {
+            // console.log(res);
+            this.changeType();
+            Laya.timer.loop(this.downTime, this, this.isDialog);
+            // this.openBox();
+            this.close();
+            jmt.common.Toast.success('万能道具领取成功！', 3000);
+        };
+        setTimeProp.isStart = 0;
+        return setTimeProp;
+    }(Laya.Dialog));
+    game.setTimeProp = setTimeProp;
+    // QQ轻游戏单章节解锁
+    var qqChapterUnlock = /** @class */ (function (_super) {
+        __extends(qqChapterUnlock, _super);
+        function qqChapterUnlock(chapterInfo, unlockSuccess) {
+            var _this = _super.call(this) || this;
+            if (unlockSuccess) {
+                _this.unlockSuccess = unlockSuccess;
+            }
+            if (chapterInfo) {
+                _this.chapterTitle = "\u7B2C" + chapterInfo.index + "\u7AE0\uFF1A" + chapterInfo.title;
+            }
+            var apiUtil = new ApiUtil();
+            apiUtil.QqChapterUnlock(jmt.Data.chapterinfo.chapterid, Handler.create(_this, _this.getDataInfo));
+            return _this;
+        }
+        qqChapterUnlock.prototype.getDataInfo = function (res) {
+            if (res) {
+                this.unlockDataInfo = res;
+            }
+            this.unlockDataInfo;
+            this.createContent();
+            this.createPackgeList();
+        };
+        qqChapterUnlock.prototype.createContent = function () {
+            var hBox = new Laya.HBox();
+            hBox.space = 50;
+            hBox.align = 'middle';
+            this.bg_img.addChild(hBox);
+            hBox.centerX = 0;
+            hBox.top = 160;
+            var Line = function () {
+                var line = new Box();
+                line.width = 45;
+                line.height = 3;
+                line.graphics.drawRect(0, 0, 45, 3, '#DDDDDD');
+                hBox.addChild(line);
+            };
+            Line();
+            var twoTitle = new Label();
+            twoTitle.text = this.chapterTitle;
+            twoTitle.font = jmt.Skin.FONT;
+            twoTitle.fontSize = 34;
+            twoTitle.color = '#FFFFFF';
+            hBox.addChild(twoTitle);
+            Line();
+            this.buyBtn = new Box();
+            this.buyBtn.width = 614;
+            this.buyBtn.height = 66;
+            this.buyBtn.graphics.drawRect(0, 0, 614, 66, '#FFD800');
+            this.buyBtn.centerX = 0;
+            this.buyBtn.top = 306;
+            var unlockText = new Label('解锁本章剧情');
+            unlockText.font = jmt.Skin.FONT;
+            unlockText.fontSize = 34;
+            unlockText.color = '#000000';
+            unlockText.centerX = 0;
+            unlockText.centerY = 0;
+            this.buyBtn.addChild(unlockText);
+            this.bg_img.addChild(this.buyBtn);
+            this.buyBtn.on(Laya.Event.CLICK, this, this.LookOrShare);
+            var closeBtn = jmt.Config.closeIcon(this.bg_img);
+            closeBtn.on(Laya.Event.CLICK, this, this.closeDialog);
+        };
+        qqChapterUnlock.prototype.LookOrShare = function () {
+            var apiUtil = new ApiUtil();
+            apiUtil.QqChapterUnlock(jmt.Data.chapterinfo.chapterid, Handler.create(this, this.refreshData));
+        };
+        qqChapterUnlock.prototype.refreshData = function (res) {
+            if (res) {
+                this.unlockDataInfo = res;
+            }
+            if (this.unlockDataInfo && this.unlockDataInfo.invite == 1) {
+                var item = this.buyList.getItem(2);
+                item.ok = true;
+                this.buyList.changeItem(2, item);
+                this.close();
+                jmt.Data.chapterinfo.isbuy = 1;
+                this.unlockSuccess.run();
+                return;
+            }
+            if (this.unlockDataInfo && this.unlockDataInfo.adnum < 2) {
+                // QQ轻游戏
+                WywUtil.QQLookVideo(this.Vcomplete.bind(this));
+                //微信IOS
+                WxUtil.WxLookVideo(this.Vcomplete.bind(this), res);
+                //章节解锁统计
+                var apiUtil1 = new ApiUtil();
+                apiUtil1.Stat(jmt.Stat.PAGE_UNLOCK, jmt.Stat.ACT_SHOWAD);
+            }
+            if (this.unlockDataInfo && this.unlockDataInfo.adnum == 2) {
+                var apiUtil = new ApiUtil();
+                apiUtil.qqShareDataInfo(jmt.QQresType.DEATH, Handler.create(this, this.getShareInfo));
+                //章节解锁统计
+                var apiUtil1 = new ApiUtil();
+                apiUtil1.Stat(jmt.Stat.PAGE_UNLOCK, jmt.Stat.ACT_SHOWSHARE);
+            }
+        };
+        qqChapterUnlock.prototype.getShareInfo = function (res) {
+            if (res) {
+                var info = {};
+                info.uid = jmt.Data.uid;
+                info.code = res.code;
+                info.chapterid = jmt.Data.chapterinfo.chapterid;
+                info = JSON.stringify(info);
+                res.extendInfoType = info;
+                // 在微信IOS端，分享字段拼接成字典个数
+                if (WxUtil.onWxIOS()) {
+                    info = "uid=" + jmt.Data.uid + "&code=" + res.code + "&chapterid=" + jmt.Data.chapterinfo.chapterid;
+                    res.extendInfoType = info;
+                }
+            }
+            //QQ
+            WywUtil.QQInviteShare(this.Vcomplete.bind(this), res);
+            //微信IOS
+            WxUtil.WxShare(this.Vcomplete.bind(this), res);
+        };
+        qqChapterUnlock.prototype.Vcomplete = function (succObj) {
+            var actype = 1;
+            if (succObj) {
+                if (succObj.data.ret == 0) {
+                    actype = 2;
+                    var apiUtil = new ApiUtil();
+                    apiUtil.ckeckVideoShareComplete(jmt.QQresType.CHAPTER, jmt.Data.chapterinfo.chapterid, 0, actype, 0, 0, 0, Handler.create(this, this.LookOrShareComplete, [actype]));
+                }
+            }
+            else {
+                var apiUtil = new ApiUtil();
+                apiUtil.ckeckVideoShareComplete(jmt.QQresType.CHAPTER, jmt.Data.chapterinfo.chapterid, 0, actype, 0, 0, 0, Handler.create(this, this.LookOrShareComplete, [actype]));
+            }
+        };
+        qqChapterUnlock.prototype.LookOrShareComplete = function (actype, res) {
+            this.unlockDataInfo = res;
+            if (actype == 2) {
+                jmt.common.Toast.success('邀请已发送，新玩家点入即可解锁！', 4000);
+            }
+            if (res && res.adnum == 1) {
+                var item = this.buyList.getItem(0);
+                if (!item.ok) {
+                    item.ok = true;
+                    this.buyList.changeItem(0, item);
+                }
+            }
+            if (res && res.adnum == 2) {
+                var item0 = this.buyList.getItem(0);
+                if (!item0.ok) {
+                    item0.ok = true;
+                    this.buyList.changeItem(0, item0);
+                }
+                var item1 = this.buyList.getItem(1);
+                if (!item1.ok) {
+                    item1.ok = true;
+                    this.buyList.changeItem(1, item1);
+                }
+            }
+            // if(res && res.invite == 1){
+            //     let item = this.buyList.getItem(2);
+            //     item.ok = true;
+            //     this.buyList.changeItem(2, item);
+            //     this.close();
+            //     this.unlockSuccess.run();
+            // }
+        };
+        qqChapterUnlock.prototype.createPackgeList = function () {
+            this.buyList = new Laya.List();
+            this.buyList.centerX = 10;
+            this.buyList.bottom = 161;
+            this.bg_img.addChild(this.buyList);
+            this.buyList.repeatX = 3;
+            this.buyList.repeatY = 1;
+            this.buyList.itemRender = game.QqUnlockItem;
+            this.buyList.renderHandler = new Handler(this, this.updataItem);
+            var data = [
+                { type: 'video' },
+                { type: 'video' },
+                { type: 'share' }
+            ];
+            if (this.unlockDataInfo && this.unlockDataInfo.adnum == 1) {
+                data[0].ok = true;
+            }
+            if (this.unlockDataInfo && this.unlockDataInfo.adnum == 2) {
+                data[0].ok = true;
+                data[1].ok = true;
+            }
+            if (this.unlockDataInfo && this.unlockDataInfo.invite == 1) {
+                data[2].ok = true;
+                this.close();
+                this.unlockSuccess.run();
+            }
+            this.buyList.array = data;
+        };
+        qqChapterUnlock.prototype.updataItem = function (cell, index) {
+            cell.setItem(cell.dataSource);
+        };
+        qqChapterUnlock.prototype.closeDialog = function () {
+            ChapterCoverView.isOpenUnlockView = 0;
+            this.close();
+        };
+        return qqChapterUnlock;
+    }(ui.dialog.QqChapterUnlockUI));
+    game.qqChapterUnlock = qqChapterUnlock;
+    var QqUnlockItem = /** @class */ (function (_super) {
+        __extends(QqUnlockItem, _super);
+        function QqUnlockItem() {
+            var _this = _super.call(this) || this;
+            var rect = new Box();
+            rect.width = 200;
+            rect.height = 200;
+            rect.alpha = 0.1;
+            rect.graphics.drawRect(0, 0, 200, 200, '#ffffff');
+            _this.addChild(rect);
+            var Vbox = new Laya.VBox();
+            Vbox.align = 'center';
+            Vbox.space = 13;
+            Vbox.centerX = 0;
+            Vbox.centerY = 0;
+            _this.addChild(Vbox);
+            _this.typeImg = new Image('skin/common/chapter_video_icon.png');
+            // this.typeImg.width = 47;
+            // this.typeImg.height = 27;
+            // this.typeImg.centerX = 0;
+            Vbox.addChild(_this.typeImg);
+            _this.typeText = new Label();
+            _this.typeText.text = '观看视频';
+            _this.typeText.font = jmt.Skin.FONT;
+            _this.typeText.fontSize = 30;
+            // this.typeText.centerX = 0;
+            _this.typeText.color = '#999999';
+            Vbox.addChild(_this.typeText);
+            return _this;
+            // this.createComplteIcon();
+        }
+        QqUnlockItem.prototype.createComplteIcon = function () {
+            var icon = new Image('skin/common/system_done_icon.png');
+            icon.top = 0;
+            icon.right = 0;
+            this.addChild(icon);
+        };
+        QqUnlockItem.prototype.setItem = function (data) {
+            if (data.type == 'share') {
+                this.typeText.text = '邀请朋友';
+                this.typeImg.skin = 'skin/common/chapter_invite_icon.png';
+            }
+            if (data.ok) {
+                this.createComplteIcon();
+            }
+        };
+        return QqUnlockItem;
+    }(Box));
+    game.QqUnlockItem = QqUnlockItem;
+    var AddDeskDialog = /** @class */ (function () {
+        function AddDeskDialog(isAddDest) {
+            if (isAddDest === void 0) { isAddDest = 0; }
+            this.addDesk = new Dialog();
+            var bgImg = new Laya.Image(jmt.Skin.POPU_ADDDESK);
+            this.addDesk.width = bgImg.width;
+            this.addDesk.height = bgImg.height;
+            this.addDesk.addChild(bgImg);
+            //创建领取图标
+            this.getImg = new Laya.Image('skin/common/pieces_get.png');
+            var getText = new Label('领取');
+            this.getImg.alpha = 0.3;
+            if (isAddDest) {
+                this.getImg.alpha = 1;
+                this.getImg.on(Laya.Event.CLICK, this, this.addDeskget);
+            }
+            getText.color = '#0E0E0E';
+            getText.fontSize = 34;
+            getText.font = jmt.Skin.FONT;
+            getText.top = 225;
+            getText.right = 196;
+            getText.zOrder = 1;
+            bgImg.addChild(getText);
+            this.getImg.top = 210;
+            this.getImg.right = 100;
+            bgImg.addChild(this.getImg);
+            var closeImg = jmt.Config.closeIcon(bgImg);
+            closeImg.on(Laya.Event.CLICK, this.addDesk, this.addDesk.close);
+            this.addDesk.popup();
+        }
+        // // 提示添加到桌面的弹窗
+        // addDestDialog(): void{
+        // }
+        //领取QQ玩一玩添加到桌面奖励
+        AddDeskDialog.prototype.addDeskget = function () {
+            this.getImg.off(Laya.Event.CLICK, this, this.addDeskget);
+            var apiUtil = new ApiUtil();
+            apiUtil.addDeskGet(1, Handler.create(this, function (res) {
+                jmt.GlobalData.CHECK_QQ_ADD_DESK = 1;
+                jmt.common.Toast.success('领取成功', 1500);
+                this.addDesk.close();
+            }));
+        };
+        return AddDeskDialog;
+    }());
+    game.AddDeskDialog = AddDeskDialog;
+    var FlashImage = /** @class */ (function (_super) {
+        __extends(FlashImage, _super);
+        function FlashImage(skin) {
+            if (skin === void 0) { skin = null; }
+            var _this = _super.call(this, skin) || this;
+            _this.showTime = 1000;
+            _this.hide();
+            return _this;
+        }
+        FlashImage.prototype.show = function () {
+            Laya.Tween.to(this, { alpha: 1 }, this.showTime / 3, null, Handler.create(this, this.hide));
+        };
+        FlashImage.prototype.hide = function () {
+            Laya.Tween.to(this, { alpha: 0.5 }, this.showTime, null, Handler.create(this, this.show));
+        };
+        return FlashImage;
+    }(Image));
+    game.FlashImage = FlashImage;
+    // 创建一根长线
+    var LongLine = /** @class */ (function (_super) {
+        __extends(LongLine, _super);
+        function LongLine(view, width, height, x, y, color) {
+            if (width === void 0) { width = 705; }
+            if (height === void 0) { height = 2; }
+            if (x === void 0) { x = 0; }
+            if (y === void 0) { y = 0; }
+            if (color === void 0) { color = '#000000'; }
+            var _this = _super.call(this) || this;
+            _this.graphics.drawRect(x, y, width, height, color);
+            _this.width = width;
+            _this.height = height;
+            _this.alpha = 0.5;
+            view.addChild(_this);
+            return _this;
+        }
+        return LongLine;
+    }(Laya.Box));
+    game.LongLine = LongLine;
+    // 推理提示缓动小图标
+    var PointPrompt = /** @class */ (function (_super) {
+        __extends(PointPrompt, _super);
+        function PointPrompt() {
+            var _this = _super.call(this) || this;
+            _this.createBgImg();
+            _this.width = _this.bgImg.width;
+            _this.height = _this.bgImg.height;
+            _this.scaleAni();
+            return _this;
+        }
+        PointPrompt.prototype.createBgImg = function () {
+            this.bgImg = new Laya.Image();
+            this.addChild(this.bgImg);
+            this.bgImg.centerX = 0;
+            this.bgImg.centerY = 0;
+            this.bgImg.skin = 'skin/common/read_key_words_tips_btn.png';
+        };
+        PointPrompt.prototype.scaleAni = function () {
+            Laya.timer.loop(1000, this, this.scaleBig);
+        };
+        PointPrompt.prototype.scaleBig = function () {
+            Laya.Tween.to(this.bgImg, { scaleX: 1.1, scaleY: 1.1 }, 500, Laya.Ease.linearIn, Laya.Handler.create(this, this.scaleSmall));
+        };
+        PointPrompt.prototype.scaleSmall = function () {
+            Laya.Tween.to(this.bgImg, { scaleX: 1, scaleY: 1 }, 500, Laya.Ease.linearIn);
+        };
+        return PointPrompt;
+    }(Laya.Box));
+    game.PointPrompt = PointPrompt;
+    // 玩一玩 观看视频 或者 分享
+    var lookVedioOrShare = /** @class */ (function (_super) {
+        __extends(lookVedioOrShare, _super);
+        function lookVedioOrShare(
+        //渲染按钮需要的参数
+        infoText, btnText, 
+        //看完视频或分享完成需要请求的参数
+        type, chapterid, branchid, actype, conid, opid, index, callBack, beforeLookVideo //这个参数是用于支线之前弹出广告
+        ) {
+            var _this = _super.call(this) || this;
+            _this.branchid = 0;
+            _this.actype = 0;
+            _this.conid = 0;
+            _this.opid = 0;
+            _this.storeIndex = 0;
+            if (callBack) {
+                _this.complateCallBack = callBack;
+            }
+            if (type) {
+                _this.type = type;
+            }
+            if (chapterid) {
+                _this.chapterid = chapterid;
+            }
+            if (branchid) {
+                _this.branchid = branchid;
+            }
+            if (actype) {
+                _this.actype = actype;
+            }
+            if (conid) {
+                _this.conid = conid;
+            }
+            if (opid) {
+                _this.opid = opid;
+            }
+            if (index) {
+                _this.storeIndex = index;
+            }
+            if (beforeLookVideo) {
+                _this.beforeLookVideo = beforeLookVideo;
+            }
+            _this.ags = { type: _this.type, chapterid: _this.chapterid, branchid: _this.branchid,
+                actype: _this.actype, conid: _this.conid, opid: _this.opid, index: _this.storeIndex, back: _this.complateCallBack };
+            // 创建背景图片
+            _this.bgImg = new Image('skin/store/save_progress_prompt_box.png');
+            _this.addChild(_this.bgImg);
+            // 创建弹窗内容文字
+            _this.infoLabel = new Label(infoText);
+            _this.bgImg.addChild(_this.infoLabel);
+            _this.infoLabel.fontSize = 37;
+            _this.infoLabel.font = jmt.Skin.FONT;
+            _this.infoLabel.color = '#DDDDDD';
+            _this.infoLabel.centerX = 0;
+            _this.infoLabel.top = 102;
+            //创建点击按钮
+            _this.btnImg = new Button('skin/common/btn_save_progress_prompt_btn.png');
+            _this.bgImg.addChild(_this.btnImg);
+            _this.btnImg.centerX = 0;
+            _this.btnImg.bottom = 103;
+            _this.btnImg.label = btnText;
+            _this.btnImg.labelSize = 34;
+            _this.btnImg.labelColors = '#0E0E0E,#ffffff';
+            _this.btnImg.stateNum = 2;
+            //如果是看视频，就替换 点击按钮皮肤，并且分别添加点击按钮的事件
+            if (actype) {
+                _this.btnImg.skin = 'skin/common/btn_video.png';
+                _this.btnImg.labelAlign = 'left';
+                _this.btnImg.labelPadding = '0,0,0,93';
+                _this.btnImg.on(Laya.Event.CLICK, _this, _this.onLookVideo);
+            }
+            else {
+                _this.btnImg.on(Laya.Event.CLICK, _this, _this.onShare);
+            }
+            // 创建关闭窗口按钮
+            _this.closeImg = new Image('skin/common/read_special_option_close_btn.png');
+            _this.bgImg.addChild(_this.closeImg);
+            _this.closeImg.top = -(_this.closeImg.width / 2 - 10);
+            _this.closeImg.right = -(_this.closeImg.width / 2 - 10);
+            _this.closeImg.on(Laya.Event.CLICK, _this, _this.closeMouseClick);
+            return _this;
+        }
+        lookVedioOrShare.prototype.closeMouseClick = function () {
+            // 如果在支线之前弹出广告，关闭的时候也执行回调
+            if (this.beforeLookVideo) {
+                this.complateCallBack.run();
+            }
+            this.close();
+        };
+        // 点击按钮，分享逻辑
+        lookVedioOrShare.prototype.onShare = function () {
+            //先从服务端请求分享数据内容，传递给QQ分享接口那边
+            var apiUtil = new ApiUtil();
+            apiUtil.qqShareDataInfo(this.type, Handler.create(this, this.getShareInfo));
+            //     var BK:any = [];
+            //     BK.Share = {};
+            //     BK.Share.share = function(suc){
+            //         suc.success();
+            //     }
+            //     BK.Share.share({
+            //     qqImgUrl: 'http://hudong.qq.com/docs/engine/img/848B76B5530AA7EE7B38E9A1267D7086.png',
+            //     socialPicPath: 'GameRes://qqshare.png.png',
+            //     title: '再玩游戏，剁手！',
+            //     summary: '这游戏有毒啊，这游戏有毒啊，这游戏有毒啊，这游戏有毒啊，这游戏有毒啊，这游戏有毒啊，这游戏有毒啊，这游戏有毒啊', 
+            //     extendInfo: '',
+            //     success: this.Vcomplete.bind(this,this.ags)
+            // }); 
+        };
+        lookVedioOrShare.prototype.getShareInfo = function (res) {
+            this.close();
+            if (res) {
+                res.extendInfoType = "" + this.type;
+            }
+            //QQ
+            WywUtil.QQshare(this.Vcomplete.bind(this, this.ags), res);
+            //微信
+            WxUtil.WxShare(this.Vcomplete.bind(this, this.ags), res);
+        };
+        // 看视频逻辑
+        // 点击按钮，看视频逻辑
+        lookVedioOrShare.prototype.onLookVideo = function () {
+            // 除了进入支线之前看视频广告  先不关闭弹窗。 其他都关闭
+            if (this.actype != jmt.QQresType.INTO_BEFORE_VEDIO) {
+                this.close();
+            }
+            else {
+                //万能道具统计
+                var apiUtil1 = new ApiUtil();
+                apiUtil1.Stat(jmt.Stat.PAGE_SUPER, jmt.Stat.ACT_SHOWAD);
+            }
+            if (this.actype == 8) {
+                //QQ
+                WywUtil.QQLookVideo(function () {
+                    this.complateCallBack.run();
+                }.bind(this), this.actype);
+                //微信
+                WxUtil.WxLookVideo(function () {
+                    this.complateCallBack.run();
+                }.bind(this), this.actype);
+            }
+            else {
+                //QQ
+                WywUtil.QQLookVideo(this.Vcomplete.bind(this, this.ags), this.type);
+                //微信
+                WxUtil.WxLookVideo(this.Vcomplete.bind(this, this.ags), this.type);
+            }
+            // // var videoAd = BK.Advertisement.createVideoAd();
+            // var videoAd:any = {};
+            // videoAd.onPlayFinish = function(fn){
+            //     fn();
+            // }
+            // videoAd.onPlayFinish();
+            // // videoAd.show();
+        };
+        lookVedioOrShare.prototype.Vcomplete = function (rs, succObj) {
+            rs.actype = 1;
+            if (succObj) {
+                if (succObj.data.ret == 0) {
+                    rs.actype = 2;
+                    var apiUtil = new ApiUtil();
+                    apiUtil.ckeckVideoShareComplete(rs.type, rs.chapterid, rs.branchid, rs.actype, rs.conid, rs.opid, rs.index, Handler.create(this, this.goCallBack, [rs.back]));
+                    //分享的toast提示
+                    if (rs.type) {
+                        var toastText = '';
+                        if (rs.type == 3) {
+                            toastText = '已提示部分正确线索，还差最后一个，请再思考一下哦';
+                            jmt.common.Toast.msg(toastText);
+                        }
+                        if (rs.type == 4) {
+                            toastText = '已提示部分错误的选择，请再思考一下哦';
+                            jmt.common.Toast.msg(toastText);
+                        }
+                    }
+                }
+            }
+            else {
+                var apiUtil = new ApiUtil();
+                apiUtil.ckeckVideoShareComplete(rs.type, rs.chapterid, rs.branchid, rs.actype, rs.conid, rs.opid, rs.index, Handler.create(this, this.goCallBack, [rs.back]));
+            }
+        };
+        lookVedioOrShare.prototype.goCallBack = function (back, rs) {
+            //如果是 进入支线之前看广告，就只有看视频成功才会关闭
+            if (this.actype == jmt.QQresType.INTO_BEFORE_VEDIO) {
+                this.close();
+            }
+            back.runWith(rs);
+        };
+        return lookVedioOrShare;
+    }(Dialog));
+    game.lookVedioOrShare = lookVedioOrShare;
+    // 加载页面的loading动画背景
+    var PlacardLoad = /** @class */ (function (_super) {
+        __extends(PlacardLoad, _super);
+        function PlacardLoad() {
+            var _this = _super.call(this) || this;
+            // this.bgAnimation = new Laya.Animation();
+            // let imgArray = [];
+            // for(let i:number = 0; i<24; i++){
+            //     let url: string = `loading_bg/loading_${100000+i}.png`;
+            //     url = url.replace('1', '');
+            //     imgArray.push(url);
+            //     console.log(url);
+            // }
+            _this.loadAtlas('res/atlas/loading_bg.atlas', Laya.Handler.create(_this, _this.onLoaded));
+            return _this;
+        }
+        PlacardLoad.prototype.onLoaded = function () {
+            // Laya.stage.addChild(this.bgAnimation);
+            this.interval = 200;
+            var scx = Laya.stage.width / 300;
+            var scy = Laya.stage.height / 533;
+            this.scale(scx, scy);
+            this.play();
+            // this.width = Laya.stage.width;
+            // this.height = Laya.stage.height;
+        };
+        return PlacardLoad;
+    }(Laya.Animation));
+    game.PlacardLoad = PlacardLoad;
+    // 微信QQ添加到桌面图标
+    var JoinDesk = /** @class */ (function (_super) {
+        __extends(JoinDesk, _super);
+        function JoinDesk() {
+            var _this = _super.call(this) || this;
+            _this.btnImg = new Button('skin/common/join_desk.png');
+            _this.btnImg.stateNum = 1;
+            _this.addChild(_this.btnImg);
+            _this.on(Laya.Event.CLICK, _this, function () {
+                //QQ轻游戏
+                WywUtil.onJoinDesk();
+            });
+            return _this;
+        }
+        return JoinDesk;
+    }(Box));
+    game.JoinDesk = JoinDesk;
+    // 滑动 插画-继续浏览
+    var Swiper = /** @class */ (function (_super) {
+        __extends(Swiper, _super);
+        function Swiper(view, listArray, complete) {
+            var _this = _super.call(this) || this;
+            _this.graphics.drawRect(0, 0, Laya.stage.width, Laya.stage.height, '#000000');
+            view.addChild(_this);
+            _this.completeHandler = complete;
+            _this.listArray = listArray;
+            // this.listArray = [
+            //     {url: 'res/image/notes_bg_pic.jpg'},
+            //     {url: 'res/image/loading_bg_pic.jpg'},
+            //     {url: 'res/image/notes_bg_pic.jpg'},
+            //     {url: 'res/image/loading_bg_pic.jpg'}
+            // ] 
+            _this.width = Laya.stage.width;
+            _this.height = Laya.stage.height;
+            _this.picBox = new Box();
+            _this.addChild(_this.picBox);
+            _this.picBox.width = _this.width;
+            _this.picBox.height = (_this.height) * listArray.length;
+            for (var i = 0; i < _this.listArray.length; i++) {
+                var swiperImg = new Laya.Image(jmt.Resource.addDomain(_this.listArray[i].cont));
+                swiperImg.width = _this.width;
+                swiperImg.height = _this.height;
+                swiperImg.x = 0;
+                swiperImg.y = _this.height * i;
+                swiperImg.zOrder = 0;
+                _this.picBox.addChild(swiperImg);
+            }
+            _this.count = 0;
+            _this.beginPosition = 0;
+            _this.lastImgPosition = -(_this.listArray.length - 1) * Laya.stage.height;
+            _this.picBox.on(Laya.Event.MOUSE_DOWN, _this, _this.onMouseDown);
+            _this.downImg = new game.FlashImage();
+            _this.closeImg = new game.FlashImage();
+            _this.createrBtnImg(_this.downImg, 'skin/common/comic_continue_icon.png');
+            _this.createrBtnImg(_this.closeImg, 'skin/common/comic_close_icon.png');
+            _this.closeImg.visible = false;
+            _this.downImg.visible = true;
+            _this.downImg.on(Laya.Event.CLICK, _this, _this.scrollDown);
+            _this.closeImg.on(Laya.Event.CLICK, _this, _this.closeSwiper);
+            return _this;
+        }
+        Swiper.prototype.onMouseDown = function () {
+            this.mouseDownPosition = Laya.stage.mouseY;
+            this.picBox.on(Laya.Event.MOUSE_MOVE, this, this.onMouseMove);
+            this.picBox.on(Laya.Event.MOUSE_UP, this, this.onMouseUp);
+        };
+        Swiper.prototype.onMouseMove = function () {
+            this.picBox.y = Laya.stage.mouseY - this.mouseDownPosition + this.beginPosition;
+        };
+        Swiper.prototype.onMouseUp = function () {
+            this.mouseUpPosition = Laya.stage.mouseY;
+            this.picBox.off(Laya.Event.MOUSE_MOVE, this, this.onMouseMove);
+            this.picBox.off(Laya.Event.MOUSE_UP, this, this.onMouseUp);
+            this.picBox.off(Laya.Event.MOUSE_DOWN, this, this.onMouseDown);
+            this.goSwiper();
+        };
+        Swiper.prototype.goSwiper = function () {
+            var dist = this.mouseUpPosition - this.mouseDownPosition;
+            if (dist > 150 && this.beginPosition != 0) {
+                this.count--;
+                Laya.Tween.to(this.picBox, { y: this.beginPosition + this.height }, 500, Laya.Ease.cubicOut, Laya.Handler.create(this, this.setting));
+            }
+            else if (dist < -150 && this.beginPosition != this.lastImgPosition) {
+                this.count++;
+                Laya.Tween.to(this.picBox, { y: this.beginPosition - this.height }, 500, Laya.Ease.cubicOut, Laya.Handler.create(this, this.setting));
+            }
+            else {
+                Laya.Tween.to(this.picBox, { y: this.beginPosition }, 500, Laya.Ease.cubicOut, Laya.Handler.create(this, this.setting));
+            }
+        };
+        Swiper.prototype.setting = function () {
+            var _this = this;
+            this.beginPosition = this.picBox.y;
+            this.picBox.on(Laya.Event.MOUSE_DOWN, this, this.onMouseDown);
+            this.downImg.on(Laya.Event.CLICK, this, this.scrollDown);
+            if (this.count === this.listArray.length - 1) {
+                this.downImg.visible = false;
+                this.timer.once(2000, null, function () {
+                    if (!_this.downImg.visible) {
+                        _this.closeImg.visible = true;
+                    }
+                });
+            }
+            else {
+                this.closeImg.visible = false;
+                this.downImg.visible = true;
+            }
+        };
+        Swiper.prototype.createrBtnImg = function (currentImg, BtnUrl) {
+            currentImg.skin = BtnUrl;
+            this.addChild(currentImg);
+            currentImg.zOrder = 9;
+            currentImg.centerX = 0;
+            currentImg.bottom = 0;
+        };
+        Swiper.prototype.scrollDown = function () {
+            if (this.count != this.listArray.length - 1) {
+                this.downImg.off(Laya.Event.CLICK, this, this.scrollDown);
+                Laya.Tween.to(this.picBox, { y: this.beginPosition - this.height }, 500, Laya.Ease.cubicOut, Laya.Handler.create(this, this.setting));
+                this.count++;
+            }
+        };
+        Swiper.prototype.closeSwiper = function () {
+            var _this = this;
+            this.visible = false;
+            this.timer.once(4000, null, function () {
+                _this.removeSelf();
+                _this.destroy(true);
+            });
+            var apiUtil = new ApiUtil();
+            apiUtil.checkNextChapter(jmt.Data.chapterinfo, this.completeHandler);
+        };
+        return Swiper;
+    }(Box));
+    game.Swiper = Swiper;
+    // 辩驳追问顶部的追问 进度条
+    var QuestionProgress = /** @class */ (function (_super) {
+        __extends(QuestionProgress, _super);
+        function QuestionProgress(view, conlist) {
+            var _this = _super.call(this) || this;
+            _this.conlist = conlist;
+            _this.centerX = 0;
+            _this.top = 290;
+            _this.createProgress();
+            _this.circleImgArray = [];
+            _this.isRightImgArray = [];
+            for (var i = 0; i < _this.conlist.length; i++) {
+                var positionX = i * (_this.progressBar.width / (_this.conlist.length - 1));
+                var cImg = _this.createCircle(positionX);
+                var rImg = _this.createIsRight(positionX);
+                _this.circleImgArray.push(cImg);
+                _this.isRightImgArray.push(rImg);
+            }
+            view.addChild(_this);
+            return _this;
+        }
+        QuestionProgress.prototype.changeRightImg = function (index, answertype, visible) {
+            var skin = 'skin/series/read_key_words_question_wrong_icon.png';
+            if (answertype) {
+                skin = 'skin/series/read_key_words_question_right_icon.png';
+            }
+            this.isRightImgArray[index].skin = skin;
+            this.isRightImgArray[index].visible = visible;
+        };
+        QuestionProgress.prototype.createProgress = function () {
+            this.progressBar = new Laya.ProgressBar('skin/common/progress_question.png');
+            this.progressBar.width = this.progressBar.width * this.conlist.length;
+            this.progressBar.value = 0;
+            this.progressBar.changeHandler = new Handler(this, this.onChange);
+            this.addChild(this.progressBar);
+        };
+        QuestionProgress.prototype.createCircle = function (position) {
+            var circleImg = new Image('skin/series/read_key_words_question_pass_icon.png');
+            circleImg.centerY = 0;
+            circleImg.anchorX = 0.5;
+            circleImg.anchorY = 0.5;
+            circleImg.x = position;
+            this.progressBar.addChild(circleImg);
+            return circleImg;
+        };
+        QuestionProgress.prototype.createIsRight = function (position) {
+            var isRightImg = new Image('skin/series/read_key_words_question_right_icon.png');
+            isRightImg.top = -isRightImg.height - 24;
+            isRightImg.anchorX = 0.5;
+            isRightImg.x = position;
+            isRightImg.visible = false;
+            this.progressBar.addChild(isRightImg);
+            return isRightImg;
+        };
+        QuestionProgress.prototype.onChange = function () {
+        };
+        return QuestionProgress;
+    }(Box));
+    game.QuestionProgress = QuestionProgress;
+    // 开启下一章节 付款页面，章节解锁，因为价格的字体大小不一样，所以单独创建了一个价格 类
+    var PriceHBox = /** @class */ (function (_super) {
+        __extends(PriceHBox, _super);
+        // public intText: string;
+        // public floatText: string;
+        function PriceHBox(view, price, color, leftFontSize, rightFontSize, savaText) {
+            var _this = _super.call(this) || this;
+            // this.space = 0;
+            _this.align = 'bottom';
+            _this.priceInt = new Label();
+            _this.priceDot = new Label();
+            _this.priceDot.text = '.';
+            _this.priceFloat = new Label();
+            if (savaText) {
+                _this.priceSavaText = new Label();
+                _this.priceSavaText.text = savaText;
+                _this.createrLable(_this.priceSavaText, color, rightFontSize);
+            }
+            _this.createPrice(price);
+            _this.createrLable(_this.priceInt, color, leftFontSize);
+            _this.createrLable(_this.priceDot, color, leftFontSize);
+            _this.createrLable(_this.priceFloat, color, rightFontSize);
+            view.addChild(_this);
+            return _this;
+        }
+        PriceHBox.prototype.createPrice = function (price) {
+            var priceString = price.toString();
+            if (priceString.indexOf('.') > -1) {
+                var priceArayy = priceString.split('.');
+                this.priceInt.text = '￥' + priceArayy[0];
+                this.priceFloat.text = priceArayy[1];
+            }
+            else {
+                this.priceInt.text = '￥' + priceString;
+                this.priceFloat.text = '00';
+            }
+        };
+        PriceHBox.prototype.createrLable = function (numberM, color, size) {
+            numberM.color = color;
+            numberM.font = jmt.Skin.FONT;
+            numberM.fontSize = size;
+            // numberM.italic = true;
+            this.addChild(numberM);
+        };
+        return PriceHBox;
+    }(Laya.HBox));
+    game.PriceHBox = PriceHBox;
+    var FloatClipBox = /** @class */ (function (_super) {
+        __extends(FloatClipBox, _super);
+        function FloatClipBox(view, text, opinfo, skin) {
+            var _this = _super.call(this) || this;
+            view.addChild(_this);
+            if (!skin) {
+                skin = jmt.Skin.OPTION_KEYWORD_STONE1;
+            }
+            _this.opinfo = opinfo;
+            _this.clipBox = new Box();
+            _this.addChild(_this.clipBox);
+            _this.clipImg = new Image();
+            _this.clipBox.addChild(_this.clipImg);
+            // this.clipBox.alpha=0;
+            _this.clipImg.loadImage(skin, 0, 0, null, null, Handler.create(_this, _this.onLoad));
+            _this.clipText = new Text();
+            _this.clipText.text = text;
+            _this.clipText.color = '#dddddd';
+            // this.clipText.bgColor = '#ff0000';
+            _this.clipText.align = 'center';
+            _this.clipText.valign = 'middle';
+            _this.clipText.font = jmt.Skin.FONT;
+            _this.clipText.fontSize = 28;
+            _this.clipText.width = 120;
+            _this.clipText.height = 70;
+            _this.clipText.x = 60;
+            _this.clipText.y = 120;
+            if (skin == jmt.Skin.OPTION_KEYWORD_STONE2) {
+                _this.clipText.x = 30;
+            }
+            else if (skin == jmt.Skin.OPTION_KEYWORD_STONE3) {
+                _this.clipText.x = 50;
+                _this.clipText.y = 60;
+                _this.clipText.width = 200;
+            }
+            else if (skin == jmt.Skin.OPTION_KEYWORD_STONE4) {
+                _this.clipText.x = 30;
+                _this.clipText.y = 60;
+                _this.clipText.width = 160;
+            }
+            else if (skin == jmt.Skin.OPTION_KEYWORD_STONE5) {
+                _this.clipText.x = 50;
+                _this.clipText.y = 70;
+                _this.clipText.width = 150;
+            }
+            else if (skin == jmt.Skin.OPTION_KEYWORD_STONE6) {
+                _this.clipText.x = 80;
+                _this.clipText.y = 60;
+                _this.clipText.width = 180;
+            }
+            _this.clipBox.addChild(_this.clipText);
+            _this.glowFilter = new Laya.GlowFilter("#dddddd", 0, 0, 0);
+            //添加发光滤镜
+            _this.clipText.filters = [_this.glowFilter];
+            return _this;
+            // Laya.Tween.from(this.clipBox,{scaleX:3,scaleY:3,alpha:0},300,Laya.Ease.backOut);
+        }
+        //请求到接口，显示错误碎片
+        FloatClipBox.prototype.showErrorTatter = function () {
+            this.clipText.color = '#666666';
+            this.clipImg.disabled = true;
+        };
+        FloatClipBox.prototype.onHover = function () {
+            this.glowFilter = new Laya.GlowFilter("#ee0000", 10, 0, 0);
+            //添加发光滤镜
+            this.clipText.filters = [this.glowFilter];
+        };
+        FloatClipBox.prototype.onOut = function () {
+            this.glowFilter = new Laya.GlowFilter("#dddddd", 0, 0, 0);
+            //添加发光滤镜
+            this.clipText.filters = [this.glowFilter];
+        };
+        FloatClipBox.prototype.onLoad = function () {
+            this.clipBox.width = this.clipImg.width;
+            this.clipBox.height = this.clipImg.height;
+            this.width = this.clipImg.width + 10;
+            this.height = this.clipImg.height + 10;
+            // this.pivot(this.width/2,this.height/2);
+            // this.alpha=0;
+            // this.scale(3,3);
+            // Laya.Tween.to(this,{scaleX:1,scaleY:1,alpha:1},300,Laya.Ease.backOut);
+            this.moveFloat();
+        };
+        FloatClipBox.prototype.moveFloat = function () {
+            var max = 100;
+            var min = 1;
+            var movex = this.clipBox.x;
+            var movey = this.clipBox.y;
+            var rannum = Math.floor(Math.random() * (max - min + 1) + min);
+            if (rannum > 50) {
+                movex += 5;
+            }
+            else {
+                movex -= 5;
+            }
+            var rannum = Math.floor(Math.random() * (max - min + 1) + min);
+            if (rannum > 50) {
+                movey += 5;
+            }
+            else {
+                movey -= 5;
+            }
+            if (movex < -10) {
+                movex = -10;
+            }
+            else if (movex > 30) {
+                movex = 30;
+            }
+            if (movey < -10) {
+                movey = -10;
+            }
+            else if (movey > 30) {
+                movey = 30;
+            }
+            Laya.Tween.to(this.clipBox, { x: movex, y: movey }, 1000, null, Handler.create(this, this.moveFloat), null, null, true);
+        };
+        return FloatClipBox;
+    }(Box));
+    game.FloatClipBox = FloatClipBox;
+    var OptionTimeBox = /** @class */ (function (_super) {
+        __extends(OptionTimeBox, _super);
+        function OptionTimeBox(time, complete) {
+            var _this = _super.call(this) || this;
+            _this.startAngle = -90;
+            _this.time = 10;
+            _this.speed = 20;
+            _this.pieNum = 500;
+            if (complete) {
+                _this.completeHandler = complete;
+            }
+            if (time) {
+                _this.time = time * 1000;
+                _this.pieNum = Math.ceil(_this.time / _this.speed);
+            }
+            _this.width = 285;
+            _this.height = 350;
+            _this.titleBox = new Box();
+            _this.titleBox.width = _this.width;
+            _this.addChild(_this.titleBox);
+            _this.titleImg = new Image(jmt.Skin.READ_TIME_TITLE);
+            _this.titleImg.centerX = 0;
+            // this.titleImg.centerY = 0;
+            _this.titleImg.pivot(_this.titleImg.width / 2, _this.titleImg.height / 2);
+            _this.titleBox.addChild(_this.titleImg);
+            _this.clockBox = new Box();
+            _this.addChild(_this.clockBox);
+            _this.clockBox.height = 215;
+            _this.clockBox.width = 215;
+            _this.clockBox.centerX = 0;
+            _this.addChild(_this.clockBox);
+            _this.maskImg = new Sprite();
+            _this.clockBox.addChild(_this.maskImg);
+            _this.maskImg.height = 215;
+            // this.maskImg.graphics.drawRect(0,0,110,110,'#ff0000');
+            // this.clockImg.mask=this.maskImg;
+            _this.clockImg = new Image(jmt.Skin.READ_TIME_CLOCK);
+            _this.clockBox.addChild(_this.clockImg);
+            _this.clockImg.height = 215;
+            _this.pointerImg = new Image(jmt.Skin.READ_TIME_POINTER);
+            _this.pointerImg.y = _this.pointerImg.height - 2;
+            _this.pointerImg.x = _this.pointerImg.height - 2;
+            _this.pointerImg.pivot(_this.pointerImg.width / 2, _this.pointerImg.height - 10);
+            // this.pointerImg.rotation=60;
+            _this.clockBox.addChild(_this.pointerImg);
+            _this.showSmall();
+            _this.draw();
+            return _this;
+        }
+        OptionTimeBox.prototype.showBig = function () {
+            Laya.Tween.to(this.titleImg, { scaleX: 1, scaleY: 1 }, 30, null, Handler.create(this, this.showSmall));
+        };
+        OptionTimeBox.prototype.showSmall = function () {
+            Laya.Tween.to(this.titleImg, { scaleX: 0.97, scaleY: 0.97 }, 30, null, Handler.create(this, this.showBig));
+        };
+        OptionTimeBox.prototype.draw = function () {
+            this.maskImg.graphics.clear();
+            this.maskImg.graphics.drawPie(108, 108, 78, this.startAngle, 270, "#8b1616");
+            if (this.startAngle < 270) {
+                var an = Math.ceil(360 / this.pieNum);
+                this.startAngle += an;
+                this.pointerImg.rotation += an;
+                Laya.timer.once(this.speed, this, this.draw);
+            }
+            else {
+                if (this.completeHandler) {
+                    this.completeHandler.run();
+                    Laya.Tween.clearAll(this);
+                    jmt.util.Sound.stopAllSound();
+                }
+            }
+        };
+        OptionTimeBox.prototype.destroy = function (destroyChild) {
+            if (destroyChild === void 0) { destroyChild = true; }
+            Laya.Tween.clearAll(this);
+            // this.removeSelf();
+            // this.removeChildren();
+            _super.prototype.destroy.call(this, destroyChild);
+        };
+        return OptionTimeBox;
+    }(Laya.VBox));
+    game.OptionTimeBox = OptionTimeBox;
+    var BackgroundBox = /** @class */ (function (_super) {
+        __extends(BackgroundBox, _super);
+        // protected _clickHandler:Handler;
+        function BackgroundBox(view, bgurl) {
+            var _this = _super.call(this) || this;
+            _this.showNum = 0;
+            view.addChild(_this);
+            _this.width = view.width;
+            _this.height = view.height + 2;
+            _this.bgImg = new Image();
+            _this.bgImg2 = new Image();
+            _this.bgImg3 = new Sprite();
+            _this.addChild(_this.bgImg3);
+            _this.addChild(_this.bgImg2);
+            _this.addChild(_this.bgImg);
+            _this.bgImg.width = _this.width;
+            _this.bgImg.height = _this.height;
+            _this.bgImg2.width = _this.width;
+            _this.bgImg2.height = _this.height;
+            _this.bgImg3.width = _this.width;
+            _this.bgImg3.height = _this.height;
+            if (bgurl) {
+                _this._bgurl = bgurl;
+                _this.bgImg.skin = _this._bgurl;
+            }
+            return _this;
+        }
+        // initialize():void {
+        // 	if (this._mouseEnableState !== 1)
+        // 	{
+        // 		this.mouseEnabled = true;
+        // 		this._setBit(Laya.Node.MOUSEENABLE, true);	
+        // 	}
+        // 	// this._createListener(Event.MOUSE_OVER, this, this.onMouse,null,false,false);
+        // 	// this._createListener(Event.MOUSE_OUT, this, this.onMouse,null,false,false);
+        // 	// this._createListener(Event.MOUSE_DOWN, this, this.onMouse,null,false,false);
+        // 	// this._createListener(Event.MOUSE_UP, this, this.onMouse,null,false,false);
+        // 	this._createListener(Event.CLICK, this.bgImg, this.onMouse,null,false,false);
+        // }
+        // protected onMouse(e:Event):void {
+        // 	if (e.type === Event.CLICK) {
+        // 		this._clickHandler && this._clickHandler.run();
+        // 		return;
+        // 	}
+        // }
+        // public get clickHandler():Handler {
+        // 	return this._clickHandler;
+        // }
+        // public set clickHandler(value:Handler) {
+        // 	this._clickHandler = value;
+        // }
+        BackgroundBox.prototype.error = function () {
+            this.errorImg = new Image(jmt.Skin.ERROR_NET_ICON);
+            this.addChild(this.errorImg);
+            this.errorImg.centerX = 0;
+            this.errorImg.centerY = 0;
+        };
+        BackgroundBox.prototype.removeError = function () {
+            if (this.errorImg) {
+                this.errorImg.removeSelf();
+            }
+        };
+        Object.defineProperty(BackgroundBox.prototype, "bgurl", {
+            set: function (value) {
+                if (this.errorImg) {
+                    this.errorImg.removeSelf();
+                }
+                if (this._bgurl != value) {
+                    this._bgurl = value;
+                    if (this._bgurl == '' || this._bgurl == 'black' || this._bgurl == 'white') {
+                        this.show3();
+                        this.hide();
+                        this.hide2();
+                    }
+                    else {
+                        if (this.showNum == 0) {
+                            this.show();
+                        }
+                        else if (this.showNum == 1) {
+                            this.hide();
+                            this.show2();
+                        }
+                        else if (this.showNum == 2) {
+                            this.hide2();
+                            this.show();
+                        }
+                    }
+                }
+                // if (this.bgImg.skin||this.bgImg.skin=='') {
+                //     this.hide();
+                // }else{
+                //     this.show();
+                // }          
+            },
+            enumerable: true,
+            configurable: true
+        });
+        // public onClick(type:string,caller:any,func:Function){
+        //     this.bgImg.on(type,caller,func);
+        // }
+        // public on(type: string, caller: any, listener: Function, args?: Array<any>): Laya.EventDispatcher{
+        //     return this.bgImg.on(type,caller,listener);
+        // }
+        BackgroundBox.prototype.hideComplete = function (url) {
+            if (url) {
+                jmt.Resource.clearTextureRes(url);
+            }
+        };
+        BackgroundBox.prototype.hide = function () {
+            Laya.Tween.to(this.bgImg, { alpha: 0 }, 1500, null, Handler.create(this, this.hideComplete, [this.bgImg.skin]));
+        };
+        BackgroundBox.prototype.show = function () {
+            this.showNum = 1;
+            this.bgImg.skin = this._bgurl;
+            Laya.Tween.to(this.bgImg, { alpha: 1 }, 1500);
+        };
+        BackgroundBox.prototype.hide2 = function () {
+            Laya.Tween.to(this.bgImg2, { alpha: 0 }, 1500, null, Handler.create(this, this.hideComplete, [this.bgImg2.skin]));
+        };
+        BackgroundBox.prototype.show2 = function () {
+            this.showNum = 2;
+            this.bgImg2.skin = this._bgurl;
+            Laya.Tween.to(this.bgImg2, { alpha: 1 }, 1500);
+        };
+        BackgroundBox.prototype.show3 = function () {
+            this.showNum = 0;
+            if (this._bgurl == 'white') {
+                this.bgImg3.graphics.drawRect(0, 0, this.width, this.height, '#ffffff');
+            }
+            else {
+                this.bgImg3.graphics.drawRect(0, 0, this.width, this.height, '#000000');
+            }
+        };
+        return BackgroundBox;
+    }(Box));
+    game.BackgroundBox = BackgroundBox;
+    /**
+     * 多立绘盒子
+     */
+    var MultiRoleBox = /** @class */ (function (_super) {
+        __extends(MultiRoleBox, _super);
+        function MultiRoleBox(view) {
+            var _this = _super.call(this) || this;
+            _this.boxList = [];
+            _this.roleNum = 0;
+            _this.roleMap = {};
+            _this.lurenpos = 0;
+            _this._movespeed = 500;
+            _this._delspeed = 200;
+            _this._showspeed = 400;
+            view.addChild(_this);
+            _this.top = 0;
+            _this.bottom = 0;
+            _this.left = 0;
+            _this.right = 0;
+            return _this;
+        }
+        Object.defineProperty(MultiRoleBox.prototype, "showspeed", {
+            set: function (value) {
+                this._showspeed = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(MultiRoleBox.prototype, "movespeed", {
+            set: function (value) {
+                this._movespeed = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(MultiRoleBox.prototype, "delspeed", {
+            set: function (value) {
+                this._delspeed = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        MultiRoleBox.prototype.beroleMap = function (list) {
+            this.roleMap = {};
+            for (var i = 0; i < list.length; i++) {
+                var role = list[i];
+                var roleid = role.roleid;
+                role.index = i;
+                this.roleMap[roleid] = role;
+            }
+        };
+        MultiRoleBox.prototype.existRole = function (roleid) {
+            if (this.roleMap) {
+                if (this.roleMap[roleid]) {
+                    return this.roleMap[roleid].index;
+                }
+            }
+            return null;
+        };
+        // 移除
+        MultiRoleBox.prototype.removeRole = function () {
+            for (var key in this.boxList) {
+                if (this.boxList.hasOwnProperty(key)) {
+                    var box = this.boxList[key];
+                    if (!this.roleMap[box.roleid]) {
+                        //不存在下一个列表则移除
+                        delete this.boxList[key];
+                        box.remove(this._delspeed);
+                    }
+                }
+            }
+        };
+        MultiRoleBox.prototype.clearRole = function () {
+            this.lurenpos = 0;
+            this.roleMap = {};
+            this.roleNum = 0;
+            for (var key in this.boxList) {
+                if (this.boxList.hasOwnProperty(key)) {
+                    var box = this.boxList[key];
+                    delete this.boxList[key];
+                    box.remove(this._delspeed);
+                }
+            }
+        };
+        MultiRoleBox.prototype.changeRoleEmoji = function (roleid, emoji) {
+            if (emoji === void 0) { emoji = 'emoji_0'; }
+            var existbox = null;
+            if (this.boxList && this.boxList[roleid]) {
+                existbox = this.boxList[roleid];
+                if (existbox.covertype == 1) {
+                    if (existbox.emoji != emoji) {
+                        existbox.changeEmoji(emoji);
+                    }
+                }
+            }
+        };
+        MultiRoleBox.prototype.stopSaying = function (roleid) {
+            var existbox = null;
+            if (this.boxList && this.boxList[roleid]) {
+                existbox = this.boxList[roleid];
+                if (existbox.covertype == 1) {
+                    var emojiarr = existbox.emoji.split('_');
+                    if (emojiarr.length > 2) {
+                        var emoji = existbox.emoji.substr(0, existbox.emoji.length - 2);
+                        existbox.changeEmoji(emoji);
+                    }
+                }
+            }
+        };
+        MultiRoleBox.prototype.addRoleList = function (list) {
+            if (!list) {
+                return;
+            }
+            this.roleNum = list.length;
+            this.beroleMap(list); //
+            this.removeRole(); //
+            // console.log(list);
+            for (var key in this.roleMap) {
+                if (this.roleMap.hasOwnProperty(key)) {
+                    var role = this.roleMap[key];
+                    var existbox = null;
+                    if (this.boxList && this.boxList[role.roleid]) {
+                        existbox = this.boxList[role.roleid];
+                    }
+                    if (!existbox) {
+                        //不存在则添加
+                        // console.log("not existbox: ");
+                        // console.log(role);
+                        if (role.spine && role.spine != '') {
+                            //添加骨骼动画立绘
+                            this.addRole(role, role.spine, role.emoji);
+                        }
+                        else if (role.cover && role.cover != '') {
+                            //添加图片立绘
+                            this.addRole(role, role.cover, '', true);
+                        }
+                    }
+                    else {
+                        //已存在，改变表情动作
+                        if (role.cover && role.cover != '') {
+                            // console.log("existbox: ");
+                            // console.log(role);
+                            //图片立绘替换表情图片
+                            existbox.changeEmoji(role.cover);
+                        }
+                        else {
+                            if (existbox.emoji != role.emoji) {
+                                //骨骼动画立绘改变表情
+                                existbox.changeEmoji(role.emoji);
+                            }
+                        }
+                        //已存在，改变位置
+                        if (this.roleNum == 1) {
+                            if (existbox.index != role.index) {
+                                existbox.moveMiddle(this._movespeed, role.front);
+                            }
+                            else {
+                                //
+                            }
+                        }
+                        else if (this.roleNum == 2) {
+                            if (role.index == 0) {
+                                existbox.moveLeft(1, this._movespeed, role.front);
+                            }
+                            else if (role.index == 1) {
+                                existbox.moveRight(1, this._movespeed, role.front);
+                            }
+                        }
+                        else if (this.roleNum == 3) {
+                            if (role.index == 0) {
+                                existbox.moveLeft(0, this._movespeed, role.front);
+                            }
+                            else if (role.index == 1) {
+                                existbox.moveMiddle(this._movespeed, role.front);
+                            }
+                            else if (role.index == 2) {
+                                existbox.moveRight(0, this._movespeed, role.front);
+                            }
+                        }
+                        if (role.front == 1) {
+                            existbox.zOrder = 9;
+                        }
+                        else {
+                            existbox.zOrder = 0;
+                        }
+                    }
+                }
+            }
+        };
+        MultiRoleBox.prototype.addRole = function (role, sk, emoji, imgrole) {
+            // var sk = 'http://res.er.52jimu.com/role/9d/5c/9d5cbd3f25fabcb3ae53c7c1da7d81b4.sk';
+            // var skimg = 'http://res.er.52jimu.com/role/9d/5c/9d5cbd3f25fabcb3ae53c7c1da7d81b4.png';
+            var x = this.width / 2;
+            if (this.roleNum == 1 && role.type == 2) {
+                if (this.lurenpos == 0) {
+                    x = 0 - this.width / 4;
+                }
+                else {
+                    x = this.width + this.width / 4;
+                }
+            }
+            else if (this.roleNum == 2) {
+                if (role.index == 0) {
+                    x = 0 - this.width / 4;
+                }
+                else if (role.index == 1) {
+                    x = this.width + this.width / 4;
+                }
+            }
+            else if (this.roleNum == 3) {
+                if (role.index == 0) {
+                    x = 0 - this.width / 4;
+                }
+                else if (role.index == 2) {
+                    x = this.width + this.width / 4;
+                }
+            }
+            if (imgrole) {
+                // console.log('imgrole:'+imgrole);
+                // console.log(role);
+                //添加图片立绘
+                var imgrolebox = new game.ImgRoleBox(this, role, x, this.height);
+                imgrolebox.load(sk, Handler.create(this, this.moveRole));
+                imgrolebox.bottom = 0;
+                imgrolebox.zOrder = 1;
+                this.boxList[role.roleid] = imgrolebox;
+            }
+            else {
+                //添加骨骼动画立绘
+                var rolebox = new game.SpineRoleBox(this, role, x, this.height);
+                rolebox.showspeed = this._showspeed;
+                rolebox.load(sk, emoji, Handler.create(this, this.moveRole));
+                rolebox.bottom = 0;
+                rolebox.zOrder = 1;
+                this.boxList[role.roleid] = rolebox;
+            }
+        };
+        MultiRoleBox.prototype.moveRole = function (obj) {
+            // console.log('============moveRole===============');
+            // console.log(this.roleNum);
+            // console.log(obj);
+            if (obj.roleinfo.front == 1) {
+                obj.zOrder = 9;
+            }
+            else {
+                obj.zOrder = 0;
+            }
+            if (this.roleNum == 1) {
+                // console.log("=============="+obj.type+"=============");
+                if (obj.type == 2) {
+                    if (this.lurenpos == 0) {
+                        obj.moveLeft(1, this._movespeed, obj.roleinfo.front);
+                        this.lurenpos = 1;
+                    }
+                    else {
+                        obj.moveRight(1, this._movespeed, obj.roleinfo.front);
+                        this.lurenpos = 0;
+                    }
+                }
+                else {
+                    // console.log("==============obj.moveMiddle=============");
+                    obj.moveMiddle(this._movespeed, obj.roleinfo.front);
+                }
+            }
+            else if (this.roleNum == 2) {
+                if (obj.index == 0) {
+                    obj.moveLeft(1, this._movespeed, obj.roleinfo.front);
+                }
+                else if (obj.index == 1) {
+                    obj.moveRight(1, this._movespeed, obj.roleinfo.front);
+                }
+            }
+            else if (this.roleNum == 3) {
+                if (obj.index == 0) {
+                    obj.moveLeft(0, this._movespeed, obj.roleinfo.front);
+                }
+                else if (obj.index == 1) {
+                    obj.moveMiddle(this._movespeed, obj.roleinfo.front);
+                }
+                else if (obj.index == 2) {
+                    obj.moveRight(0, this._movespeed, obj.roleinfo.front);
+                }
+            }
+        };
+        return MultiRoleBox;
+    }(Box));
+    game.MultiRoleBox = MultiRoleBox;
+    /**
+     * 图片立绘
+     */
+    var ImgRoleBox = /** @class */ (function (_super) {
+        __extends(ImgRoleBox, _super);
+        function ImgRoleBox(view, role, x, y, wp) {
+            if (wp === void 0) { wp = 0.7; }
+            var _this = _super.call(this) || this;
+            _this.mStartX = 400;
+            _this.mStartY = 500;
+            _this.index = 0;
+            _this.roleid = 0;
+            _this.type = 0;
+            _this.covertype = 0;
+            _this.postype = 0;
+            _this.realWidth = 500;
+            _this.scaleper = 1;
+            _this.mPlay = false;
+            _this.isdelete = false;
+            _this._showspeed = 500;
+            _this.roleinfo = role;
+            _this.index = role.index;
+            _this.roleid = role.roleid;
+            _this.type = parseInt(role.type);
+            // this.maskBox = new Sprite();
+            view.addChild(_this);
+            _this.top = 0;
+            _this.bottom = 0;
+            _this.left = 0;
+            _this.right = 0;
+            _this.mStartX = x;
+            _this.mStartY = y;
+            // var width = view.width/2;
+            var width = view.width * wp;
+            // console.log("width: "+width);
+            _this.scaleper = width / _this.realWidth;
+            return _this;
+            // console.log("scaleper: "+this.scaleper);
+        }
+        Object.defineProperty(ImgRoleBox.prototype, "showspeed", {
+            set: function (value) {
+                this._showspeed = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        //加载动画
+        ImgRoleBox.prototype.load = function (imgUrl, complete) {
+            if (!imgUrl || imgUrl == '') {
+                return;
+            }
+            // console.log('load:'+this.emoji);
+            if (complete) {
+                this.completeHandler = complete;
+            }
+            this.imgUrl = imgUrl;
+            this.roleImg = new Laya.Image();
+            this.roleImg.bottom = 0;
+            this.roleImg.alpha = 0;
+            Laya.loader.load(this.imgUrl, Handler.create(this, this.loadComplete), null, Laya.Loader.IMAGE);
+            // this.roleImg.on(Laya.Event.LOADED,this,this.loadComplete);
+        };
+        ImgRoleBox.prototype.loadComplete = function () {
+            // console.log('===========图片立绘加载完成==========');
+            this.roleImg.skin = this.imgUrl;
+            this.addChild(this.roleImg);
+            this.roleImg.pivotX = this.roleImg.width / 2;
+            this.roleImg.x = this.mStartX;
+            // this.roleImg.centerX = 0;
+            // this.roleImg.centerY = 0;
+            // console.log("loadComplete-x:"+this.roleImg.x);
+            //图片立绘加载完成，根据图片高度，显示盘白说话对话框的位置
+            if (ReadingView._instans) {
+                if (ReadingView._instans.speakType == SpeakType.supportingRole) {
+                    var scalePix = (Laya.stage.width) / this.roleImg.width;
+                    scalePix = scalePix.toFixed(2);
+                    this.roleImg.width = Laya.stage.width;
+                    this.roleImg.height = this.roleImg.height * scalePix;
+                    //加载图片完成，根据图片宽高，改变打字对话框的位置
+                    var posY = this.roleImg.height * 0.66;
+                    SpeakManager.instance().changePos(posY);
+                }
+            }
+            this.show();
+            if (this.completeHandler) {
+                this.completeHandler.runWith(this);
+            }
+            if (this.isdelete) {
+                this.remove();
+            }
+        };
+        //改变表情
+        ImgRoleBox.prototype.changeEmoji = function (skin) {
+            // console.log("changeEmoji:"+skin);
+            if (this.roleImg) {
+                this.roleImg.skin = skin;
+            }
+        };
+        ImgRoleBox.prototype.play = function (skin) {
+            this.roleImg.skin = skin;
+        };
+        ImgRoleBox.prototype.show = function () {
+            Laya.Tween.to(this.roleImg, { alpha: 1 }, this._showspeed);
+        };
+        ImgRoleBox.prototype.hide = function () {
+            Laya.Tween.to(this.roleImg, { alpha: 0 }, 300);
+        };
+        ImgRoleBox.prototype.remove = function (speed) {
+            if (speed === void 0) { speed = 200; }
+            this.isdelete = true;
+            if (this.roleImg) {
+                var param = { x: this.roleImg.x };
+                if (this.postype == 1) {
+                    param.x = 0;
+                    Laya.Tween.to(this.roleImg, param, speed);
+                }
+                else if (this.postype == 2) {
+                    param.x = this.width;
+                    Laya.Tween.to(this.roleImg, param, speed);
+                }
+                Laya.Tween.to(this.roleImg, { alpha: 0 }, speed, null, Handler.create(this, this.removeComplete));
+            }
+        };
+        ImgRoleBox.prototype.removeComplete = function () {
+            try {
+                if (this.roleImg) {
+                    this.roleImg.removeSelf();
+                    this.roleImg.destroy(true);
+                }
+                this.removeChildren();
+                this.destroyChildren();
+                this.removeSelf();
+                this.destroy(true);
+            }
+            catch (error) {
+                // jmt.Print.log(error);
+            }
+        };
+        ImgRoleBox.prototype.resize = function (front) {
+            if (front === void 0) { front = 1; }
+            if (front == 1) {
+                Laya.Tween.to(this.roleImg, { scaleX: this.scaleper, scaleY: this.scaleper }, this._showspeed);
+                // this.disabled=true;                
+                // this.maskBox.alpha=1;
+                this.hideMask();
+            }
+            else {
+                Laya.Tween.to(this.roleImg, { scaleX: this.scaleper - 0.05, scaleY: this.scaleper - 0.05 }, this._showspeed);
+                // this.maskBox.alpha=0.8;
+                // this.disabled=true;
+                this.showMask();
+            }
+        };
+        /**
+         * 黑影遮罩
+         */
+        ImgRoleBox.prototype.showMask = function () {
+            if (!this.coverBlack) {
+                this.coverBlack = new Image('skin/common/cover_black.png');
+                this.addChild(this.coverBlack);
+                this.coverBlack.alpha = 0;
+            }
+            else {
+                this.coverBlack.visible = true;
+                this.coverBlack.alpha = 0;
+            }
+            // console.log(this.roleImg.getBounds());
+            var rectbound = this.roleImg.getBounds();
+            // console.log(this.roleinfo);
+            // console.log(rectbound);
+            this.coverBlack.width = rectbound.width + 150;
+            this.coverBlack.height = rectbound.height;
+            this.coverBlack.x = rectbound.x - 50;
+            this.coverBlack.y = rectbound.y - 100;
+            Laya.Tween.to(this.coverBlack, { alpha: 0.15 }, this._showspeed);
+        };
+        ImgRoleBox.prototype.hideMask = function () {
+            if (this.coverBlack) {
+                // this.coverBlack.visible=false;
+                Laya.Tween.to(this.coverBlack, { alpha: 0 }, this._showspeed);
+            }
+        };
+        ImgRoleBox.prototype.moveLeft = function (pos, speed, front) {
+            if (pos === void 0) { pos = 0; }
+            if (speed === void 0) { speed = 500; }
+            if (front === void 0) { front = 1; }
+            if (this.roleImg) {
+                this.postype = 1;
+                if (pos == 1) {
+                    Laya.Tween.to(this.roleImg, { x: (this.width / 2 - this.width / 4) }, speed, null, Handler.create(this, this.resize, [front]));
+                }
+                else {
+                    Laya.Tween.to(this.roleImg, { x: (this.width / 2 - this.width / 4 - this.width / 16) }, speed, null, Handler.create(this, this.resize, [front]));
+                }
+            }
+        };
+        ImgRoleBox.prototype.moveRight = function (pos, speed, front) {
+            if (pos === void 0) { pos = 0; }
+            if (speed === void 0) { speed = 500; }
+            if (front === void 0) { front = 1; }
+            if (this.roleImg) {
+                this.postype = 2;
+                if (pos == 1) {
+                    Laya.Tween.to(this.roleImg, { x: (this.width / 2 + this.width / 4) }, speed, null, Handler.create(this, this.resize, [front]));
+                }
+                else {
+                    Laya.Tween.to(this.roleImg, { x: (this.width / 2 + this.width / 4 + this.width / 16) }, speed, null, Handler.create(this, this.resize, [front]));
+                }
+            }
+        };
+        ImgRoleBox.prototype.moveMiddle = function (speed, front) {
+            if (speed === void 0) { speed = 500; }
+            if (front === void 0) { front = 1; }
+            if (this.roleImg) {
+                this.postype = 0;
+                Laya.Tween.to(this.roleImg, { x: this.width / 2 }, speed, null, Handler.create(this, this.resize, [front]));
+            }
+        };
+        ImgRoleBox.prototype.clear = function () {
+            this.removeChildren();
+        };
+        ImgRoleBox.prototype.onError = function () {
+        };
+        ImgRoleBox.prototype.maskRole = function () {
+            //创建模糊滤镜实例
+            var blurFilter = new Laya.BlurFilter(1);
+            // 设置模糊强度
+            // blurFilter.strength = 1;
+            this.filters = [blurFilter];
+        };
+        return ImgRoleBox;
+    }(Laya.Panel));
+    game.ImgRoleBox = ImgRoleBox;
+    /**
+     * 骨骼动画立绘
+     */
+    var SpineRoleBox = /** @class */ (function (_super) {
+        __extends(SpineRoleBox, _super);
+        function SpineRoleBox(view, role, x, y, wp) {
+            if (wp === void 0) { wp = 0.5; }
+            var _this = _super.call(this) || this;
+            _this.mStartX = 400;
+            _this.mStartY = 500;
+            _this.aniIndex = 0;
+            _this.mCurrIndex = 0;
+            _this.skinIndex = 0;
+            _this.emoji = 'emoji_0';
+            _this.index = 0;
+            _this.roleid = 0;
+            _this.type = 0;
+            _this.covertype = 1;
+            _this.postype = 0;
+            _this.realWidth = 450;
+            _this.scaleper = 1;
+            _this.mPlay = false;
+            _this.isdelete = false;
+            _this._showspeed = 500;
+            _this.roleinfo = role;
+            _this.index = role.index;
+            _this.roleid = role.roleid;
+            _this.type = role.type;
+            _this.maskBox = new Sprite();
+            view.addChild(_this);
+            _this.top = 0;
+            _this.bottom = 0;
+            _this.left = 0;
+            _this.right = 0;
+            _this.mStartX = x;
+            _this.mStartY = y;
+            // var width = view.width/2;
+            var width = view.width * wp;
+            _this.scaleper = width / _this.realWidth;
+            return _this;
+        }
+        Object.defineProperty(SpineRoleBox.prototype, "showspeed", {
+            set: function (value) {
+                this._showspeed = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        //加载动画
+        SpineRoleBox.prototype.load = function (aniUrl, emoji, complete) {
+            if (!aniUrl || aniUrl == '') {
+                return;
+            }
+            // console.log(aniUrl);
+            // console.log('load:'+emoji);
+            if (emoji) {
+                this.emoji = emoji;
+            }
+            // console.log('load:'+this.emoji);
+            if (complete) {
+                this.completeHandler = complete;
+            }
+            this.aniUrl = aniUrl;
+            this.templet = new Templet();
+            this.templet.on(Event.COMPLETE, this, this.parseComplete);
+            // this.templet.on(Event.ERROR, this, this.onError);
+            this.templet.loadAni(this.aniUrl);
+            this.maskBox.graphics.drawRect(0, 0, this.width, this.height, '#ffffff');
+            this.mask = this.maskBox;
+            this.maskBox.alpha = 0;
+            // this.show();
+        };
+        SpineRoleBox.prototype.parseComplete = function () {
+            //创建模式为1，可以启用换装
+            this.skeleton = this.templet.buildArmature(1);
+            this.skeleton.x = this.mStartX;
+            this.skeleton.y = this.mStartY;
+            this.skeleton.scale(this.scaleper, this.scaleper);
+            this.skeleton.on(Event.STOPPED, this, this.stopHandler);
+            if (!this.emojiArr) {
+                this.emojiArr = {};
+                var emojinum = this.skeleton.getAnimNum();
+                for (var i = 0; i < emojinum; i++) {
+                    var element = this.skeleton.getAniNameByIndex(i);
+                    this.emojiArr[element] = 1;
+                }
+                // console.log(this.emojiArr);
+            }
+            // console.log('emojiArr1:'+this.emoji);
+            if (!this.emojiArr[this.emoji]) {
+                //如果表情不存在则使用默认第一个
+                this.emoji = this.skeleton.getAniNameByIndex(0);
+            }
+            // console.log('emojiArr2:'+this.emoji);
+            this.play(this.emoji);
+            this.addChild(this.skeleton);
+            this.show();
+            if (this.completeHandler) {
+                this.completeHandler.runWith(this);
+            }
+            if (this.isdelete) {
+                this.remove();
+            }
+        };
+        SpineRoleBox.prototype.stopHandler = function () {
+            // this.mPlay=true;
+            // this.skeleton.texture = Laya.loader.getRes('res/99f9afee9b021c3ce3513ffeba2eb907_spine_dark.png');
+            // console.log(this.roleid);
+            // console.log(this.roleinfo);
+            if (this.skeleton) {
+                //循环播放，控制播放完一次后需要从0开始重新播放，代替循环播放参数
+                // console.log('stopHandler:'+this.emoji);
+                this.play(this.emoji);
+            }
+        };
+        //改变表情
+        SpineRoleBox.prototype.changeEmoji = function (emoji) {
+            // console.log('changeEmoji:'+emoji);
+            if (emoji) {
+                this.emoji = emoji;
+            }
+            if (!this.emojiArr || !this.emojiArr[this.emoji]) {
+                if (this.skeleton) {
+                    //如果表情不存在则使用默认第一个
+                    this.emoji = this.skeleton.getAniNameByIndex(0);
+                }
+            }
+            var starttime = 0;
+            if (this.skeleton) {
+                //切换表情，从当前播放位置切换，防止跳动
+                starttime = this.skeleton.player.currentPlayTime;
+            }
+            this.play(this.emoji, starttime);
+        };
+        SpineRoleBox.prototype.play = function (emoji, start) {
+            // console.log('play:'+emoji);
+            if (this.skeleton) {
+                //禁止自动循环播放，控制播放完一次后需要从0开始重新播放
+                this.skeleton.play(emoji, false, true, start);
+            }
+        };
+        SpineRoleBox.prototype.scaleRole = function (scaleper) {
+            if (this.skeleton) {
+                this.skeleton.scale(this.scaleper, this.scaleper);
+            }
+        };
+        SpineRoleBox.prototype.show = function () {
+            Laya.Tween.to(this.maskBox, { alpha: 1 }, this._showspeed);
+        };
+        SpineRoleBox.prototype.hide = function () {
+            Laya.Tween.to(this.maskBox, { alpha: 0 }, 300);
+        };
+        SpineRoleBox.prototype.remove = function (speed) {
+            if (speed === void 0) { speed = 200; }
+            this.isdelete = true;
+            if (this.skeleton) {
+                var param = { x: this.skeleton.x };
+                if (this.postype == 1) {
+                    param.x = 0;
+                    Laya.Tween.to(this.skeleton, param, speed);
+                }
+                else if (this.postype == 2) {
+                    param.x = this.width;
+                    Laya.Tween.to(this.skeleton, param, speed);
+                }
+                Laya.Tween.to(this.maskBox, { alpha: 0 }, speed, null, Handler.create(this, this.removeComplete));
+            }
+        };
+        SpineRoleBox.prototype.removeComplete = function () {
+            try {
+                if (this.skeleton) {
+                    this.skeleton.stop(); //停止龙骨动画播放
+                    this.skeleton.removeSelf(); //从显示列表移除龙骨动画本身
+                    // this.skeleton.removeChildren();//从显示列表移除龙骨动画子对象
+                    this.skeleton.destroy(true); //从显存销毁龙骨动画及其子对象
+                }
+                if (this.templet) {
+                    this.templet.releaseResource(true); //释放龙骨资源
+                    this.templet.destroy(); //释放动画模板类下的纹理数据                    
+                }
+                this.removeChildren();
+                this.destroyChildren();
+                this.removeSelf();
+                this.destroy(true);
+            }
+            catch (error) {
+                // jmt.Print.log(error);
+            }
+        };
+        // public destroy():void {
+        // 	this.skeleton.stop();//停止龙骨动画播放
+        // 	this.removeEvent();//移除事件
+        // 	this.skeleton.removeSelf();//从显示列表移除龙骨动画本身
+        // 	this.skeleton.removeChildren();//从显示列表移除龙骨动画子对象
+        // 	this.skeleton.destroy(true);//从显存销毁龙骨动画及其子对象
+        // 	this.templet.destroy();//释放动画模板类下的纹理数据
+        // 	this.templet.releaseResource(true);//释放龙骨资源
+        // }
+        // public removeEvent():void{
+        // 	this.templet.off(Event.COMPLETE, this, this.parseComplete);
+        // 	this.skeleton.off(Event.STOPPED, this, this.completeHandler);
+        // }
+        SpineRoleBox.prototype.resize = function (front) {
+            if (front === void 0) { front = 1; }
+            if (front == 1) {
+                // this.skeleton.scale(this.scaleper, this.scaleper);
+                Laya.Tween.to(this.skeleton, { scaleX: this.scaleper, scaleY: this.scaleper }, this._showspeed);
+                // this.disabled=true;                
+                // this.maskBox.alpha=1;
+                this.hideMask();
+            }
+            else {
+                // this.skeleton.scale(this.scaleper-0.08, this.scaleper-0.08);
+                Laya.Tween.to(this.skeleton, { scaleX: this.scaleper - 0.05, scaleY: this.scaleper - 0.05 }, this._showspeed);
+                // this.maskBox.alpha=0.8;
+                // this.disabled=true;
+                this.showMask();
+            }
+        };
+        SpineRoleBox.prototype.showMask = function () {
+            if (!this.coverBlack) {
+                this.coverBlack = new Image('skin/common/cover_black.png');
+                this.addChild(this.coverBlack);
+                this.coverBlack.alpha = 0;
+            }
+            else {
+                this.coverBlack.visible = true;
+                this.coverBlack.alpha = 0;
+            }
+            // console.log(this.skeleton.getBounds());
+            var rectbound = this.skeleton.getBounds();
+            // console.log(this.roleinfo);
+            // console.log(rectbound);
+            this.coverBlack.width = rectbound.width + 150;
+            this.coverBlack.height = rectbound.height;
+            this.coverBlack.x = rectbound.x - 50;
+            this.coverBlack.y = rectbound.y - 100;
+            Laya.Tween.to(this.coverBlack, { alpha: 0.15 }, this._showspeed);
+        };
+        SpineRoleBox.prototype.hideMask = function () {
+            if (this.coverBlack) {
+                // this.coverBlack.visible=false;
+                Laya.Tween.to(this.coverBlack, { alpha: 0 }, this._showspeed);
+            }
+        };
+        SpineRoleBox.prototype.moveLeft = function (pos, speed, front) {
+            if (pos === void 0) { pos = 0; }
+            if (speed === void 0) { speed = 500; }
+            if (front === void 0) { front = 1; }
+            if (this.skeleton) {
+                this.postype = 1;
+                if (pos == 1) {
+                    Laya.Tween.to(this.skeleton, { x: (this.width / 2 - this.width / 4) }, speed, null, Handler.create(this, this.resize, [front]));
+                }
+                else {
+                    Laya.Tween.to(this.skeleton, { x: (this.width / 2 - this.width / 4 - this.width / 16) }, speed, null, Handler.create(this, this.resize, [front]));
+                }
+            }
+        };
+        SpineRoleBox.prototype.moveRight = function (pos, speed, front) {
+            if (pos === void 0) { pos = 0; }
+            if (speed === void 0) { speed = 500; }
+            if (front === void 0) { front = 1; }
+            if (this.skeleton) {
+                this.postype = 2;
+                if (pos == 1) {
+                    Laya.Tween.to(this.skeleton, { x: (this.width / 2 + this.width / 4) }, speed, null, Handler.create(this, this.resize, [front]));
+                }
+                else {
+                    Laya.Tween.to(this.skeleton, { x: (this.width / 2 + this.width / 4 + this.width / 16) }, speed, null, Handler.create(this, this.resize, [front]));
+                }
+            }
+        };
+        SpineRoleBox.prototype.moveMiddle = function (speed, front) {
+            if (speed === void 0) { speed = 500; }
+            if (front === void 0) { front = 1; }
+            if (this.skeleton) {
+                this.postype = 0;
+                Laya.Tween.to(this.skeleton, { x: this.width / 2 }, speed, null, Handler.create(this, this.resize, [front]));
+            }
+        };
+        SpineRoleBox.prototype.clear = function () {
+            this.removeChildren();
+        };
+        SpineRoleBox.prototype.onError = function () {
+        };
+        SpineRoleBox.prototype.maskRole = function () {
+            // var colorMatrix:any = [
+            //     1, 0, 0, 0, -50,  //R
+            //     0, 1, 0, 0, -50, //G
+            //     0, 0, 1, 0, -50,  //B
+            //     0, 0, 0, 1, 0, //A
+            // ];
+            // //创建红色颜色滤镜
+            // var redFilter:Laya.ColorFilter = new Laya.ColorFilter(colorMatrix);
+            //创建模糊滤镜实例
+            var blurFilter = new Laya.BlurFilter(1);
+            // 设置模糊强度
+            // blurFilter.strength = 1;
+            this.filters = [blurFilter];
+            // this.blendMode="lighter";
+            // this.mArmature.alpha = 0.5;
+            // // this.mArmature.play(0, true);
+            // var grayMat = [
+            //     0, 0, 0, 0, 0,
+            //     0, 0, 0, 0, 0,
+            //     0, 0, 0, 0, 0,
+            //     0, 0, 0, 1, 0
+            // ];
+            // //创建一个颜色滤镜对象，灰图
+            // var scaleFilter = new Laya.ColorFilter(grayMat);
+            // this.mArmature.filters = [scaleFilter];
+        };
+        return SpineRoleBox;
+    }(Laya.Panel));
+    game.SpineRoleBox = SpineRoleBox;
+    var MidChatBox = /** @class */ (function (_super) {
+        __extends(MidChatBox, _super);
+        function MidChatBox(view, bgSkin, onnext) {
+            var _this = _super.call(this) || this;
+            _this.lineHeight = 50;
+            _this.font = jmt.Skin.FONT;
+            _this.fontSize = 34;
+            _this.fontBigSize = 56;
+            _this.printSpeed = 30;
+            _this.showSpeed = 200;
+            _this._type = 0;
+            view.addChild(_this);
+            if (onnext) {
+                _this.onnextHandler = onnext;
+            }
+            _this.left = 0;
+            _this.right = 0;
+            _this.centerY = 0;
+            _this.height = 200;
+            // this.contBox = new jmt.common.SoulTextBox(this);
+            if (bgSkin) {
+                _this.bgSkin = bgSkin;
+                _this.bgImg = new Image(_this.bgSkin);
+                _this.addChild(_this.bgImg);
+                _this.bgImg.top = 30;
+                _this.bgImg.bottom = 0;
+                _this.bgImg.left = 0;
+                _this.bgImg.right = 0;
+                _this.bgImg.on(Laya.Event.CLICK, _this, _this.onNext);
+            }
+            //打字控件
+            _this.contBox = new jmt.common.SoulTextBox(_this);
+            // this.contBox.top = 180;
+            _this.contBox.left = 80;
+            _this.contBox.right = 80;
+            _this.contBox.lineHeight = _this.lineHeight;
+            _this.contBox.fontSize = _this.fontSize;
+            _this.contBox.fontSmallSize = _this.fontSize;
+            _this.contBox.fontBigSize = _this.fontBigSize;
+            _this.contBox.printSpeed = _this.printSpeed;
+            _this.contBox.showSpeed = _this.showSpeed;
+            _this.contBox.font = _this.font;
+            return _this;
+        }
+        MidChatBox.prototype.onNext = function () {
+            if (this.onnextHandler) {
+                this.onnextHandler.run();
+            }
+        };
+        MidChatBox.prototype.show = function (type, cont, name, complete, isBgWhite) {
+            this._type = type;
+            this.contBox.printSpeed = this.printSpeed;
+            this.contBox.showSpeed = this.showSpeed;
+            if (complete) {
+                this.completeHandler = complete;
+            }
+            // if (fontsize) {
+            //     this.fontSize = fontsize;
+            // }
+            // if (lineheight) {
+            //     this.lineHeight = lineheight;
+            // }
+            var blackColor = null;
+            if (isBgWhite && isBgWhite == 'white') {
+                blackColor = '#0e0e0e';
+            }
+            this.contBox.play(cont, Handler.create(this, this.printComplete), blackColor);
+        };
+        Object.defineProperty(MidChatBox.prototype, "type", {
+            set: function (value) {
+                this._type = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        MidChatBox.prototype.goComplete = function () {
+            this.contBox.finish();
+        };
+        MidChatBox.prototype.printComplete = function (args) {
+            if (this.completeHandler) {
+                this.completeHandler.run();
+            }
+        };
+        MidChatBox.prototype.onClue = function (data) {
+        };
+        return MidChatBox;
+    }(Laya.LayoutBox));
+    game.MidChatBox = MidChatBox;
+    var ChatBox = /** @class */ (function (_super) {
+        __extends(ChatBox, _super);
+        function ChatBox(view, bgSkin, onnext) {
+            var _this = _super.call(this) || this;
+            _this.lineHeight = 50;
+            _this.font = jmt.Skin.FONT;
+            _this.fontSize = 34;
+            _this.fontBigSize = 56;
+            _this.printSpeed = 30;
+            _this.showSpeed = 200;
+            _this._type = 0;
+            view.addChild(_this);
+            if (onnext) {
+                _this.onnextHandler = onnext;
+            }
+            _this.left = 0;
+            _this.right = 0;
+            _this.bottom = 0;
+            _this.height = 330;
+            _this.bgSkin = bgSkin;
+            _this.bgImg = new Image(_this.bgSkin);
+            // this.contBox = new jmt.common.SoulTextBox(this);
+            _this.nextBtn = new FlashImage(jmt.Skin.CHAT_NEXTBTN);
+            _this.iconBox = new Animation();
+            _this.nameBox = new Box();
+            _this.addChild(_this.bgImg);
+            _this.addChild(_this.nameBox);
+            //this.addChild(this.contBox);
+            _this.addChild(_this.nextBtn);
+            _this.nameBg = new Image(jmt.Skin.CHAT_NAME_BG);
+            _this.nameBox.size(202, 98);
+            _this.nameBox.left = 10;
+            _this.nameBox.top = 65;
+            _this.nameBox.addChild(_this.nameBg);
+            _this.nameText = new Text();
+            _this.nameBox.addChild(_this.nameText);
+            _this.nameText.size(_this.nameBox.width, _this.nameBox.height);
+            _this.nameText.color = '#080707';
+            _this.nameText.font = jmt.Skin.FONT;
+            _this.nameText.fontSize = 25;
+            _this.nameText.align = 'center';
+            _this.nameText.valign = 'middle';
+            _this.bgImg.top = 30;
+            _this.bgImg.bottom = 0;
+            _this.bgImg.left = 0;
+            _this.bgImg.right = 0;
+            _this.nextBtn.right = 0;
+            _this.nextBtn.bottom = 0;
+            // this.contBox.pos(70,100);
+            // this.contBox.width = this.width-140;
+            //打字控件
+            _this.contBox = new jmt.common.SoulTextBox(_this);
+            _this.contBox.top = 170;
+            _this.contBox.left = 90;
+            _this.contBox.right = 120;
+            _this.contBox.lineHeight = _this.lineHeight;
+            _this.contBox.fontSize = _this.fontSize;
+            _this.contBox.fontSmallSize = _this.fontSize;
+            _this.contBox.fontBigSize = _this.fontBigSize;
+            _this.contBox.printSpeed = _this.printSpeed;
+            _this.contBox.showSpeed = _this.showSpeed;
+            _this.contBox.font = _this.font;
+            _this.bgImg.on(Laya.Event.CLICK, _this, _this.onNext);
+            _this.nextBtn.on(Laya.Event.CLICK, _this, _this.onNext);
+            _this.voicesImg = new Image('skin/common/read_sound_prompt.png');
+            _this.addChild(_this.voicesImg);
+            _this.voicesImg.left = _this.nameBox.width;
+            _this.voicesImg.top = 75;
+            _this.voicesImg.visible = false;
+            return _this;
+        }
+        ChatBox.prototype.onNext = function () {
+            if (this.onnextHandler) {
+                this.onnextHandler.run();
+            }
+        };
+        ChatBox.prototype.show = function (type, cont, name, isleadrole, complete, voices) {
+            this._type = type;
+            this.contBox.printSpeed = this.printSpeed;
+            this.contBox.showSpeed = this.showSpeed;
+            if (complete) {
+                this.completeHandler = complete;
+            }
+            // if (fontsize) {
+            //     this.fontSize = fontsize;
+            // }
+            // if (lineheight) {
+            //     this.lineHeight = lineheight;
+            // }
+            if (name) {
+                this.nameText.text = name;
+            }
+            if (voices) {
+                this.voicesImg.visible = true;
+            }
+            else {
+                this.voicesImg.visible = false;
+            }
+            //创建动画实例
+            if (this._type == jmt.Content.TYPE_ASIDE) {
+                this.nameBox.visible = false;
+                this.iconBox.visible = true;
+                //加载动画图集，加载成功后执行回调方法
+                this.iconBox.loadAtlas("res/atlas/skin/asideact.atlas", Laya.Handler.create(this, this.onLoadedIcon));
+                this.iconBox.interval = 100;
+                this.iconBox.play();
+            }
+            else if (this._type == jmt.Content.TYPE_TALK) {
+                this.nameBox.visible = true;
+                this.iconBox.visible = false;
+                if (isleadrole) {
+                    this.nameText.color = '#dddddd';
+                    this.nameBg.skin = jmt.Skin.CHAT_MYNAME_BG;
+                }
+                else {
+                    this.nameText.color = '#080707';
+                    this.nameBg.skin = jmt.Skin.CHAT_NAME_BG;
+                }
+            }
+            this.contBox.play(cont, Handler.create(this, this.printComplete));
+            this.reHeight();
+        };
+        Object.defineProperty(ChatBox.prototype, "type", {
+            set: function (value) {
+                this._type = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        /**
+         * 对话框高度调整
+         */
+        ChatBox.prototype.reHeight = function () {
+            var h = this.contBox.height + this.contBox.top + 20;
+            if (h > 330) {
+                this.height = h;
+                Laya.Tween.to(this, { height: h }, 300);
+            }
+            else {
+                if (this.height != 330) {
+                    Laya.Tween.to(this, { height: 330 }, 300);
+                }
+            }
+        };
+        ChatBox.prototype.goComplete = function () {
+            this.contBox.finish();
+            this.reHeight();
+        };
+        ChatBox.prototype.printComplete = function (args) {
+            // this.reHeight();
+            this.iconBox.loop = false;
+            if (this.completeHandler) {
+                this.completeHandler.run();
+            }
+        };
+        ChatBox.prototype.onLoadedIcon = function () {
+            this.addChild(this.iconBox);
+            this.iconBox.x = 30;
+        };
+        ChatBox.prototype.onClue = function (data) {
+        };
+        return ChatBox;
+    }(Laya.LayoutBox));
+    game.ChatBox = ChatBox;
+    var ChatBoxHtml = /** @class */ (function (_super) {
+        __extends(ChatBoxHtml, _super);
+        function ChatBoxHtml(bgSkin, htmlCont) {
+            var _this = _super.call(this) || this;
+            _this.htmlCont = htmlCont;
+            _this.bgSkin = bgSkin;
+            _this.bgImg = new Laya.Image(_this.bgSkin);
+            _this.chatElement = new Laya.HTMLDivElement();
+            _this.addChild(_this.bgImg);
+            _this.addChild(_this.chatElement);
+            return _this;
+            //var sp : Sprite = new Sprite();
+            //sp.graphics.fillText
+        }
+        ChatBoxHtml.prototype.init = function () {
+            this.left = 0;
+            this.right = 0;
+            this.bottom = 0;
+            this.height = 200;
+            this.bgImg.top = 0;
+            this.bgImg.bottom = 0;
+            this.bgImg.left = 0;
+            this.bgImg.right = 0;
+            this.chatElement.width = this.width - 140;
+            this.chatElement.pos(70, 130);
+            this.chatElement.innerHTML = this.htmlCont;
+            this.chatElement.pos(80, 100);
+            this.chatElement.width = this.width - 140;
+            this.chatElement.style.lineHeight = 50;
+            this.chatElement.on(Laya.Event.LINK, this, this.onClue);
+        };
+        ChatBoxHtml.prototype.onClue = function (data) {
+        };
+        return ChatBoxHtml;
+    }(Laya.LayoutBox));
+    game.ChatBoxHtml = ChatBoxHtml;
+    var GridBox = /** @class */ (function (_super) {
+        __extends(GridBox, _super);
+        function GridBox(view, columnNum, width, itemHeight, itemSkin) {
+            var _this = _super.call(this) || this;
+            // private loadingBox : game.WaveLoading;
+            _this.columnNum = 2;
+            _this.itemHeight = 100;
+            _this.itemWidth = 100;
+            _this.itemNum = 0;
+            view.addChild(_this);
+            _this.width = width;
+            _this.columnNum = columnNum;
+            _this.itemHeight = itemHeight;
+            _this.itemWidth = _this.width / _this.columnNum;
+            if (itemSkin) {
+                _this.itemSkin = itemSkin;
+            }
+            return _this;
+        }
+        GridBox.prototype.addItem = function (itemView) {
+            var itemBox = new Box();
+            this.addChild(itemBox);
+            itemBox.width = this.itemWidth;
+            itemBox.height = this.itemHeight;
+            if (this.itemSkin) {
+                var bgImg = new Sprite();
+                bgImg.loadImage(this.itemSkin, 0, 0, itemBox.width, itemBox.height);
+                itemBox.addChild(bgImg);
+            }
+            itemBox.addChild(itemView);
+            itemView.pivot(itemView.width / 2, itemView.height / 2); //设置中心为轴心的
+            itemView.x = itemBox.width / 2;
+            itemView.y = itemBox.height / 2;
+            var col = this.itemNum % this.columnNum;
+            var row = Math.floor(this.itemNum / this.columnNum);
+            itemBox.x = col * itemBox.width;
+            itemBox.y = row * itemBox.height;
+            this.itemNum++;
+        };
+        return GridBox;
+    }(Box));
+    game.GridBox = GridBox;
+    /**
+     * 自定义扩展类（测试参考List）
+     */
+    var SoulGridBox = /** @class */ (function (_super) {
+        __extends(SoulGridBox, _super);
+        function SoulGridBox(columnNum, itemHeight) {
+            var _this = _super.call(this) || this;
+            // private loadingBox : game.WaveLoading;
+            _this.columnNum = 2;
+            _this.itemHeight = 100;
+            _this.itemNum = 0;
+            _this.selectEnable = false;
+            // _cells: any;
+            _this._cells = new Array();
+            _this._startIndex = 0;
+            _this._selectedIndex = -1;
+            return _this;
+        }
+        SoulGridBox.prototype.destroy = function (destroyChild) {
+            _super.prototype.destroy.call(this, destroyChild);
+            this._itemRender = null;
+            this._cells = null;
+            this._array = null;
+            this.selectHandler = this.renderHandler = this.mouseHandler = null;
+        };
+        SoulGridBox.prototype.initItems = function () {
+            // for (var index = 0; index < this.array.length; index++) {
+            //     var item = this.array[index];
+            // }
+        };
+        Object.defineProperty(SoulGridBox.prototype, "width", {
+            set: function (value) {
+                if (value != this._width) {
+                    this.width = value;
+                    this._width = value;
+                    // super.width = value;
+                    // _setCellChanged();
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(SoulGridBox.prototype, "height", {
+            set: function (value) {
+                if (value != this._height) {
+                    this.height = value;
+                    this._height = value;
+                    // super.width = value;
+                    // _setCellChanged();
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(SoulGridBox.prototype, "itemRender", {
+            set: function (value) {
+                if (this._itemRender != value) {
+                    this._itemRender = value;
+                    //销毁老单元格
+                    for (var i = 0; i < this._cells.length; i++) {
+                        this._cells[i].destroy();
+                    }
+                    this._cells.length = 0;
+                    // _setCellChanged();
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(SoulGridBox.prototype, "array", {
+            set: function (value) {
+                // renderItem();
+                // this.runCallLater();
+                this.runCallLater(this.changeCells);
+                this._array = value || [];
+                var length = this._array.length;
+                // totalPage = Math.ceil(length / (repeatX * repeatY));
+                //重设selectedIndex
+                this._selectedIndex = this._selectedIndex < length ? this._selectedIndex : length - 1;
+                //重设startIndex
+                this.startIndex = this._startIndex;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(SoulGridBox.prototype, "startIndex", {
+            set: function (value) {
+                this._startIndex = value > 0 ? value : 0;
+                this.callLater(this.renderItems);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        SoulGridBox.prototype.renderItems = function (from, to) {
+            if (from === void 0) { from = 0; }
+            if (to === void 0) { to = 0; }
+            for (var i = from, n = to || this._cells.length; i < n; i++) {
+                this.renderItem(this._cells[i], this._startIndex + i);
+            }
+            // changeSelectStatus();
+        };
+        SoulGridBox.prototype.renderItem = function (cell, index) {
+            if (this._array && index >= 0 && index < this._array.length) {
+                cell.visible = true;
+                if (cell._$bindData) {
+                    cell._dataSource = this._array[index];
+                    this._bindData(cell, this._array[index]);
+                }
+                else {
+                    cell.dataSource = this._array[index];
+                }
+                if (!this.cacheContent) {
+                    //TODO:
+                    // this.posCell(cell, index);
+                }
+                if (this.hasListener(Event.RENDER)) {
+                    this.event(Event.RENDER, [cell, index]);
+                }
+                if (this.renderHandler) {
+                    this.renderHandler.runWith([cell, index]);
+                }
+            }
+            else {
+                cell.visible = false;
+                cell.dataSource = null;
+            }
+        };
+        SoulGridBox.prototype._bindData = function (cell, data) {
+            var arr = cell._$bindData;
+            for (var i = 0, n = arr.length; i < n; i++) {
+                var ele = arr[i++];
+                var prop = arr[i++];
+                var value = arr[i];
+                var fun = Laya.UIUtils.getBindFun(value);
+                ele[prop] = fun.call(this, data);
+            }
+        };
+        // private posCell(cell:Box, cellIndex:int):void {
+        // 	if (!_scrollBar) return;
+        // 	var lineX:int = (_isVertical ? this.repeatX : this.repeatY);
+        // 	var lineY:int = (_isVertical ? this.repeatY : this.repeatX);
+        // 	var pos:Number = Math.floor(cellIndex / lineX) * _cellSize;
+        // 	_isVertical ? cell.y = pos : cell.x = pos;
+        // }
+        SoulGridBox.prototype.addCell = function (cell) {
+            // cell.on(Event.CLICK, this, onCellMouse);
+            // cell.on(Event.RIGHT_CLICK, this, onCellMouse);
+            // cell.on(Event.MOUSE_OVER, this, onCellMouse);
+            // cell.on(Event.MOUSE_OUT, this, onCellMouse);
+            // cell.on(Event.MOUSE_DOWN, this, onCellMouse);
+            // cell.on(Event.MOUSE_UP, this, onCellMouse);
+            this._cells.push(cell);
+        };
+        SoulGridBox.prototype.onCellMouse = function (e) {
+            if (e.type === Event.MOUSE_DOWN)
+                this._isMoved = false;
+            var cell = e.currentTarget;
+            var index = this._startIndex + this._cells.indexOf(cell);
+            if (index < 0)
+                return;
+            if (e.type === Event.CLICK || e.type === Event.RIGHT_CLICK) {
+                if (this.selectEnable && !this._isMoved)
+                    this.selectedIndex = index;
+                else
+                    this.changeCellState(cell, true, 0);
+            }
+            else if ((e.type === Event.MOUSE_OVER || e.type === Event.MOUSE_OUT) && this._selectedIndex !== index) {
+                this.changeCellState(cell, e.type === Event.MOUSE_OVER, 0);
+            }
+            this.mouseHandler && this.mouseHandler.runWith([e, index]);
+        };
+        Object.defineProperty(SoulGridBox.prototype, "selectedIndex", {
+            set: function (value) {
+                if (this._selectedIndex != value) {
+                    this._selectedIndex = value;
+                    // this.changeSelectStatus();
+                    this.event(Event.CHANGE);
+                    this.selectHandler && this.selectHandler.runWith(value);
+                    //选择发生变化，自动渲染一次
+                    this.startIndex = this._startIndex;
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        SoulGridBox.prototype.changeCellState = function (cell, visable, index) {
+            var selectBox = cell.getChildByName("selectBox");
+            if (selectBox) {
+                this.selectEnable = true;
+                selectBox.visible = visable;
+                selectBox.index = index;
+            }
+        };
+        SoulGridBox.prototype.changeCells = function () {
+            this._cellChanged = false;
+            if (this._itemRender) {
+                // renderItem();
+                if (this._array) {
+                    this.runCallLater(this.renderItems);
+                }
+            }
+        };
+        SoulGridBox.prototype._setCellChanged = function () {
+            if (!this._cellChanged) {
+                this._cellChanged = true;
+                this.callLater(this.changeCells);
+            }
+        };
+        return SoulGridBox;
+    }(Box));
+    game.SoulGridBox = SoulGridBox;
+    var MySkuItem = /** @class */ (function (_super) {
+        __extends(MySkuItem, _super);
+        function MySkuItem(width, skuname, progress, type) {
+            var _this = _super.call(this) || this;
+            _this.width = width;
+            if (type == jmt.Sku.TYPE_BOTTLE) {
+                var loadingBox = new jmt.loading.WaveLoading(_this, 110);
+                loadingBox.init(progress, jmt.Skin.LOADING_WAVE_SPIRIT, jmt.Skin.LOADING_BOTTLE, jmt.Skin.LOADING_BOTTLE_COVER);
+            }
+            else if (type == jmt.Sku.TYPE_HUMAN) {
+                var loadingBox = new jmt.loading.WaveLoading(_this, 110);
+                loadingBox.init(progress, jmt.Skin.LOADING_WAVE_HUMAN, jmt.Skin.LOADING_HUMAN, jmt.Skin.LOADING_HUMAN_COVER);
+            }
+            else {
+                var loadingBox = new jmt.loading.WaveLoading(_this, 120);
+                loadingBox.init(progress, jmt.Skin.LOADING_WAVE_LOVE, jmt.Skin.LOADING_LOVE, jmt.Skin.LOADING_LOVE_COVER);
+            }
+            var sku = new Text();
+            _this.addChild(sku);
+            _this.addChild(loadingBox);
+            sku.width = _this.width;
+            // sku.pivotX = this.width/2;
+            // sku.x = this.width/2;
+            sku.y = 20;
+            sku.align = 'center';
+            sku.text = skuname;
+            sku.font = jmt.Skin.FONT;
+            sku.fontSize = 23;
+            sku.color = '#ffffff';
+            // sku.bgColor = '#ff0000';
+            loadingBox.y = 60;
+            loadingBox.x = (_this.width / 2) - (loadingBox.width / 2);
+            return _this;
+        }
+        return MySkuItem;
+    }(Box));
+    game.MySkuItem = MySkuItem;
+    var RelaSkuItem = /** @class */ (function (_super) {
+        __extends(RelaSkuItem, _super);
+        function RelaSkuItem(roleCover, rolename, progress, skuname) {
+            var _this = _super.call(this) || this;
+            _this.width = 240;
+            _this.height = 220;
+            // this.centerX = 0;
+            // this.centerY=0;
+            var coverWidth = 82;
+            var cover = new jmt.common.CircleImgBox(coverWidth, coverWidth, roleCover);
+            cover.cover = jmt.Skin.SKU_HEAD_COVER;
+            _this.addChild(cover);
+            cover.x = 20;
+            var name = new Text();
+            name.text = rolename;
+            name.font = 'SimHei';
+            name.bold = true;
+            name.fontSize = 22;
+            name.color = '#ffffff';
+            name.x = cover.x + coverWidth + 20;
+            name.y = 20;
+            var sku = new Text();
+            sku.text = skuname ? skuname : '好感度';
+            sku.font = jmt.Skin.FONT;
+            sku.fontSize = 20;
+            sku.color = '#ffffff';
+            sku.x = cover.x + coverWidth + 20;
+            sku.y = 50;
+            var loadingBox = new jmt.loading.WaveLoading(_this, 134);
+            loadingBox.init(progress, jmt.Skin.LOADING_WAVE_LOVE, jmt.Skin.LOADING_LOVE, jmt.Skin.LOADING_LOVE_COVER);
+            loadingBox.y = coverWidth + 20;
+            loadingBox.x = (_this.width / 2) - (loadingBox.width / 2);
+            _this.addChild(name);
+            _this.addChild(sku);
+            return _this;
+            // this.addChild(loadingBox);
+        }
+        return RelaSkuItem;
+    }(Box));
+    game.RelaSkuItem = RelaSkuItem;
+    //日志列表数据
+    var LogListBox = /** @class */ (function (_super) {
+        __extends(LogListBox, _super);
+        function LogListBox(loglist, width, height, parentPanel) {
+            var _this = _super.call(this) || this;
+            _this.height = 0;
+            // if (width) {
+            //     this.width=width;
+            // }
+            // if (height) {
+            //     this.height=height;
+            // }
+            _this.itemList = loglist;
+            if (parentPanel) {
+                _this.parentPanel = parentPanel;
+                _this.parentPanel.name = 'parentPanel';
+            }
+            // this.space = 15;
+            // this.align = 'left';
+            var _a = _this.Pattern(), myname = _a[0], pattern = _a[1];
+            // var myname = jmt.Data.renamerole[jmt.Data.novelinfo.leadrole.roleid];
+            // var pattern:RegExp = new RegExp(jmt.Data.novelinfo.leadrole, 'g');
+            // 滑动加载章节内容
+            _this.parentPanel.on(Laya.Event.MOUSE_DOWN, _this, _this.MouseDownHandler);
+            if (loglist) {
+                for (var i = 0; i < loglist.length; i++) {
+                    var item = loglist[i];
+                    var type = item.type;
+                    if (type == jmt.Content.TYPE_NAMECHECK || type == jmt.Content.TYPE_ROLECHECK || type == jmt.Content.TYPE_ROLEHIDE || type == jmt.Content.TYPE_SKUCHECK || type == jmt.Content.TYPE_CHECK) {
+                        continue;
+                    }
+                    // if(item.cont && pattern.test(item.cont)){
+                    //     var cont:string = item.cont;
+                    //     if(myname){
+                    //         item.cont = cont.replace(pattern, myname);
+                    //     }
+                    // }
+                    // if(item.rolename && pattern.test(item.rolename)){
+                    //     var rolename:string = item.rolename;
+                    //     if(myname){
+                    //         item.rolename = rolename.replace(pattern, myname);
+                    //     }
+                    // }
+                    _this.Replace(item, myname, pattern);
+                    var itemBox = new jmt.item.LogListItem(item);
+                    if (i > 0) {
+                        itemBox.y = _this.height + 20;
+                    }
+                    _this.addChild(itemBox);
+                    if (_this.height > height) {
+                        _this.logListIndex = i + 1;
+                        _this.itemList = _this.itemList.slice(_this.logListIndex);
+                        return _this;
+                    }
+                }
+            }
+            return _this;
+        }
+        LogListBox.prototype.Pattern = function () {
+            var myname = jmt.Data.renamerole[jmt.Data.novelinfo.leadrole.roleid];
+            if (!myname && jmt.Data.userinfo) {
+                myname = jmt.Data.userinfo.nickname;
+            }
+            var pattern = new RegExp(jmt.Data.novelinfo.leadrole.rolename, 'g');
+            return [myname, pattern];
+        };
+        LogListBox.prototype.Replace = function (item, myname, pattern) {
+            if (item.cont && pattern.test(item.cont)) {
+                var cont = item.cont;
+                if (myname) {
+                    item.cont = cont.replace(pattern, myname);
+                }
+            }
+            if (item.rolename && pattern.test(item.rolename)) {
+                var rolename = item.rolename;
+                if (myname) {
+                    item.rolename = rolename.replace(pattern, myname);
+                }
+            }
+        };
+        LogListBox.prototype.MouseDownHandler = function () {
+            this.mouseDownY = this.mouseY;
+            Laya.stage.on(Laya.Event.MOUSE_MOVE, this, this.MouseMoveHandler);
+        };
+        LogListBox.prototype.MouseMoveHandler = function () {
+            this.mouseMoveY = this.mouseY;
+            // console.log(this.mouseMoveY);
+            if ((this.mouseDownY - this.mouseMoveY) > 20) {
+                // console.log(this.itemList);
+                if (this.height < this.parentPanel.height) {
+                    return;
+                }
+                if (this.itemList.length == 0) {
+                    return;
+                }
+                this.mouseDownY = this.mouseMoveY;
+                var _a = this.Pattern(), myname = _a[0], pattern = _a[1];
+                // var myname = jmt.Data.renamerole[jmt.Data.novelinfo.leadrole.roleid];
+                // if(!myname && jmt.Data.userinfo){
+                //     myname = jmt.Data.userinfo.nickname;
+                // }
+                // var pattern:RegExp = new RegExp(jmt.Data.novelinfo.leadrole.rolename, 'g');
+                var item = this.itemList[0];
+                var type = item.type;
+                if (type == jmt.Content.TYPE_NAMECHECK || type == jmt.Content.TYPE_ROLECHECK || type == jmt.Content.TYPE_ROLEHIDE || type == jmt.Content.TYPE_SKUCHECK || type == jmt.Content.TYPE_CHECK) {
+                    this.itemList.shift();
+                    return;
+                }
+                // if(item.cont && pattern.test(item.cont)){
+                //     var cont:string = item.cont;
+                //     if(myname){
+                //         item.cont = cont.replace(pattern, myname);
+                //     }
+                // }
+                // if(item.rolename && pattern.test(item.rolename)){
+                //     var rolename:string = item.rolename;
+                //     if(myname){
+                //         item.rolename = rolename.replace(pattern, myname);
+                //     }
+                // }
+                this.Replace(item, myname, pattern);
+                var itemBox = new jmt.item.LogListItem(item);
+                itemBox.y = this.height + 20;
+                this.addChild(itemBox);
+                this.itemList.shift();
+            }
+            Laya.stage.on(Laya.Event.MOUSE_UP, this, this.MouseUpHandler);
+        };
+        LogListBox.prototype.MouseUpHandler = function () {
+            Laya.stage.off(Laya.Event.MOUSE_MOVE, this, this.MouseMoveHandler);
+        };
+        return LogListBox;
+    }(Box));
+    game.LogListBox = LogListBox;
+})(game || (game = {}));
+//# sourceMappingURL=GameUi.js.map

@@ -1,0 +1,57 @@
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+var RoleImg = (function (_super) {
+    __extends(RoleImg, _super);
+    function RoleImg() {
+        var _this = _super.call(this) || this;
+        _this.sortSkin = '1'; //未拼接的皮肤
+        _this.centerX = 0;
+        _this.bottom = 0;
+        _this.width = Laya.stage.width * 0.9;
+        _this.height = Laya.stage.height * 0.9;
+        return _this;
+    }
+    Object.defineProperty(RoleImg, "instans", {
+        get: function () {
+            if (!RoleImg._instans) {
+                RoleImg._instans = new RoleImg();
+            }
+            return RoleImg._instans;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    //初始化皮肤
+    // init(skin: string): void{
+    //     if(skin != 'fllow'){
+    //         this.alpha = 0;
+    //         this.skin = skin;
+    //         this.cureentSkin = skin;
+    //         Laya.Tween.to(this, {alpha: 1}, 1000);
+    //     }
+    // }
+    //改变皮肤
+    RoleImg.prototype.changeSkin = function (skin) {
+        if (skin && skin != 'follow' && skin != this.sortSkin) {
+            this.alpha = 0;
+            this.sortSkin = skin;
+            this.skin = jmt.Config.IMG_DOMAIN_HTTP2 + skin;
+            this.cureentSkin = jmt.Config.IMG_DOMAIN_HTTP2 + skin;
+            Laya.Tween.to(this, { alpha: 1 }, 200);
+        }
+        else if (!skin) {
+            this.skin = '';
+            this.cureentSkin = '';
+            this.sortSkin = '';
+            Laya.Tween.to(this, { alpha: 0 }, 200, null, Handler.create(this, this.clearSkin));
+        }
+    };
+    //清除皮肤
+    RoleImg.prototype.clearSkin = function () {
+    };
+    return RoleImg;
+}(Laya.Image));
+//# sourceMappingURL=BgImg.js.map

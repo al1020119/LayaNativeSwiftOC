@@ -1,0 +1,265 @@
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var StoreView = /** @class */ (function (_super) {
+    __extends(StoreView, _super);
+    // private skuPanel: Laya.Panel;
+    // private bgImg: Laya.Sprite;
+    function StoreView(type, isHome, complete) {
+        if (type === void 0) { type = 0; }
+        var _this = _super.call(this) || this;
+        _this.name = 'StoreView';
+        _this.type = 0; //0读档，1存档
+        //banner广告
+        if (jmt.GlobalData.PACKGE) {
+            if (!jmt.GlobalData.PACKGE.all.isbuy) {
+                //QQ
+                WywUtil.addQQbanner();
+                //微信
+                WxUtil.addWxBanner();
+            }
+        }
+        if (isHome) {
+            _this.isHome = isHome;
+        }
+        _this.height = Laya.stage.height;
+        _this.type = type;
+        if (complete) {
+            _this.completeHandler = complete;
+        }
+        if (_this.type == 1) {
+            _this.titleImg.skin = jmt.Skin.WORD_TITLE_STORE_SAVE;
+        }
+        _this.bgImg.skin = jmt.Skin.GENERAL_BG;
+        // this.mainBox.vScrollBarSkin="";
+        _this.btnGoback.on(Laya.Event.CLICK, _this, _this.close);
+        _this.apiUtil = new ApiUtil();
+        _this.apiUtil.storeList(Handler.create(_this, _this.getListData));
+        return _this;
+    }
+    StoreView.prototype.getListData = function (res) {
+        this.listArray = res;
+        this.initStoreList(this.listArray);
+    };
+    /**
+     * 初始化关系属性
+     * @param rolelist
+     */
+    StoreView.prototype.initStoreList = function (list) {
+        this.storeList = new LayaList();
+        this.storeList.height = this.mainBox.height;
+        this.mainBox.width = this.storeList.width;
+        this.mainBox.addChild(this.storeList);
+        this.storeList.spaceY = 15;
+        this.storeList.spaceX = 20;
+        this.storeList.centerX = 0;
+        this.storeList.repeatX = 2;
+        var row = Math.ceil(list.length / 2);
+        if (row < 1) {
+            row = 1;
+        }
+        this.storeList.repeatY = row;
+        this.storeList.itemRender = jmt.item.StoreListItem;
+        // 使用但隐藏滚动条
+        this.storeList.vScrollBarSkin = "";
+        this.storeList.selectEnable = true;
+        // this.storeList.selectHandler = new Handler(this, this.onStoreSelect);
+        this.storeList.mouseEnabled = true;
+        this.storeList.mouseHandler = new Handler(this, this.onStoreSelect);
+        this.storeList.renderHandler = new Handler(this, this.updateItem);
+        for (var i = 0; i < list.length; i++) {
+            list[i]['type'] = this.type;
+        }
+        //无限存档，请求接口，判断是否付费
+        this.checkBSV();
+        this.storeList.array = this.listArray;
+        Load.style(this.mainBox, 'alpha', 0, 1);
+        // let item = this.storeList.getCell(1);
+        // let itemParent = item.parent;
+        // console.log(item);
+        // console.log(itemParent);
+        // item.zOrder = 101;
+        // let a = new Laya.Box();
+        // a.graphics.drawRect(0,0,Laya.stage.width,Laya.stage.height, '#000000');
+        // a.alpha = 0.9;
+        // // a.width = Laya.stage.width;
+        // // a.height = Laya.stage.height;
+        // a.mouseEnabled = false;
+        // a.zOrder = 100;
+        // itemParent.addChild(a);
+    };
+    StoreView.prototype.checkBSV = function () {
+        if (this.type == 1) {
+            var apiUtil = new ApiUtil();
+            apiUtil.checkBuyShare(jmt.QQresType.STORE, jmt.Data.chapterinfo.chapterid, 0, 0, 0, Handler.create(this, this.checkStatus));
+        }
+    };
+    //得到数据
+    StoreView.prototype.checkStatus = function (res) {
+        // console.log(res);
+        this.isOption = res;
+        //每次进入页面就添加一个item
+        if (this.isOption) {
+            this.addOneListItem(this.isOption);
+        }
+    };
+    // 服务器返回的列表再添加一个item
+    StoreView.prototype.addOneListItem = function (isOption) {
+        if (this.type == 1) {
+            var info = this.listArray[this.listArray.length - 1];
+            var myindex = parseInt(info.index) + 1;
+            var data = { index: myindex };
+            if (isOption.isbuy) {
+                this.actype = 0;
+            }
+            if (isOption.showad) {
+                this.actype = 1;
+            }
+            if (isOption.showshare) {
+                this.actype = 2;
+            }
+            if (isOption.isbuy) {
+                data.pay = 1;
+            }
+            else {
+                data.video = 1;
+            }
+            this.listArray.push(data);
+            //刷新列表，添加一个Item
+            this.storeList.refresh();
+        }
+    };
+    //请求接口的最后一个list item数据
+    StoreView.prototype.getLastItemData = function (index) {
+        var info = this.listArray[index];
+        var myindex = info.index;
+        var typeIndex = { actype: this.actype, index: myindex };
+        var apiUtil = new ApiUtil();
+        apiUtil.unlockStore(typeIndex, Laya.Handler.create(this, this.unlockData));
+    };
+    // 得到最后一个list item的数据
+    StoreView.prototype.unlockData = function (res) {
+        // console.log(res);
+        res.storeinfo.type = this.type;
+        var index = this.storeList.array.length - 1;
+        this.storeList.changeItem(index, res.storeinfo);
+        var item = this.storeList.getItem(index);
+        this.setTitle({ index: index, item: item });
+    };
+    StoreView.prototype.onStoreSelect = function (e, index) {
+        if (e.type == Laya.Event.CLICK) {
+            var item = this.storeList.getItem(index);
+            if (this.type == 1) {
+                if (item.storeid) {
+                    var apiUtil1 = new ApiUtil();
+                    apiUtil1.Stat(jmt.Stat.PAGE_STORE, jmt.Stat.ACT_STORE_ADD);
+                    var promptView = new PromptView('要覆盖原来的存档，覆盖后无法撤销，请确认。', Handler.create(this, this.setTitle, [{ index: index, item: item }]), '覆盖存档', '取消');
+                    promptView.popup();
+                }
+                else {
+                    // 解锁存档位
+                    if (index == this.listArray.length - 1) {
+                        if (this.isOption.isbuy) {
+                            this.getLastItemData(index);
+                        }
+                        else {
+                            //这里调取广告或者分享
+                            var isSV = 1;
+                            if (this.isOption.showshare) {
+                                isSV = 0;
+                            }
+                            var videoOrSharePrompt = new game.lookVedioOrShare('观看视频，解锁一个新存档位置', '观看视频', jmt.QQresType.STORE, jmt.Data.chapterinfo.chapterid, jmt.Data.chapterinfo.branchid, isSV, 0, 0, item.index, Handler.create(this, this.getLastItemData, [index]));
+                            if (isSV === 0) {
+                                videoOrSharePrompt.infoLabel.text = '分享成功后，解锁一个新存档位置';
+                                videoOrSharePrompt.btnImg.label = '立即分享';
+                                var apiUtil2 = new ApiUtil();
+                                apiUtil2.Stat(jmt.Stat.PAGE_STORE, jmt.Stat.ACT_SHOWSHARE);
+                            }
+                            else {
+                                var apiUtil3 = new ApiUtil();
+                                apiUtil3.Stat(jmt.Stat.PAGE_STORE, jmt.Stat.ACT_SHOWAD);
+                            }
+                            videoOrSharePrompt.popup();
+                        }
+                    }
+                    else {
+                        this.setTitle({ index: index, item: item });
+                    }
+                }
+            }
+            else {
+                var apiUtil1 = new ApiUtil();
+                apiUtil1.Stat(jmt.Stat.PAGE_STORE, jmt.Stat.ACT_STORE_READ);
+                if (item.storeid) {
+                    var promptView = new PromptView('要读取进入这个存档，请确认。', Handler.create(this, this.readStore, [{ index: index, item: item }]), '确认读取', '取消', null, null, item.title, item.fatime, this.completeHandler);
+                    promptView.popup();
+                }
+            }
+        }
+    };
+    StoreView.prototype.setTitle = function (args) {
+        // if (jmt.Config.DEBUG) {
+        //     console.log(args);
+        // }
+        // UIConfig.closeDialogOnSide=true;
+        var titleView = new StoreTitleView(args.item, Handler.create(this, this.storeResult, [{ index: args.index }]));
+        titleView.popup();
+    };
+    StoreView.prototype.readStore = function (args) {
+        var apiUtil = new ApiUtil();
+        apiUtil.readStore(args.item.storeid, Handler.create(this, this.initGame));
+    };
+    StoreView.prototype.updateItem = function (cell, index) {
+        cell.setData(cell.dataSource);
+    };
+    StoreView.prototype.initGame = function (info) {
+        GameMain.initGame(info);
+        this.close();
+    };
+    StoreView.prototype.onClosed = function () {
+        _super.prototype.onClosed.call(this);
+        // jmt.Resource.clearTextureRes(this.bgImg.skin);
+        //清除banner广告
+        if (!this.isHome) {
+            WywUtil.desQQbanner();
+            WxUtil.desWxBanner();
+        }
+        // this.removeSelf();//与destory冲突，remove后，destory无效
+        this.destroy(true);
+    };
+    StoreView.prototype.storeResult = function (args, res) {
+        if (res) {
+            res.type = this.type;
+            this.storeList.changeItem(args.index, res);
+            jmt.common.Toast.success('保存成功！');
+        }
+        else {
+            if (args.index == this.listArray.length - 1) {
+                var lastItem = this.storeList.getItem(args.index);
+                // console.log(lastItem)
+                lastItem.video = 0;
+                this.storeList.changeItem(args.index, lastItem);
+            }
+        }
+        //无限存档成功，再添加一个listItem
+        // console.log(this.listArray.length);
+        if (args.index == this.listArray.length - 1) {
+            this.checkBSV();
+        }
+        //回调父级页面
+        // this.selectedHandler.runWith(res);
+        // this.close();       
+    };
+    return StoreView;
+}(ui.home.StoreUI));
+//# sourceMappingURL=StoreView.js.map

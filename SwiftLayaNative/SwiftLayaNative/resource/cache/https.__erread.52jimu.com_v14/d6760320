@@ -1,0 +1,77 @@
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var RoleImg = /** @class */ (function (_super) {
+    __extends(RoleImg, _super);
+    function RoleImg() {
+        var _this = _super.call(this) || this;
+        _this.sortSkin = '1'; //未拼接的皮肤
+        _this.centerX = 0;
+        _this.bottom = 0;
+        return _this;
+    }
+    Object.defineProperty(RoleImg, "instans", {
+        get: function () {
+            if (!RoleImg._instans) {
+                RoleImg._instans = new RoleImg();
+            }
+            return RoleImg._instans;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    //初始化皮肤
+    // init(skin: string): void{
+    //     if(skin != 'fllow'){
+    //         this.alpha = 0;
+    //         this.skin = skin;
+    //         this.cureentSkin = skin;
+    //         Laya.Tween.to(this, {alpha: 1}, 1000);
+    //     }
+    // }
+    //改变皮肤
+    RoleImg.prototype.changeSkin = function (skin) {
+        if (skin && skin != 'follow' && skin != this.sortSkin) {
+            //    console.log('说话管理器');
+            this.alpha = 0;
+            this.sortSkin = skin;
+            this.skin = jmt.Config.IMG_DOMAIN_HTTP2 + skin;
+            this.cureentSkin = jmt.Config.IMG_DOMAIN_HTTP2 + skin;
+            Laya.loader.load(this.skin, Handler.create(this, this.loadComplte), null, Laya.Loader.IMAGE);
+        }
+        else if (!skin) {
+            this.skin = '';
+            this.cureentSkin = '';
+            this.sortSkin = '';
+            Laya.Tween.to(this, { alpha: 0 }, 200);
+        }
+    };
+    RoleImg.prototype.loadComplte = function () {
+        var scalePix = (Laya.stage.width * 0.8) / this.width;
+        scalePix = scalePix.toFixed(2);
+        this.width = Laya.stage.width * 0.8;
+        this.height = this.height * scalePix;
+        //加载图片完成，根据图片宽高，改变打字对话框的位置
+        var posY = this.height * 0.66;
+        SpeakManager.instance().changePos(posY);
+        Laya.Tween.to(this, { alpha: 1 }, 200);
+    };
+    RoleImg.prototype.clearRoleImage = function () {
+        if (RoleImg._instans) {
+            RoleImg._instans.removeSelf();
+            RoleImg._instans = null;
+        }
+    };
+    return RoleImg;
+}(Laya.Image));
+//# sourceMappingURL=RoleImg.js.map

@@ -1,0 +1,71 @@
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var ReNameView = /** @class */ (function (_super) {
+    __extends(ReNameView, _super);
+    function ReNameView(contObj, complete) {
+        var _this = _super.call(this) || this;
+        _this.name = 'ReNameView';
+        _this.closeOnSide = false;
+        _this.bgImg.skin = jmt.Skin.CUSTOM_NAMEBOX_BG;
+        _this.completeHandler = complete;
+        _this.contObj = contObj;
+        //拿到QQ轻游戏的玩家昵称
+        if (jmt.Data.userinfo) {
+            if (jmt.Data.userinfo.nickname) {
+                _this.inRolename.text = jmt.Data.userinfo.nickname;
+            }
+        }
+        _this.btnOk.on(LayaEvent.CLICK, _this, _this.reName);
+        return _this;
+    }
+    ReNameView.prototype.reName = function () {
+        if (this.inRolename.text == '') {
+            jmt.common.Toast.error('请输入角色名');
+            return;
+        }
+        this.apiUtil = new ApiUtil();
+        if (this.contObj.conid && this.contObj.roleid) {
+            this.apiUtil.reName(this.contObj.conid, this.contObj.roleid, this.inRolename.text, Handler.create(this, this.reNameSuccess));
+        }
+        else {
+            jmt.common.Toast.error('参数错误');
+            return;
+        }
+    };
+    ReNameView.prototype.reNameSuccess = function (res) {
+        if (res) {
+            jmt.Data.renamerole = res;
+            //回调父级页面
+            this.completeHandler.run();
+            this.closeOnSide = true;
+            this.close();
+        }
+        else {
+            jmt.common.Toast.error('未知错误');
+        }
+    };
+    ReNameView.prototype.close = function () {
+        if (this.closeOnSide) {
+            _super.prototype.close.call(this);
+        }
+    };
+    ReNameView.prototype.onClosed = function () {
+        _super.prototype.onClosed.call(this);
+        // jmt.Resource.clearTextureRes(this.bgImg.skin);
+        // this.removeSelf();
+        this.destroy(true);
+    };
+    return ReNameView;
+}(ui.dialog.ReNameUI));
+//# sourceMappingURL=ReNameView.js.map

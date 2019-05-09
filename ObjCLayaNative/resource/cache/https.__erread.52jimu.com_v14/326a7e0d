@@ -1,0 +1,110 @@
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var AsideSpeak = /** @class */ (function (_super) {
+    __extends(AsideSpeak, _super);
+    function AsideSpeak() {
+        var _this = _super.call(this) || this;
+        _this.tweenIsExist = false; //缓动小icon是否开启过缓动。开启过则不缓动了
+        _this.width = 557;
+        _this.centerX = 0;
+        _this.centerY = 0;
+        _this.printBgImg = new LayaImage();
+        _this.tweenNextImg = new LayaImage();
+        _this.printControl = new jmt.common.SoulTextBox(_this.printBgImg, 506);
+        _this.printControl.letterColor = '#FFFFFF';
+        _this.createBg();
+        _this.createTweenNextImg();
+        return _this;
+    }
+    AsideSpeak.prototype.createBg = function () {
+        this.printBgImg.skin = 'skin/niji/read_pb_dialog.png';
+        this.printBgImg.top = 0;
+        this.printBgImg.left = 0;
+        this.printBgImg.sizeGrid = '25, 60, 60, 25';
+        this.printBgImg.height = 153;
+        this.addChild(this.printBgImg);
+        //记录height，用于重置
+        this.resertBgheight = this.printBgImg.height;
+    };
+    AsideSpeak.prototype.createTweenNextImg = function () {
+        this.tweenNextImg.skin = 'skin/niji/read_lr_continue_icon.png';
+        // this.tweenNextImg.bottom = 0;
+        // this.tweenNextImg.right = 0;
+        this.tweenNextImg.y = this.printBgImg.height - 35;
+        this.tweenNextImg.x = this.printBgImg.width - 35;
+        this.printBgImg.addChild(this.tweenNextImg);
+        //记录top left，用于重置
+        this.resertTweenNextImgTop = this.tweenNextImg.top;
+        this.resertTweenNextImgleft = this.tweenNextImg.left;
+    };
+    AsideSpeak.prototype.initTween = function (roleName, infoText, skin, completeHanler) {
+        this.printControl.top = 25;
+        this.printControl.left = 20;
+        this.infoText = infoText;
+        if (completeHanler) {
+            this.completeHanler = completeHanler;
+        }
+        // this.pivot(this.width/2, this.height/2);
+        // this.x += this.printBgImg.width/2;
+        // console.log(this.x);
+        // console.log(this.y);
+        // console.log(infoText);
+        this.scaleY = 0.1;
+        Laya.Tween.to(this, { scaleY: 1 }, 200, null, Handler.create(this, this.tweenHandler));
+    };
+    AsideSpeak.prototype.tweenHandler = function () {
+        this.printPlay(this.infoText);
+        //小三角形缩放动画
+        //不存在缓动，才执行一次缓动
+        if (!this.tweenIsExist) {
+            Laya.Tween.to(this.tweenNextImg, { scaleX: 0.8, scaleY: 0.8 }, 500, null, Handler.create(this, this.nextTween));
+        }
+    };
+    AsideSpeak.prototype.nextTween = function () {
+        this.tweenIsExist = true;
+        Laya.Tween.to(this.tweenNextImg, { scaleX: 1, scaleY: 1 }, 500, null, Handler.create(this, this.nextTween2));
+    };
+    AsideSpeak.prototype.nextTween2 = function () {
+        Laya.Tween.to(this.tweenNextImg, { scaleX: 0.8, scaleY: 0.8 }, 500, null, Handler.create(this, this.nextTween));
+    };
+    //开始打字
+    AsideSpeak.prototype.printPlay = function (info, completeHanler) {
+        if (completeHanler) {
+            this.completeHanler = completeHanler;
+        }
+        this.printControl.play(info, this.completeHanler);
+        if (this.printControl.height > 103) {
+            // this.printBgImg.height = this.printControl.height + 48;
+            // // this.printControl.centerY = 0;
+            // this.tweenNextImg.top = this.printBgImg.height -35;
+            // this.tweenNextImg.left = this.printBgImg.width -35;
+            Laya.Tween.to(this.printBgImg, { height: (this.printControl.height + 48) }, 500);
+            this.printBgImg.on(Laya.Event.RESIZE, this, function resize() {
+                this.tweenNextImg.y = this.printBgImg.height - 35;
+            });
+        }
+        else {
+            this.resertPos();
+        }
+    };
+    //上次由于文本过高，吧对话框撑高了。下次高度不够撑高，就重置高度
+    AsideSpeak.prototype.resertPos = function () {
+        Laya.Tween.to(this.printBgImg, { height: (this.resertBgheight) }, 500, null);
+        // this.printBgImg.height = this.resertBgheight;
+        // this.tweenNextImg.top = this.resertTweenNextImgTop;
+        // this.tweenNextImg.left = this.resertTweenNextImgleft
+    };
+    return AsideSpeak;
+}(Laya.Box));
+//# sourceMappingURL=AsideSpeak.js.map

@@ -1,0 +1,601 @@
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var SystemSetting = /** @class */ (function (_super) {
+    __extends(SystemSetting, _super);
+    function SystemSetting(packageData) {
+        var _this = _super.call(this) || this;
+        _this.logText = new Label(); //日志
+        _this.catalogText = new Label(); //目录
+        _this.readStore = new Label(); //读档
+        _this.saveStore = new Label(); //存档
+        _this.volume = new Label(); //音量
+        _this.make = new Label(); //制作组
+        _this.Qtalk = new Label(); //Q群讨论
+        _this.score = new Label(); //评分
+        _this.share = new Label(); //分享
+        _this.Niji = new Label(); //Niji社区
+        _this.abort = new Label(); //登出
+        //打开页面，如果图片存在，抽出图片，不清除
+        jmt.common.ImgManager.openClear([jmt.Skin.CHAPTER_PAYBG]);
+        if (packageData) {
+            _this.data = packageData;
+        }
+        _this.height = Laya.stage.height;
+        //请求数据
+        _this.initData();
+        _this.btn_close.on(Laya.Event.CLICK, _this, _this.onClose);
+        var bgImg = new Laya.Image(jmt.Skin.CHAPTER_PAYBG);
+        _this.addChild(bgImg);
+        bgImg.width = Laya.stage.width;
+        bgImg.height = Laya.stage.height;
+        bgImg.zOrder = -1;
+        // this.bg_img.skin = jmt.Skin.CHAPTER_PAYBG;
+        _this.oneHbox = new Laya.HBox();
+        _this.twoHbox = new Laya.HBox();
+        _this.twoHboxBg = new Laya.Image();
+        _this.nextBtn = new Laya.Image();
+        _this.backBtn = new Laya.Image();
+        _this.labelArray = [
+            { label: _this.logText, text: '日志' },
+            { label: _this.catalogText, text: '目录' },
+            { label: _this.readStore, text: '读档' },
+            { label: _this.saveStore, text: '存档' },
+            { label: _this.Qtalk, text: 'Q群讨论', isUnderLine: true },
+            // {label: this.volume, text: '音量'},
+            // {label: this.Qtalk, text: 'Q群讨论', isUnderLine: true},
+            // {label: this.score, text: '评分', isUnderLine: true},
+            { label: _this.share, text: '分享', isUnderLine: true },
+            { label: _this.make, text: '制作组', isUnderLine: true },
+            { label: _this.Niji, text: 'Niji社区', isUnderLine: true },
+        ];
+        _this.createOneHbox();
+        _this.createLabelAndImg(_this.labelArray);
+        _this.createTwoHbox();
+        _this.nextBtn.on(Laya.Event.CLICK, _this, _this.jumpNext);
+        _this.backBtn.on(Laya.Event.CLICK, _this, _this.jumpBack);
+        //现在是点击不同文字，显示不同界面、
+        _this.logText.on(Laya.Event.CLICK, _this, _this.onlogText);
+        _this.catalogText.on(Laya.Event.CLICK, _this, _this.oncatalogText);
+        _this.readStore.on(Laya.Event.CLICK, _this, _this.onreadStore);
+        _this.saveStore.on(Laya.Event.CLICK, _this, _this.onsaveStore);
+        // this.volume.on(Laya.Event.CLICK, this, this.onvolume);
+        _this.make.on(Laya.Event.CLICK, _this, _this.onmake);
+        _this.Qtalk.on(Laya.Event.CLICK, _this, _this.onQtalk);
+        _this.score.on(Laya.Event.CLICK, _this, _this.onscore);
+        _this.share.on(Laya.Event.CLICK, _this, _this.onshare);
+        _this.Niji.on(Laya.Event.CLICK, _this, _this.onNiji);
+        _this.abort.on(Laya.Event.CLICK, _this, _this.onabort);
+        return _this;
+    }
+    SystemSetting.prototype.onClose = function () {
+        //关闭页面，定时清除背景图片
+        // jmt.common.ImgManager.closeClear([jmt.Skin.CHAPTER_PAYBG]);
+        // jmt.Resource.clearTextureRes(jmt.Skin.CHAPTER_PAYBG);
+        this.close();
+    };
+    SystemSetting.prototype.onClosed = function () {
+        _super.prototype.onClosed.call(this);
+        // jmt.Resource.clearTextureRes(this.bg_img.skin);
+        if (this.allPackage) {
+            // this.allPackage.removeSelf();
+            this.allPackage.destroy(true);
+        }
+        // this.removeSelf();//与destory冲突，remove后，destory无效
+        this.destroy(true);
+    };
+    // 得到数据
+    SystemSetting.prototype.initData = function () {
+        //创建全套餐局部页
+        if (this.data && this.data.all) {
+            this.allPackage = new AllPackageInfo(this.data.all);
+            this.addChild(this.allPackage);
+            this.allPackage.top = 377;
+        }
+    };
+    // 跳转下一个导航页
+    SystemSetting.prototype.jumpNext = function () {
+        this.oneHbox.visible = false;
+        this.nextBtn.visible = false;
+        this.twoHboxBg.visible = true;
+    };
+    // 跳转到上一个导航页
+    SystemSetting.prototype.jumpBack = function () {
+        this.oneHbox.visible = true;
+        this.nextBtn.visible = true;
+        this.twoHboxBg.visible = false;
+    };
+    //创建顶部第一页导航
+    SystemSetting.prototype.createOneHbox = function () {
+        this.oneHbox.space = 90;
+        this.oneHbox.left = 70;
+        this.oneHbox.top = 227;
+        this.oneHbox.align = 'bottom';
+        this.addChild(this.oneHbox);
+    };
+    //创建顶部第二页导航
+    SystemSetting.prototype.createTwoHbox = function () {
+        this.twoHbox.space = 80;
+        this.twoHbox.left = 80;
+        //如果是微信小游戏，就隐藏NiJi社区
+        if (Laya.Browser.onMiniGame) {
+            this.Niji.visible = false;
+            this.twoHbox.left = 142;
+            this.twoHbox.space = 100;
+        }
+        this.twoHbox.centerY = 0;
+        this.twoHboxBg.addChild(this.twoHbox);
+    };
+    SystemSetting.prototype.createLabelAndImg = function (labelArray) {
+        for (var i = 0; i < labelArray.length; i++) {
+            var label = labelArray[i].label;
+            label.text = labelArray[i].text;
+            label.color = '#ffffff';
+            label.font = jmt.Skin.FONT;
+            if (labelArray[i].isUnderLine) {
+                label.underline = true;
+                label.underlineColor = '#ffffff';
+                label.fontSize = 22;
+                this.twoHbox.addChild(label);
+            }
+            else {
+                label.fontSize = 31;
+                this.oneHbox.addChild(label);
+            }
+        }
+        //创建第一个页面的 跳转图片
+        this.nextBtn.skin = 'skin/common/system_expend_normal_btn.png';
+        this.nextBtn.top = 192;
+        this.nextBtn.right = 40;
+        this.addChild(this.nextBtn);
+        // 创建第二个导航页面的背景图片
+        this.twoHboxBg.skin = 'skin/common/system_expend_selected_btn.png';
+        this.twoHboxBg.centerX = 0;
+        this.twoHboxBg.top = 175;
+        this.addChild(this.twoHboxBg);
+        this.twoHboxBg.visible = false;
+        //创建第二个页面的 跳转图片
+        this.backBtn.skin = 'skin/common/system_closed_btn.png';
+        this.backBtn.centerY = 0;
+        this.backBtn.right = 60;
+        this.twoHboxBg.addChild(this.backBtn);
+        // 创建长线
+        var longLine = new game.LongLine(this);
+        longLine.top = 313;
+        longLine.centerX = 0;
+    };
+    SystemSetting.prototype.onlogText = function () {
+        var logView = new ReadLogView();
+        logView.popup();
+    };
+    SystemSetting.prototype.oncatalogText = function () {
+        var catalogView = new CatalogView();
+        catalogView.popup();
+    };
+    SystemSetting.prototype.onreadStore = function () {
+        var storeView = new StoreView(0, '', Handler.create(this, this.close));
+        storeView.popup();
+    };
+    SystemSetting.prototype.onsaveStore = function () {
+        var storeView = new StoreView(1);
+        storeView.popup();
+    };
+    SystemSetting.prototype.onvolume = function () {
+        var systemView = new SystemView();
+        systemView.popup();
+    };
+    SystemSetting.prototype.onmake = function () {
+        var teamView = new TeamView();
+        teamView.popup();
+    };
+    SystemSetting.prototype.onQtalk = function () {
+        if (Laya.Browser.onMiniGame) {
+            var promptView = new PromptView("<span>QQ\u7FA4\uFF1A" + jmt.GlobalData.QQ_TALK + "</span>", Handler.create(WxUtil, WxUtil.setClipText), '复制');
+            promptView.bgImg.width = 450;
+            promptView.bgImg.height = 250;
+            promptView.cancelBtn.width = 100;
+            promptView.cancelBtn.height = 40;
+            promptView.cancelBtn.labelSize = 30;
+            promptView.cancelBtn.right = 170;
+            promptView.cancelBtn.bottom = 110;
+            promptView.okBtn.width = 100;
+            promptView.okBtn.height = 40;
+            promptView.okBtn.labelSize = 30;
+            promptView.okBtn.left = 170;
+            promptView.okBtn.bottom = 110;
+            promptView.htmlText.pos(200, 130);
+            promptView.popup();
+        }
+        else if (WywUtil.onLimixiu()) {
+            WywUtil.openWebView('https://jq.qq.com/?_wv=1027&k=56DAPhq');
+        }
+    };
+    SystemSetting.prototype.onscore = function () {
+    };
+    SystemSetting.prototype.onshare = function () {
+        //先从服务端请求分享数据内容，传递给QQ分享接口那边
+        var apiUtil = new ApiUtil();
+        apiUtil.qqShareDataInfo(0, Handler.create(this, this.getShareInfo));
+    };
+    SystemSetting.prototype.onNiji = function () {
+        WywUtil.openWebView('https://lxjy.52jimu.com/');
+    };
+    SystemSetting.prototype.onabort = function () {
+    };
+    SystemSetting.prototype.getShareInfo = function (res) {
+        if (res) {
+            res.extendInfoType = 0;
+        }
+        //QQ
+        WywUtil.QQshare(function () { }, res);
+        //微信
+        WxUtil.WxShare(function () { }, res);
+    };
+    return SystemSetting;
+}(ui.dialog.SystemSettingUI));
+var AllPackageInfo = /** @class */ (function (_super) {
+    __extends(AllPackageInfo, _super);
+    function AllPackageInfo(data, packageListTop, completeHandler) {
+        var _this = _super.call(this) || this;
+        if (data) {
+            _this.data = data;
+        }
+        if (completeHandler) {
+            _this.completeHandler = completeHandler;
+        }
+        _this.centerX = 0;
+        _this.bigBg = new Laya.Box();
+        _this.topTitleBg = new Laya.Image();
+        _this.topTitleHbox = new Laya.HBox();
+        _this.topTitle = new Laya.Label();
+        _this.packageListBox = new Laya.Box();
+        _this.packageList = new Laya.List();
+        _this.buyBtn = new Laya.Button();
+        _this.savaPriceBg = new Laya.Image();
+        if (data) {
+            _this.createTopTitleAndBg();
+            if (packageListTop) {
+                _this.packageListTop = packageListTop;
+            }
+            _this.createPackageList();
+            // 判断是否购买了
+            if (data.isbuy) { //是否已经购买数据
+                _this.createOkBuyBtn();
+            }
+            else {
+                _this.createBuyBtn();
+            }
+            // 点击购买按钮，调接口
+            _this.buyBtn.on(Laya.Event.CLICK, _this, _this.createOrder, [data]);
+        }
+        return _this;
+    }
+    /**
+     * 点击付款（下单）
+     */
+    AllPackageInfo.prototype.createOrder = function (goodsinfo) {
+        // jmt.Console.log('我要付款全套餐');
+        // jmt.common.Toast.msg('开始购买');
+        var apiUtil1 = new ApiUtil();
+        apiUtil1.Stat(jmt.Stat.PAGE_SYS, jmt.Stat.ACT_BUY_ALL);
+        if (Laya.Browser.onMiniGame) {
+            // apiUtil.createOrder(goodsinfo.goodsid, jmt.Order.PAYTYPE_WXMINI);
+            // WxUtil.buyGoods(goodsinfo.price,Handler.create(this,this.checkComplete,[goodsinfo]));
+            var apiUtil = new ApiUtil();
+            apiUtil.checkMiniBalance(Handler.create(this, this.checkMiniBalance, [goodsinfo]));
+        }
+        else if (WywUtil.onLimixiu()) {
+            if (goodsinfo && goodsinfo.otherids && goodsinfo.otherids.qqwyw) {
+                WywUtil.checkitem(goodsinfo.otherids.qqwyw, Handler.create(this, this.checkComplete, [goodsinfo]));
+            }
+            else {
+                jmt.common.Toast.error('道具信息错误');
+            }
+        }
+    };
+    /**
+     * 检查余额回调处理
+     * @param goodsinfo
+     * @param res
+     */
+    AllPackageInfo.prototype.checkMiniBalance = function (goodsinfo, res) {
+        if (res) {
+            var hasitem = false;
+            if (res.balance > goodsinfo.price) {
+                hasitem = true;
+            }
+            var apiUtil = new ApiUtil();
+            apiUtil.createOrder(goodsinfo.goodsid, jmt.Order.PAYTYPE_WXMINI, 0, 0, 0, Handler.create(this, this.createOrderComplete, [goodsinfo, hasitem]));
+        }
+    };
+    AllPackageInfo.prototype.checkComplete = function (goodsinfo, hasitem) {
+        // jmt.Print.log(goodsinfo);
+        // jmt.Print.log('hasitem:'+hasitem);
+        //不存在则购买
+        var apiUtil = new ApiUtil();
+        apiUtil.createOrder(goodsinfo.goodsid, jmt.Order.PAYTYPE_QQWYW, 0, 0, 0, Handler.create(this, this.createOrderComplete, [goodsinfo, hasitem]));
+    };
+    //创建订单成功，发起支付
+    AllPackageInfo.prototype.createOrderComplete = function (goodsinfo, hasitem, res) {
+        if (res) {
+            // let money = res.money;
+            var itemid = parseInt(goodsinfo.otherids.qqwyw);
+            res.itemid = itemid;
+            var orderid = res.orderid;
+            var goodsid = goodsinfo.goodsid;
+            var price = goodsinfo.price;
+            if (hasitem) {
+                // jmt.Print.log('consumeGoods');
+                if (WywUtil.onLimixiu()) {
+                    WywUtil.consumeGoods(orderid, goodsid, itemid, Handler.create(this, this.buyComplete));
+                }
+                else if (Laya.Browser.onMiniGame) {
+                    // console.log('WxUtil consumeGoods');
+                    WxUtil.consumeGoods(orderid, goodsid, price, Handler.create(this, this.buyComplete));
+                }
+            }
+            else {
+                if (WywUtil.onLimixiu()) {
+                    WywUtil.buyGoods(orderid, goodsid, itemid, 1, Handler.create(this, this.buyComplete));
+                }
+                else if (Laya.Browser.onMiniGame) {
+                    // console.log('WxUtil buyGoods');
+                    WxUtil.buyGoods(orderid, goodsid, price, Handler.create(this, this.buyComplete));
+                }
+            }
+        }
+        else {
+            jmt.common.Toast.error('创建订单失败');
+        }
+    };
+    AllPackageInfo.prototype.buyComplete = function (res) {
+        // jmt.Print.log('支付成功');
+        // jmt.common.Toast.success('支付成功');
+        // jmt.Print.log(res);
+        //刷新道具状态
+        jmt.common.Toast.success('购买成功');
+        var apiUtil1 = new ApiUtil();
+        apiUtil1.Stat(jmt.Stat.PAGE_SYS, jmt.Stat.ACT_BUY_ALL_SUCCESS);
+        if (this.buyBtn) {
+            this.buyBtn.removeSelf();
+            this.createOkBuyBtn();
+            if (jmt.GlobalData.PACKGE && jmt.GlobalData.PACKGE.all) {
+                jmt.GlobalData.PACKGE.all.isbuy = 1;
+            }
+        }
+        if (this.completeHandler) {
+            this.completeHandler.runWith(res);
+        }
+    };
+    // 创建背景大图
+    AllPackageInfo.prototype.createBigBg = function (height, width, x, y, color) {
+        if (height === void 0) { height = 788; }
+        if (width === void 0) { width = 705; }
+        if (x === void 0) { x = 0; }
+        if (y === void 0) { y = 0; }
+        if (color === void 0) { color = '#000000'; }
+        this.bigBg.graphics.drawRect(x, y, width, height, color);
+        this.bigBg.width = width;
+        this.bigBg.height = height;
+        this.bigBg.alpha = 0.5;
+        this.bigBg.top = this.topTitleBg.height;
+        this.width = width;
+        this.height = this.topTitleBg.height + height;
+        this.addChild(this.bigBg);
+        this.bigBg.zOrder = -1;
+    };
+    // 创建顶部栏背景及标题
+    AllPackageInfo.prototype.createTopTitleAndBg = function () {
+        this.top = 0;
+        this.topTitleBg.skin = 'skin/common/chapter_package_title_box.png';
+        this.topTitleHbox.space = 3;
+        this.topTitleHbox.align = 'bottom';
+        this.topTitleHbox.left = 20;
+        this.topTitleHbox.top = 15;
+        this.topTitle.text = this.data.title; //套餐标题数据
+        this.topTitle.fontSize = 27;
+        this.topTitle.font = 'SimHei';
+        this.topTitle.color = '#DDDDDD';
+        this.topTitle.bold = true;
+        var tuiJian = new Label('（推荐）');
+        tuiJian.fontSize = 27;
+        tuiJian.font = 'SimHei';
+        tuiJian.color = '#9F0000';
+        tuiJian.bold = true;
+        this.topTitleHbox.addChild(this.topTitle);
+        this.topTitleHbox.addChild(tuiJian);
+        this.topTitleBg.width = this.topTitle.width + tuiJian.width + 50;
+        this.topTitleBg.addChild(this.topTitleHbox);
+        this.addChild(this.topTitleBg);
+    };
+    // 创建套餐列表
+    AllPackageInfo.prototype.createPackageList = function () {
+        this.packageList.repeatX = 3;
+        this.packageList.repeatY = Math.ceil(this.data.sublist.length / 3); //这里要动态，根据列表数量
+        this.packageList.spaceX = 10;
+        this.packageList.spaceY = 10;
+        this.packageList.vScrollBarSkin = '';
+        this.packageList.itemRender = packageListItem;
+        this.packageList.renderHandler = Handler.create(this, this.updata, null, false);
+        this.packageListBox.width = this.packageList.width;
+        this.packageListBox.height = this.packageList.height;
+        this.packageListBox.addChild(this.packageList);
+        if (this.packageListTop) {
+            this.packageListBox.top = this.packageListTop;
+        }
+        else {
+            this.packageListBox.top = 127;
+        }
+        this.packageListBox.centerX = 0;
+        this.addChild(this.packageListBox);
+        this.packageList.array = this.data.sublist; //套餐列表的数据项
+        if (this.packageListTop) {
+            var bgHeight = this.packageListBox.top + this.packageListBox.height;
+            this.createBigBg(bgHeight);
+        }
+        else {
+            this.createBigBg();
+        }
+    };
+    // 更新套餐列表数据
+    AllPackageInfo.prototype.updata = function (cell, index) {
+        cell.setDate(cell.dataSource);
+    };
+    // 创建购买按钮
+    AllPackageInfo.prototype.createBuyBtn = function () {
+        this.buyBtn.skin = 'skin/common/chapter_pay_all_price_btn.png';
+        this.buyBtn.stateNum = 2;
+        this.buyBtn.centerX = 0;
+        this.buyBtn.top = this.packageListBox.top + this.packageListBox.height + 20;
+        if ((this.data.sublist.length - 1) % 3 === 0) {
+            this.buyBtn.centerX = 120;
+            this.buyBtn.top = this.packageListBox.top + this.packageListBox.height - 200 + 55;
+        }
+        this.savaPriceBg.skin = 'skin/common/chapter_pay_sale_label.png';
+        this.savaPriceBg.top = 9;
+        this.savaPriceBg.right = 13;
+        this.buyBtn.addChild(this.savaPriceBg);
+        this.addChild(this.buyBtn);
+        //创建价格
+        var currentPrice = new game.PriceHBox(this.buyBtn, this.data.price / 100, '#000000', 47, 37); //当前价格，因为服务端返回的是以分为单位，所以要除以100
+        currentPrice.top = 5;
+        currentPrice.left = 5;
+        var savaPrice = new game.PriceHBox(this.buyBtn, this.data.save_money / 100, '#FFD800', 35, 25, '省'); //节省多少钱，因为服务端返回的是以分为单位，所以要除以100
+        savaPrice.top = 20;
+        savaPrice.left = 215;
+        var totalPrice = new game.PriceHBox(this.buyBtn, this.data.org_price / 100, '#383838', 25, 20); //总价值多少多少钱，原价，单位为元
+        totalPrice.top = 47;
+        totalPrice.left = 40;
+        var deleteLine = new Laya.Box();
+        deleteLine.graphics.drawLine(0, 0, 100, 10, '#800805', 1.5);
+        deleteLine.width = 100;
+        deleteLine.height = 10;
+        deleteLine.bottom = 20;
+        deleteLine.left = 40;
+        this.buyBtn.addChild(deleteLine);
+    };
+    // 创建已经购买过套餐的按钮,因为只是个显示状态，所以没必要放全局
+    AllPackageInfo.prototype.createOkBuyBtn = function () {
+        var okBuyBtn = new Laya.Button('skin/common/chapter_pay_btn.png', '已解锁');
+        okBuyBtn.centerX = 0;
+        okBuyBtn.top = this.packageListBox.top + this.packageListBox.height + 20;
+        if ((this.data.sublist.length - 1) % 3 === 0) {
+            okBuyBtn.centerX = 120;
+            okBuyBtn.top = this.packageListBox.top + this.packageListBox.height - 200 + 55;
+        }
+        okBuyBtn.stateNum = 1;
+        okBuyBtn.labelSize = 47;
+        okBuyBtn.labelColors = '#0E0E0E';
+        okBuyBtn.labelAlign = 'center';
+        okBuyBtn.labelPadding = '0,0,7,0';
+        this.addChild(okBuyBtn);
+    };
+    return AllPackageInfo;
+}(Laya.Box));
+//套餐列表的 渲染boxItem
+var packageListItem = /** @class */ (function (_super) {
+    __extends(packageListItem, _super);
+    function packageListItem() {
+        var _this = _super.call(this) || this;
+        _this.width = 199;
+        _this.height = 200;
+        _this.itemBg = new Laya.Box();
+        _this.conBox = new Laya.VBox();
+        _this.itemTitle = new Laya.Label();
+        _this.itemInfo = new Laya.Label();
+        _this.addChild(_this.itemBg);
+        _this.addChild(_this.conBox);
+        _this.conBox.width = _this.width * 0.7;
+        _this.conBox.addChild(_this.itemTitle);
+        _this.conBox.addChild(_this.itemInfo);
+        _this.conBox.space = 11;
+        _this.createItemBg();
+        _this.createItemTitleAndInfo();
+        _this.conBox.centerX = 0;
+        _this.conBox.centerY = 0;
+        return _this;
+    }
+    packageListItem.prototype.createItemBg = function (color, width, height, x, y) {
+        if (color === void 0) { color = '#000000'; }
+        if (width === void 0) { width = 199; }
+        if (height === void 0) { height = 200; }
+        if (x === void 0) { x = 0; }
+        if (y === void 0) { y = 0; }
+        this.itemBg.graphics.drawRect(x, y, width, height, color);
+        this.itemBg.alpha = 0.4;
+        this.itemBg.width = width;
+        this.itemBg.height = height;
+        // this.width = width;
+        // this.height = height;
+        // this.addChild(this.itemBg);
+        // console.log(1111);
+    };
+    packageListItem.prototype.createItemTitleAndInfo = function () {
+        this.itemTitle.text = '';
+        this.itemTitle.fontSize = 30;
+        this.itemTitle.font = 'SimHei';
+        this.itemTitle.color = '#999999';
+        this.itemTitle.width = this.conBox.width;
+        this.itemTitle.centerX = 0;
+        this.itemTitle.align = 'center';
+        this.itemTitle.wordWrap = true;
+        this.itemTitle.leading = 10;
+        this.itemInfo.fontSize = 21;
+        this.itemInfo.font = 'SimHei';
+        this.itemInfo.color = '#666666';
+        this.itemInfo.width = this.conBox.width;
+        // this.itemInfo.height = 50;
+        this.itemInfo.wordWrap = true;
+        this.itemInfo.leading = 5;
+        this.itemInfo.overflow = 'scroll';
+        this.itemInfo.centerX = 0;
+        // if(this.itemInfo.text){
+        //     this.itemTitle.centerY = 0;
+        // }
+        // this.addChild(this.itemTitle);
+        // this.addChild(this.itemInfo);
+    };
+    //是否显示赠送图片
+    packageListItem.prototype.createItemIsGift = function () {
+        this.itemIsGift = new Laya.Image('skin/common/chapter_handsel_icon.png');
+        this.itemIsGift.top = 0;
+        this.itemIsGift.right = 0;
+        this.addChild(this.itemIsGift);
+    };
+    packageListItem.prototype.setDate = function (listItem) {
+        if (listItem.isgive == '1') {
+            this.createItemIsGift();
+        }
+        else {
+            this.createItemBg('#FF0000');
+            this.itemBg.zOrder = -1;
+        }
+        if (listItem.title) {
+            this.itemTitle.text = listItem.title;
+            // if(this.itemTitle.height>50){
+            //     this.itemTitle.top = 46;
+            // }else{
+            //     this.itemTitle.top = 67;
+            // }
+        }
+        if (listItem.intro) {
+            this.itemInfo.text = jmt.Config.multiLineEllipsis(listItem.intro, this.itemInfo.width, 21, 2);
+            //  this.itemInfo.top = this.itemTitle.top+this.itemTitle.height+5;
+            this.conBox.space = 11;
+            this.conBox.height = this.itemTitle.height + this.itemInfo.height;
+        }
+        this.conBox.centerY = 0;
+    };
+    return packageListItem;
+}(Laya.Box));
+//# sourceMappingURL=SystemSetting.js.map

@@ -1,0 +1,237 @@
+var Login = /** @class */ (function () {
+    function Login() {
+    }
+    Object.defineProperty(Login, "instans", {
+        get: function () {
+            if (!Login._instans) {
+                Login._instans = new Login();
+            }
+            return Login._instans;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Login.prototype.checkLogin = function () {
+        // ==============本地调试===============
+        // let uid = jmt.util.Common.getQuery('uid');
+        // let token = jmt.util.Common.getQuery('token');
+        // if(uid && token ){
+        //     jmt.Data.uid = uid;
+        //     jmt.Data.token = token;
+        //     jmt.Data.userinfo = {
+        //         uid: uid,
+        //         token: token
+        //     }
+        //     this.checkToken(true);
+        //     jmt.Print.log(11111111111111);
+        // }else{
+        //     if (jmt.Config.DEBUG && jmt.Data.uid<1 && jmt.Data.debug_uid>0) {
+        //         jmt.Data.uid=jmt.Data.debug_uid;
+        //         jmt.Data.userinfo = {uid:jmt.Data.uid};
+        //         jmt.Print.log(2222222222222);
+        //         // this.showLoginBtn();
+        //         // this.initData();
+        //     }else{
+        //         var uinfo = jmt.Data.getUser();
+        //         if (uinfo) {
+        //             //TODO: wx.checkSession
+        //             if (Laya.Browser.onMiniGame) {
+        //                 WxUtil.checkSession(this.checkToken.bind(this),this.oauthLogin.bind(this));
+        //             }else{
+        //                 //检查token
+        //                 this.checkToken();
+        //             }                
+        //         }else{
+        //             this.oauthLogin();
+        //         }
+        //     }  
+        // }
+        // ===============上线==================
+        // var uinfo = jmt.Data.getUser();
+        // if (uinfo) {
+        //     //TODO: wx.checkSession
+        //     if (Laya.Browser.onMiniGame) {
+        //         WxUtil.checkSession(this.checkToken.bind(this),this.oauthLogin.bind(this));
+        //     }else{
+        //         //检查token
+        //         this.checkToken();
+        //     }                
+        // }else{
+        //     this.oauthLogin();
+        // }
+        //初始化阅读信息。判断是预览还是阅读
+        this.isPreviewOrReading();
+        //初始化游戏信息
+        this.initGameData();
+        //初始化得到用户信息
+        this.initGetUserInfo();
+        //平台，为了兼容零下记忆,线上环境，关闭
+        // jmt.Data.uid = jmt.Data.debug_uid;
+        //平台，测试预览，作品只能预览自己的作品，uid要和作品匹配
+        // jmt.Data.uid = 630146;
+        // jmt.Config.ISLOGIN = 1;
+        //获取小说信息，如果是预览直接获取章节信息，然后跳转
+        this.getNovelInfo();
+    };
+    //初始化阅读信息。判断是预览还是阅读
+    Login.prototype.isPreviewOrReading = function () {
+        // 上平台 开启
+        // 获取小说信息
+        var readInfo = Bridge.instans.getReadInfo();
+        jmt.Config.NOVELID = readInfo.novelid;
+        //预览开始阅读需要的信息
+        jmt.Data.chapterid = readInfo.chapterid;
+        jmt.Data.sceneid = readInfo.sceneid;
+        jmt.Data.conid = readInfo.conid;
+        jmt.Config.PREVIEW = readInfo.ispre ? 1 : 0;
+        // jmt.Print.log('测试预览');
+        // jmt.Print.log(readInfo);
+        //测试预览 开始阅读，先写死
+        // jmt.Print.log('测试预览');
+        // jmt.Config.NOVELID = 2819;
+        // jmt.Data.chapterid = 10110;
+        // jmt.Data.sceneid = 10110;
+        // jmt.Data.conid = 1926;
+        // jmt.Config.PREVIEW = 0;
+    };
+    //初始化游戏信息
+    Login.prototype.initGameData = function () {
+        // 上平台 开启
+        // 获取设备信息
+        var info = Bridge.instans.getDeviceInfo();
+        // jmt.Print.log('设备信息');
+        // jmt.Print.log(info);
+        jmt.Config.MODEL = info.model;
+        jmt.Config.DM = info.dm;
+        jmt.Config.CHL = info.chl;
+        jmt.Config.MID = info.imei;
+        jmt.Config.OSVN = info.osvn;
+        jmt.Config.VC = info.vc;
+        //测试的小说id
+        // jmt.Config.NOVELID = 2758;
+    };
+    //初始化得到用户信息
+    Login.prototype.initGetUserInfo = function () {
+        // 上平台 开启
+        // 获取用户信息
+        var uinfo = Bridge.instans.getUserInfo();
+        if (uinfo) {
+            jmt.Data.setUser(uinfo);
+        }
+        // jmt.Print.log('用户信息');
+        // jmt.Print.log(uinfo);
+    };
+    //获取小说信息
+    Login.prototype.getNovelInfo = function () {
+        //如果是预览
+        if (jmt.Config.PREVIEW) {
+            // 获取预览开始阅读
+            var apiUtil = new ApiUtil();
+            apiUtil.PreiewReadingStar(jmt.Config.NOVELID, jmt.Data.chapterid, jmt.Data.sceneid, jmt.Data.conid, Handler.create(Login, Login.getChapterInfoAndShowinfo.bind(Login)));
+            // jmt.Print.log('预览');
+        }
+        //如果是阅读
+        else {
+            //获取小说信息
+            var apiUtil = new ApiUtil();
+            apiUtil.getNovelInfo(Handler.create(this, this.initNovel));
+        }
+    };
+    //得到小说信息
+    Login.prototype.initNovel = function (info) {
+        if (info.novelid) {
+            jmt.Data.novelinfo = info;
+            // jmt.Print.log('小说信息');
+            // jmt.Print.log(info);
+            this.startReading();
+        }
+        else {
+            jmt.common.Toast.error('获取数据失败');
+        }
+    };
+    //请求开始阅读
+    Login.prototype.startReading = function (isReplay) {
+        if (isReplay === void 0) { isReplay = false; }
+        if (jmt.Data.novelinfo) {
+            // jmt.Print.log('start');
+            // jmt.Print.log('startReading');
+            //重新开始阅读的时候，关闭弹窗
+            if (ReadMoreDialog._instans) {
+                ReadMoreDialog._instans.close();
+            }
+            //当前阅读界面存在，清除当前阅读界面
+            if (ReadingView._instans) {
+                ReadingView._instans.clearReading();
+            }
+            var apiUtil = new ApiUtil();
+            apiUtil.startReading(isReplay, Handler.create(Login, Login.initGame));
+        }
+        else {
+            jmt.common.Toast.error('数据初始化失败，请重试！');
+            var apiUtil = new ApiUtil();
+            apiUtil.getNovelInfo(Handler.create(this, this.initNovel));
+        }
+    };
+    //进入开始阅读
+    Login.initGame = function (info) {
+        // console.log('重新开始阅读');
+        // console.log(info);
+        // jmt.Print.log('进入开始阅读');
+        // jmt.Print.log(info);
+        GameMain.initGame(info);
+    };
+    //预览得到chapterinfo 和 showinfo
+    Login.getChapterInfoAndShowinfo = function (info) {
+        // jmt.Print.log('预览阅读');
+        // jmt.Print.log(info);
+        jmt.Data.chapterinfo = info.chapterinfo;
+        jmt.Data.showinfo = info.showinfo;
+        //得到chapterinfo 和 showinfo， 请求预览章节info
+        var apiUtil = new ApiUtil();
+        apiUtil.PreiewChapterInfo(jmt.Config.NOVELID, jmt.Data.chapterid, jmt.Data.sceneid, jmt.Data.conid, 0, Handler.create(Login, Login.getPreviewChapterInfo.bind(Login)));
+    };
+    //得到预览章节info
+    Login.getPreviewChapterInfo = function (arg) {
+        // jmt.Print.log('得到预览章节info');
+        // jmt.Print.log(arg);
+        // console.log('得到章节预览内容');
+        // console.log(arg);
+        var reviewReading = ReadingView.instans();
+        Laya.stage.addChild(reviewReading);
+        reviewReading.initContent(arg);
+    };
+    Login.prototype.checkToken = function (goin) {
+        if (goin === void 0) { goin = false; }
+        //检查token
+        var apiUtil = new ApiUtil();
+        apiUtil.tokenLogin(Handler.create(this, this.updateToken, [goin]), Handler.create(this, this.tokenError));
+    };
+    Login.prototype.tokenError = function () {
+        //退出用户
+        jmt.Data.delUser();
+        // Dialog.manager.closeAll();
+        // this.oauthLogin();
+    };
+    /**
+     * 更新token
+     * @param res
+     */
+    Login.prototype.updateToken = function (goin, res) {
+        if (res) {
+            var uinfo = jmt.Data.getUser();
+            uinfo.token = res.token;
+            if (res.mid) {
+                uinfo.mid = res.mid;
+            }
+            jmt.Data.setUser(uinfo);
+            // this.showLoginBtn();
+            // this.initData(goin);           
+        }
+        else {
+            jmt.common.Toast.error('登录失败');
+            // this.showNotLoginBtn();
+        }
+    };
+    return Login;
+}());
+//# sourceMappingURL=Login.js.map

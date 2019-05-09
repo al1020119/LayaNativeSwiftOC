@@ -1,0 +1,164 @@
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var ReadLogView = /** @class */ (function (_super) {
+    __extends(ReadLogView, _super);
+    function ReadLogView() {
+        var _this = _super.call(this) || this;
+        _this.name = 'ReadLogView';
+        _this.contListArray = [];
+        _this.height = Laya.stage.height;
+        // this.bigBox.skin = jmt.Skin.NOTES_BIG_BOX;
+        _this.btnGoback.on(LayaEvent.CLICK, _this, _this.clear); // 点击返回按钮，清除页面，并且关闭
+        _this.initBox();
+        _this.syncStore();
+        return _this;
+    }
+    //定时同步存档
+    ReadLogView.prototype.syncStore = function () {
+        var storeinfo = jmt.Data.getCurrentStore();
+        var readloglist = jmt.Data.getReadLoglist();
+        if (storeinfo && readloglist) {
+            storeinfo.index = 0;
+            var apiUtil = new ApiUtil();
+            apiUtil.syncReading(storeinfo, readloglist, Handler.create(this, this.loadLog));
+        }
+        else {
+            this.loadLog();
+        }
+    };
+    ReadLogView.prototype.loadLog = function () {
+        var apiUtil = new ApiUtil();
+        apiUtil.getCheckPoint(1, Handler.create(this, this.initCheckPoint)); //获取日志左边章节 标题 列表
+    };
+    ReadLogView.prototype.clear = function () {
+        if (this.pointList) {
+            // this.pointList.removeChildren();
+            this.pointList.removeSelf();
+            this.pointList.destroy(true);
+        }
+        this.close();
+    };
+    ReadLogView.prototype.onClosed = function () {
+        _super.prototype.onClosed.call(this);
+        // this.removeSelf();//与destory冲突，remove后，destory无效
+        this.destroy(true);
+    };
+    ReadLogView.prototype.initBox = function () {
+        this.leftBoxBg.skin = jmt.Skin.NOTES_LEFT_BOX;
+        this.rightBoxBg.skin = jmt.Skin.NOTES_RIGHT_BOX;
+        // this.rollBall = new jmt.common.RollBall(this);
+        // this.rollBall.bottom=150;
+        // this.rollBall.left=30;
+    };
+    /**
+     *
+     * @param res
+     */
+    ReadLogView.prototype.initCheckPoint = function (list) {
+        var row = list.length;
+        // console.log(list);
+        this.pointList = new LayaList();
+        this.leftBox.addChild(this.pointList);
+        this.pointList.width = this.leftBox.width;
+        // this.pointList.height = this.leftBox.height;
+        this.pointList.top = 100;
+        this.pointList.spaceY = 30;
+        this.pointList.repeatY = row;
+        this.pointList.itemRender = jmt.item.AnalyListItem;
+        // 使用但隐藏滚动条
+        this.pointList.vScrollBarSkin = "";
+        this.pointList.selectEnable = true;
+        this.pointList.selectHandler = new Handler(this, this.onPointSelect);
+        // this.pointList.mouseEnabled = true;
+        // this.pointList.mouseHandler = new Handler(this, this.onPointSelect);
+        this.pointList.renderHandler = new Handler(this, this.updatePointItem);
+        for (var i = 0; i < list.length; i++) {
+            list[i]['title'] = '第 ' + list[i]['index_cn'] + ' 章';
+        }
+        this.pointList.array = list;
+        if (list && list.length > 0) {
+            this.onPointSelect(0);
+        }
+    };
+    ReadLogView.prototype.updatePointItem = function (cell, index) {
+        cell.setData(cell.dataSource);
+    };
+    ReadLogView.prototype.onPointSelect = function (index) {
+        // if (jmt.Config.DEBUG) {
+        //     console.log("当前选择的索引：" + index);
+        // }
+        var currentitem = this.pointList.getItem(index);
+        if (!currentitem) {
+            return;
+        }
+        for (var i = 0; i < this.pointList.length; i++) {
+            var item = this.pointList.getItem(i);
+            if (i == index) {
+                // item.color='#58C7EE';
+                item.color = '#dddddd';
+                item.bgimg = jmt.Skin.NOTES_TITLE_CHECK;
+            }
+            else {
+                item.color = '#dddddd';
+                item.bgimg = ''; // 这里以后要注意，没有皮肤
+            }
+            // // 设置其他章节的内容列表为空
+            // if(i != index){
+            //     this.contListArray[i] = '';
+            // }
+            this.pointList.changeItem(i, item);
+        }
+        if (this.contListArray[index]) {
+            this.initContlist(index, this.contListArray[index]);
+        }
+        else {
+            var apiUtil = new ApiUtil();
+            apiUtil.getReadLog(currentitem.chapterid, Handler.create(this, this.initContlist, [index])); //获取阅读日志内容列表
+        }
+    };
+    /**
+     *
+     * @param res
+     */
+    ReadLogView.prototype.initContlist = function (index, list) {
+        // if (jmt.Config.DEBUG) {
+        //     console.log(list);
+        // }
+        if (this.loglistBox) {
+            // 重置滚动位置
+            this.rightPanel.scrollTo(0, 0);
+        }
+        if (list) {
+            this.contListArray[index] = list;
+        }
+        this.rightPanel.vScrollBarSkin = '';
+        // 如果有内容，就渲染内容列表
+        if (this.contListArray[index]) {
+            if (this.loglistBox) {
+                this.loglistBox.removeSelf();
+            }
+            this.loglistBox = new game.LogListBox(list, this.rightPanel.width, this.rightPanel.height, this.rightPanel);
+            this.rightPanel.addChild(this.loglistBox);
+        }
+        // this.loglistBox.left = 0;
+        // this.loglistBox.right = 0;
+        // this.loglistBox.top = 0;
+        // this.loglistBox.bottom = 0;
+    };
+    ReadLogView.prototype.updateLogItem = function (cell, index) {
+        cell.setData(cell.dataSource);
+    };
+    return ReadLogView;
+}(ui.home.ReadLogUI));
+//# sourceMappingURL=ReadLogView.js.map

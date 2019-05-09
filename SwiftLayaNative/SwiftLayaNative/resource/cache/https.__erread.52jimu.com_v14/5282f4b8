@@ -1,0 +1,562 @@
+var Label = Laya.Label;
+var Handler = Laya.Handler;
+var Loader = Laya.Loader;
+var WebGL = Laya.WebGL;
+var SoundManager = Laya.SoundManager;
+// import DialogManager = Laya.DialogManager;
+var LayaEvent = Laya.Event;
+var LayaBox = Laya.Box;
+var LayaImage = Laya.Image;
+var LayaSprite = Laya.Sprite;
+var LayaButton = Laya.Button;
+var LayaList = Laya.List;
+var LayaLabel = Laya.Label;
+var LayaText = Laya.Text;
+var Particle2D = Laya.Particle2D;
+var ParticleSetting = Laya.ParticleSetting;
+var HttpRequestArr = [];
+//判断 是否在浏览器，不在 颜说平台
+jmt.Config.ISSHAREBROWSER = jmt.util.Common.isShareBrowser();
+var GameMain = /** @class */ (function () {
+    function GameMain() {
+        if (!jmt.Config.ISSHAREBROWSER && window.loadingView) {
+            window.loadingView.loading(80);
+            window.loadingView.loadingAutoClose = true; //true代表引擎控制关闭时机。false为开发者手动控制
+            // window.loadingView.bgColor("#ffff00");//设置背景颜色
+            // window.loadingView.setFontColor("#000000");//设置字体颜色
+            // window.loadingView.setTips(["新世界的大门即将打开","敌军还有30秒抵达战场","妈妈说，心急吃不了热豆腐"]);//设置tips数组，会随机出现
+        }
+        // 初始化微信小游戏, QQ轻游戏注释
+        // Laya.MiniAdpter.init();
+        // console.log(Laya.Browser.pixelRatio);
+        // require("weapp-adapter.js");
+        // window.Parser = require("./js/dom_parser"); //微信添加支持HTMLDivelement
+        //程序入口, 1440=>1754兼容iPhone X
+        Laya.init(720, 1280, WebGL);
+        // Laya.Stat.show(0,0);//显示运行信息
+        // 开启资源管理器
+        jmt.SourceManager.instance;
+        jmt.SourceManager.instance.lockSource('texture_snow.png', 'snowSource'); //第一章雪不清除
+        jmt.SourceManager.instance.lockSource('part/Snowstorm.part', 'snowPartSource'); //第一章雪粒子不清除
+        // Laya.stage.frameRate=Laya.Stage.FRAME_SLOW;
+        //判断是 颜说平台 : 浏览器分享
+        if (jmt.Config.ISSHAREBROWSER) {
+            Laya.stage.scaleMode = Laya.Stage.SCALE_SHOWALL;
+        }
+        else {
+            //设置屏幕缩放模式，始终全部等比显示
+            // Laya.stage.scaleMode = Laya.Stage.SCALE_SHOWALL;//方便调试，测试
+            Laya.stage.scaleMode = Laya.Stage.SCALE_FIXED_WIDTH; //兼容iPhone X，上线
+        }
+        //水平对齐方式
+        Laya.stage.alignH = Laya.Stage.ALIGN_CENTER;
+        //垂直对齐方式 
+        Laya.stage.alignV = Laya.Stage.ALIGN_MIDDLE;
+        //屏幕适配
+        // Laya.stage.screenMode = Laya.Stage.SCREEN_NONE;
+        //激活资源版本控制
+        Laya.ResourceVersion.enable("version.json", Handler.create(this, this.beginLoad), Laya.ResourceVersion.FILENAME_VERSION);
+        //弹窗配置
+        UIConfig.popupBgAlpha = 0.5;
+        //点击遮罩关闭窗口
+        UIConfig.closeDialogOnSide = true;
+        // var dlgma = new DialogManager();
+        // dlgma.popupEffectHandler = new Handler(this,this.popupEffect);
+        //全局对话框弹出效果
+        Dialog.manager.popupEffectHandler = new Handler(this, this.popupEffect);
+        Dialog.manager.closeEffectHandler = new Handler(this, this.closeEffect);
+        // jmt.Print.log('进入页面');  
+    }
+    GameMain.prototype.popupEffect = function (dialog) {
+        dialog.scale(1, 1);
+        dialog.alpha = 1;
+        Laya.Tween.from(dialog, { alpha: 0 }, 600, Laya.Ease.circOut, Handler.create(Dialog.manager, Dialog.manager.doOpen, [dialog]));
+        // Laya.Tween.from(dialog, {x: Laya.stage.width / 2, y: Laya.stage.height / 2, scaleX: 0.5, scaleY: 0.5, alpha: 0}, 300,Laya.Ease.backOut, Handler.create(Dialog.manager,Dialog.manager.doOpen, [dialog]));
+    };
+    GameMain.prototype.closeEffect = function (dialog, type) {
+        Laya.Tween.to(dialog, { alpha: 0 }, 200, Laya.Ease.circOut, Handler.create(Dialog.manager, Dialog.manager.doClose, [dialog, type]));
+    };
+    GameMain.prototype.beginLoad = function () {
+        var resArray = [
+            // {url:"res/atlas/skin/common.atlas",type:Laya.Loader.ATLAS},
+            // {url:"res/atlas/skin/home.atlas",type:Laya.Loader.ATLAS},
+            // {url:"res/atlas/skin/clue.atlas",type:Laya.Loader.ATLAS},
+            // {url:"res/atlas/skin/cover.atlas",type:Laya.Loader.ATLAS},
+            // {url:"res/atlas/skin/sku.atlas",type:Laya.Loader.ATLAS},
+            // {url:"res/atlas/skin/store.atlas",type:Laya.Loader.ATLAS},
+            // {url:"res/atlas/skin/option.atlas",type:Laya.Loader.ATLAS},
+            // {url:"res/atlas/skin/series.atlas",type:Laya.Loader.ATLAS},
+            // {url:"res/atlas/skin/closeup.atlas",type:Laya.Loader.ATLAS},
+            // {url:"res/atlas/skin/wait.atlas",type:Laya.Loader.ATLAS},
+            // {url:"res/atlas/skin/end.atlas",type:Laya.Loader.ATLAS},
+            // {url:"res/atlas/skin/asideact.atlas",type:Laya.Loader.ATLAS},          
+            // {url:jmt.Skin.STARUP_BG,type:Laya.Loader.IMAGE},
+            { url: "res/atlas/skin/niji.atlas", type: Laya.Loader.ATLAS },
+            { url: "res/atlas/skin/common.atlas", type: Laya.Loader.ATLAS },
+            { url: jmt.Skin.READING_DEFBG, type: Laya.Loader.IMAGE }
+        ];
+        //平台，为了兼容零下记忆
+        // if(jmt.Config.NOVELID == 10000){
+        // resArray.push({url:"res/atlas/skin/common.atlas",type:Laya.Loader.ATLAS});
+        // resArray.push({url:"res/atlas/skin/home.atlas",type:Laya.Loader.ATLAS});
+        // }
+        Laya.loader.load(resArray, Handler.create(this, this.onStart), null, null, 1, true);
+    };
+    GameMain.prototype.initGameData = function () {
+        if (WywUtil.onLimixiu()) {
+            jmt.Config.GAMEID = GameStatusInfo.gameId;
+            jmt.Config.OS = GameStatusInfo.platform;
+            jmt.Config.OSVN = GameStatusInfo.osVersion;
+            if (GameStatusInfo.QQVer >= "7.6.3") {
+                jmt.Config.MODEL = GameStatusInfo.model;
+            }
+            if (GameStatusInfo.QQVer >= "7.6.5") {
+                //unknown:-1, no:0, wifi:1, 2G:2, 3G:3, 4G:4, CABLE:5
+                var connType = GameStatusInfo.connType;
+                if (connType == 1) {
+                    jmt.Config.NET = 'wifi';
+                }
+                else if (connType == 2) {
+                    jmt.Config.NET = '2g';
+                }
+                else if (connType == 3) {
+                    jmt.Config.NET = '3g';
+                }
+                else if (connType == 4) {
+                    jmt.Config.NET = '4g';
+                }
+                else if (connType == 5) {
+                    jmt.Config.NET = 'cable';
+                }
+            }
+            var width = BK.Director.screenPixelSize.width;
+            var height = BK.Director.screenPixelSize.height;
+            jmt.Config.DM = width + '*' + height;
+            jmt.Config.MID = XcryUtil.md5(GameStatusInfo.openId + jmt.Config.OS + jmt.Config.OSVN + jmt.Config.MODEL + jmt.Config.DM + GameStatusInfo.QQVer);
+        }
+        else if (Laya.Browser.onMiniGame) {
+            var sysInfo = wx.getSystemInfoSync();
+            //获取微信界面大小
+            var width = sysInfo.screenWidth;
+            var height = sysInfo.screenHeight;
+            jmt.Config.MODEL = sysInfo.model;
+            jmt.Config.OS = sysInfo.platform;
+            jmt.Config.DM = width + '*' + height;
+            jmt.Config.MID = XcryUtil.md5(jmt.Config.OS + jmt.Config.MODEL + jmt.Config.DM + sysInfo.brand + sysInfo.system + sysInfo.version);
+            wx.getNetworkType({
+                success: function (res) {
+                    jmt.Config.NET = res.networkType;
+                }
+            });
+        }
+        else {
+            if (Laya.Browser.onAndroid) {
+                jmt.Config.OS = 'android';
+            }
+            else if (Laya.Browser.onIOS) {
+                jmt.Config.OS = 'ios';
+            }
+            else if (Laya.Browser.onPC) {
+                jmt.Config.OS = 'pc';
+            }
+        }
+    };
+    GameMain.prototype.onStart = function () {
+        // this.showTest();
+        if (!jmt.Config.ISSHAREBROWSER && window.loadingView) {
+            window.loadingView.loading(100);
+        }
+        //判断是 颜说平台 : 浏览器分享
+        if (jmt.Config.ISSHAREBROWSER) {
+            //分享链接 浏览器打开
+            jmt.Data.uid = 0; //上线记得改成0 
+            var novelid = jmt.util.Common.getQuery('novelid');
+            novelid = novelid ? novelid : jmt.Config.NOVELID;
+            novelid && (jmt.Config.NOVELID = parseInt(novelid));
+            // jmt.Config.PREVIEW = 1;
+            // jmt.Data.chapterid = 11100;
+            var login = Login.instans;
+            login.getNovelInfo();
+        }
+        else {
+            // 颜说 平台打开
+            var login = Login.instans;
+            login.checkLogin();
+        }
+        // jmt.Print.log('===========userAgent==========');
+        // jmt.Print.log(Laya.Browser.userAgent);
+        //本地调试，零下记忆、平台
+        //平台，为了兼容零下记忆
+        // if(jmt.Config.NOVELID == 10000){
+        //     Laya.timer.loop(5000, jmt.common.ImgManager, jmt.common.ImgManager.clearImg);
+        //     this.initGameData();
+        //     WywUtil.onException();//监听异常信息
+        //     WywUtil.onEnterListen();//监听玩一玩前后台切换，恢复音乐播放
+        //     let startView = new StartView(Handler.create(this,this.loadMain));
+        //     Laya.stage.addChild(startView); 
+        // }else{
+        //     //平台，本地测试
+        //     let bridge = Login.instans;
+        //     bridge.checkLogin();
+        // }
+    };
+    GameMain.prototype.loadMain = function () {
+        //主界面
+        this.mainView = new MainView();
+        Laya.stage.addChild(this.mainView);
+    };
+    /**
+     *
+     * @param info  {chapterinfo,storeinfo,readloglist}
+     */
+    GameMain.initGame = function (info) {
+        // console.log('读档');
+        // console.log(info);
+        // jmt.Print.log('重头开始'+ JSON.stringify(info));
+        var showchapter = false;
+        if (info) {
+            if (info.chapterinfo) {
+                //如果根章节id ==章节id，说明这个章节是大章节切换，所以要显示章节封面；不相等，说明是支线章节
+                if (info.chapterinfo.chapterid == info.chapterinfo.rootchapterid) {
+                    showchapter = true;
+                }
+                // if (info.storeinfo) {
+                //     if (info.storeinfo.chapterid==info.chapterinfo.chapterid) {
+                //         info.chapterinfo.show_conid = info.storeinfo.conid;//指定跳转内容ID
+                //     }
+                // }
+                jmt.Data.chapterinfo = info.chapterinfo;
+            }
+            jmt.Data.resetStore(info.storeinfo, info.chapterinfo, info.readloglist);
+            if (info.openrolelist) {
+                //已揭晓角色列表
+                jmt.Data.openrolelist = info.openrolelist;
+            }
+            // jmt.Print.log('显示info ');
+            // jmt.Print.log(info);
+            if (info.showinfo) {
+                // jmt.Print.log('显示showinfo ');
+                // jmt.Print.log(info.showinfo);
+                jmt.Data.showinfo = info.showinfo;
+            }
+            //回调父级页面
+            // jmt.util.Common.clearStage();
+            //平台，为了兼容零下记忆
+            //如果不是零下记忆，是平台，就不显示封面
+            if (jmt.Config.NOVELID != 10000) {
+                showchapter = false;
+            }
+            this.LoadGame(showchapter);
+        }
+        else {
+            jmt.common.Toast.msg('未知错误');
+        }
+    };
+    //加载资源
+    GameMain.LoadGame = function (showchapter) {
+        //回调父级页面
+        jmt.util.Common.clearStage();
+        if (showchapter) {
+            this.loadingView = new LoadingView(jmt.Data.chapterinfo.chapterid, Handler.create(this, this.checkPay));
+            Laya.stage.addChild(this.loadingView);
+            // Laya.stage.replaceChild(this.loadingView,this.oldView);
+        }
+        else {
+            // jmt.Print.log('重头开始1');
+            //加载资源，写成异步
+            this.loadingView = new LoadingView(jmt.Data.chapterinfo.chapterid);
+            Laya.stage.addChild(this.loadingView);
+            //读档时候，如果更多弹窗存在，关闭更多弹窗
+            if (ReadMoreDialog._instans) {
+                ReadMoreDialog._instans.close();
+            }
+            //当前阅读界面存在，清除当前阅读界面
+            if (ReadingView._instans) {
+                ReadingView._instans.clearReading();
+            }
+            // this.ShowReading();
+            //阅读界面
+            this.readingView = ReadingView.instans(jmt.Data.chapterinfo.chapterid);
+            if (jmt.Data.showinfo) {
+                this.readingView.isJump = true;
+                // jmt.Print.log('重头开始2');   
+            }
+            Laya.stage.addChild(this.readingView);
+            // jmt.Print.log('重头开始3');
+        }
+    };
+    //章节是否付款了
+    GameMain.checkPay = function () {
+        //微信小游戏平台 安卓端 单章节付费
+        if (Laya.Browser.onMiniGame && Laya.Browser.onAndroid) {
+            if (+jmt.Data.chapterinfo.ischarge && jmt.Data.chapterinfo.isbuy != 1) {
+                var unlockView = new ChapterUnlock(jmt.Data.chapterinfo, Handler.create(this, this.ShowChapterCover));
+                Laya.stage.addChild(unlockView);
+            }
+            else {
+                this.ShowChapterCover();
+            }
+        }
+        else {
+            this.ShowChapterCover();
+        }
+        // //QQ轻游戏平台
+        // if(WywUtil.onLimixiu()){
+        //     this.ShowChapterCover();
+        // }
+    };
+    //章节封面
+    GameMain.ShowChapterCover = function () {
+        this.chapterCoverView = new ChapterCoverView(jmt.Data.chapterinfo);
+        Laya.stage.addChild(this.chapterCoverView);
+        // //微信小游戏平台
+        // if(Laya.Browser.onMiniGame){
+        //     GameMain.intoReadingView();
+        // }
+        // 如果是在QQ轻游戏  微信IOS 邀请功能
+        if (WywUtil.onLimixiu() || WxUtil.onWxIOS()) {
+            if (+jmt.Data.chapterinfo.ischarge && jmt.Data.chapterinfo.isbuy != 1) {
+                var unlockDialog = new game.qqChapterUnlock(jmt.Data.chapterinfo, Handler.create(GameMain, GameMain.intoReadingView));
+                unlockDialog.popup();
+                ChapterCoverView.isOpenUnlockView = 1;
+            }
+            else {
+                GameMain.intoReadingView();
+            }
+        }
+        else {
+            GameMain.intoReadingView();
+        }
+        //QQ轻游戏平台
+        // if(Laya.Browser.onMiniGame){
+        //     GameMain.intoReadingView();
+        // }else{
+        //     let unlockDialog = new game.qqChapterUnlock(); 
+        //     unlockDialog.popup();
+        // }
+    };
+    //进入阅读界面
+    GameMain.intoReadingView = function () {
+        var _this = this;
+        var showtime = 3000;
+        var uid = jmt.util.Common.getQuery('uid');
+        if (uid) {
+            showtime = 500;
+        }
+        Laya.timer.once(showtime, this, function () {
+            _this.chapterCoverView.clear();
+            // this.chapterCoverView.removeSelf();
+            // this.chapterCoverView.destroy();
+            //阅读界面
+            _this.readingView = ReadingView.instans(jmt.Data.chapterinfo.chapterid);
+            Laya.stage.addChild(_this.readingView);
+        });
+    };
+    /**
+     * 快速测试
+     */
+    GameMain.prototype.showTest = function () {
+        if (jmt.Config.DEBUG && jmt.Data.uid < 1) {
+            jmt.Data.uid = jmt.Data.debug_uid;
+        }
+        var imgurl = 'https://erres.52jimu.com/scene/20/56/20565cc92935d6d5d74669c73fd74d47.png';
+        var bgImg = new Laya.Image(imgurl);
+        bgImg.left = 0;
+        bgImg.right = 0;
+        bgImg.top = 0;
+        bgImg.bottom = 0;
+        Laya.stage.addChild(bgImg);
+        this.showCover2();
+    };
+    GameMain.prototype.showWxAd = function () {
+        WxUtil.showAd('1000');
+    };
+    GameMain.prototype.showCover2 = function () {
+        var cover = 'res/6fff50b02e12053e4bf874ef7a290c49_spine.sk';
+        // var cover = 'http://res.er.52jimu.com/role/99/f9/99f9afee9b021c3ce3513ffeba2eb907.sk';
+        var role = {
+            roleid: 5,
+            type: 0,
+            spine: cover
+        };
+        var rolebox = new SpineRoleBox(Laya.stage, role, Laya.stage.width / 2, Laya.stage.height);
+        rolebox.load(role.spine, 'emoji_99');
+        rolebox.bottom = 0;
+        rolebox.zOrder = 1;
+    };
+    GameMain.prototype.showCover3 = function () {
+        var _this = this;
+        var img = new Laya.Image('res/image/general_bg_pic.jpg');
+        Laya.stage.addChild(img);
+        img.top = 0;
+        img.bottom = 0;
+        img.left = 0;
+        img.right = 0;
+        var multibox = new game.MultiRoleBox(this);
+        var sk = 'http://res.er.52jimu.com/role/56/ff/56ffd31c89fd27299ceb5e96561b6030.sk';
+        var sk2 = 'http://res.er.52jimu.com/role/9d/5c/9d5cbd3f25fabcb3ae53c7c1da7d81b4.sk';
+        var sk3 = 'http://res.er.52jimu.com/role/97/24/972478aad31644412f2ca116d40c80ff.sk';
+        var sk4 = 'http://res.er.52jimu.com/role/74/3f/743f27d64a30ae6a393ad2ee838e4780.sk';
+        // Laya.timer.once(3000,this, ()=>{
+        //     var rolelist = [];
+        //     var role = {
+        //         roleid:5,
+        //         type: 0,
+        //         spine: sk
+        //     };
+        //     rolelist.push(role);
+        //     multibox.addRoleList(rolelist);
+        //     Laya.timer.once(3000,this, ()=>{
+        //         var rolelist = [];
+        //         var role = {
+        //             roleid:5,
+        //             type: 0,
+        //             spine: sk
+        //         };
+        //         rolelist.push(role);
+        //         var role2 = {
+        //             roleid:6,
+        //             type: 1,
+        //             spine: sk2
+        //         };
+        //         rolelist.push(role2);
+        //         var role3 = {
+        //             roleid:7,
+        //             type: 2,
+        //             spine: sk3
+        //         };
+        //         rolelist.push(role3);
+        //         multibox.addRoleList(rolelist);
+        //     }); 
+        // }); 
+        Laya.timer.once(3000, this, function () {
+            var rolelist = [];
+            var role = {
+                roleid: 10,
+                type: 2,
+                spine: sk3
+            };
+            rolelist.push(role);
+            multibox.addRoleList(rolelist);
+            Laya.timer.once(3000, _this, function () {
+                var rolelist = [];
+                var role = {
+                    roleid: 11,
+                    type: 2,
+                    spine: sk4
+                };
+                rolelist.push(role);
+                multibox.addRoleList(rolelist);
+                Laya.timer.once(3000, _this, function () {
+                    var rolelist = [];
+                    var role = {
+                        roleid: 10,
+                        type: 2,
+                        spine: sk3
+                    };
+                    rolelist.push(role);
+                    multibox.addRoleList(rolelist);
+                    Laya.timer.once(3000, _this, function () {
+                        var rolelist = [];
+                        var role = {
+                            roleid: 1,
+                            type: 0,
+                            spine: sk
+                        };
+                        rolelist.push(role);
+                        var role2 = {
+                            roleid: 2,
+                            type: 1,
+                            spine: sk2
+                        };
+                        rolelist.push(role2);
+                        var role3 = {
+                            roleid: 3,
+                            type: 2,
+                            spine: sk3
+                        };
+                        rolelist.push(role3);
+                        multibox.addRoleList(rolelist);
+                        Laya.timer.once(3000, _this, function () {
+                            var rolelist = [];
+                            var role = {
+                                roleid: 2,
+                                type: 0,
+                                spine: sk
+                            };
+                            rolelist.push(role);
+                            var role2 = {
+                                roleid: 4,
+                                spine: sk2
+                            };
+                            rolelist.push(role2);
+                            multibox.addRoleList(rolelist);
+                            Laya.timer.once(3000, _this, function () {
+                                var rolelist = [];
+                                var role = {
+                                    roleid: 5,
+                                    type: 0,
+                                    spine: sk
+                                };
+                                rolelist.push(role);
+                                multibox.addRoleList(rolelist);
+                                Laya.timer.once(3000, _this, function () {
+                                    var rolelist = [];
+                                    var role = {
+                                        roleid: 5,
+                                        type: 0,
+                                        spine: sk
+                                    };
+                                    rolelist.push(role);
+                                    var role2 = {
+                                        roleid: 6,
+                                        type: 1,
+                                        spine: sk2
+                                    };
+                                    rolelist.push(role2);
+                                    var role3 = {
+                                        roleid: 7,
+                                        type: 2,
+                                        spine: sk3
+                                    };
+                                    rolelist.push(role3);
+                                    multibox.addRoleList(rolelist);
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+        });
+    };
+    GameMain.prototype.showCover4 = function () {
+        var box = new Laya.Box();
+        Laya.stage.addChild(box);
+        box.top = 0;
+        box.bottom = 0;
+        box.left = 0;
+        box.right = 0;
+        var sk = 'http://res.er.52jimu.com/role/9d/5c/9d5cbd3f25fabcb3ae53c7c1da7d81b4.sk';
+        var skimg = 'http://res.er.52jimu.com/role/9d/5c/9d5cbd3f25fabcb3ae53c7c1da7d81b4.png';
+        var role = {
+            roleid: 7,
+            type: 2,
+            spinecover: sk
+        };
+        var rolebox = new SpineRoleBox(box, role, Laya.stage.width / 2, Laya.stage.height);
+        rolebox.load(sk, 'emoji_3');
+        rolebox.bottom = 0;
+        rolebox.zOrder = 1;
+        // box.alpha=0.5;
+        var maskBox = new Laya.Sprite();
+        maskBox.graphics.drawRect(0, 0, box.width, box.height, '#ffffff');
+        // box.mask = maskBox;
+        // box.addChild(maskBox);
+        rolebox.mask = maskBox;
+        maskBox.alpha = 0;
+        Laya.Tween.to(maskBox, { alpha: 1 }, 5000);
+    };
+    return GameMain;
+}());
+new GameMain();
+//# sourceMappingURL=LayaIndex.js.map

@@ -1,0 +1,8 @@
+var ReadStore = /** @class */ (function () {
+    //读档，拿到安卓端给我的chapterInfo和showinfo，然后如果给我storeinfo,readlist，就要重置本地存档，防止用户重新存档，拿不到本地的storeinffo,readlist
+    function ReadStore(info) {
+        GameMain.initGame(info);
+    }
+    return ReadStore;
+}());
+//# sourceMappingURL=ReadStore.js.map

@@ -1,0 +1,74 @@
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var TipsView = /** @class */ (function (_super) {
+    __extends(TipsView, _super);
+    function TipsView(type, complete) {
+        var _this = _super.call(this) || this;
+        _this.name = 'TipsView';
+        _this.canclose = false;
+        _this.height = Laya.stage.height;
+        _this.type = type;
+        var hastip = jmt.Data.hasTips(type);
+        if (!hastip) {
+            switch (type) {
+                case jmt.Data.TIPS_TYPE_STORE:
+                    _this.bgImg.skin = jmt.Skin.TIPS_STORE;
+                    break;
+                case jmt.Data.TIPS_TYPE_LOG:
+                    _this.bgImg.skin = jmt.Skin.TIPS_LOG;
+                    break;
+                case jmt.Data.TIPS_TYPE_SKU:
+                    _this.bgImg.skin = jmt.Skin.TIPS_SKU;
+                    break;
+                case jmt.Data.TIPS_TYPE_WAIT:
+                    _this.bgImg.skin = jmt.Skin.TIPS_WAIT;
+                    break;
+                case jmt.Data.TIPS_TYPE_CLUE_1:
+                    _this.bgImg.skin = jmt.Skin.TIPS_CLUE_1;
+                    break;
+                case jmt.Data.TIPS_TYPE_CLUE_2:
+                    _this.bgImg.skin = jmt.Skin.TIPS_CLUE_2;
+                    break;
+                default:
+                    break;
+            }
+            jmt.Data.setTips(type);
+        }
+        if (complete) {
+            _this.completeHandler = complete;
+        }
+        _this.on(LayaEvent.CLICK, _this, _this.onClose);
+        Laya.timer.once(3000, _this, function () {
+            _this.canclose = true;
+        });
+        return _this;
+    }
+    TipsView.prototype.onClose = function (res) {
+        if (!this.canclose) {
+            return;
+        }
+        this.close();
+        if (this.completeHandler) {
+            this.completeHandler.runWith([res]);
+        }
+    };
+    TipsView.prototype.onClosed = function () {
+        _super.prototype.onClosed.call(this);
+        jmt.Resource.clearTextureRes(this.bgImg.skin);
+        // this.removeSelf();
+        this.destroy(true);
+    };
+    return TipsView;
+}(ui.dialog.TipsUI));
+//# sourceMappingURL=TipsView.js.map

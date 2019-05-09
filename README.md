@@ -4,19 +4,20 @@ LayaNative与Swift交互，LayaNative与OC
 ---------------- Swift <--> 实现方案 ---------------- 
 
 现在Swift引入LayaNative方式
-Swift调用Objective-C
-OC在调用Objective-C/C++
-Objective-C/C++再调SDK
++ Swift调用Objective-C
++ OC在调用Objective-C/C++
++ Objective-C/C++再调SDK
 
 详细说明：
-Swift桥接文件Bridging-Header.h中引入原生OC
-原生OC调用Objective-C/C++(mm)
-Objective-C/C++(mm)引入并调用SDK相关文件
+1. Swift桥接文件Bridging-Header.h中引入原生OC
+2. 原生OC调用Objective-C/C++(mm)
+3. Objective-C/C++(mm)引入并调用SDK相关文件
 
-Swift导入LayaNative编译不过
+------------ Swift导入LayaNative编译不过 ------------
 
-报错位置：
-conchRuntime.h  ->  #import <functional>
+>报错位置：
+
+>> conchRuntime.h  ->  #import <functional>
 
 错误信息：缺少C++标准库，即：'functional' file not found
 
@@ -28,6 +29,12 @@ conchRuntime.h  ->  #import <functional>
 1. 无法知道#import <functional>需要什么系统库的支持
   
 同时存在：#import <conchRuntime.h> -> 'conchRuntime.h' file not found
+
+如果Bridge中引入#import "LayaBridgeViewController.h"，就会报
+#import <conchRuntime.h> -> 'conchRuntime.h' file not found
+
+- 但是LayaBridgeViewController是OC原生文件
+- ReadingGamesViewController才是OC/C++混合文件
 
 ### 尝试检测
 

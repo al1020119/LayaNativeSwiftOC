@@ -1,0 +1,74 @@
+var DicObj = /** @class */ (function () {
+    function DicObj(_strongType) {
+        if (_strongType === void 0) { _strongType = null; }
+        this._length = 0;
+        this._strongType = _strongType;
+        this._container = new Object();
+    }
+    Object.defineProperty(DicObj.prototype, "container", {
+        get: function () {
+            return this._container;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(DicObj.prototype, "length", {
+        get: function () {
+            return this._length;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    DicObj.prototype.add = function (key, value) {
+        if (this._strongType && !(value instanceof this._strongType)) {
+            throw new Error('Obj Dictionary[add] Type Check Error nedd ' + this._strongType);
+        }
+        if (!this.isHasKey(key)) {
+            this._length++;
+            this._container[key] = value;
+        }
+    };
+    DicObj.prototype.reset = function (key, value) {
+        if (this._strongType && !(value instanceof this._strongType)) {
+            throw new Error('Obj Dictionary[add] Type Check Error nedd ' + this._strongType);
+        }
+        if (this.isHasKey(key)) {
+            this._container[key] = value;
+        }
+        else {
+            console.warn('Obj Dictionnary: warning you reset a not exist ' + key);
+        }
+    };
+    DicObj.prototype.remove = function (key) {
+        if (this.isHasKey(key)) {
+            this._container[key] = null;
+            delete this._container[key];
+            this._length - 1;
+        }
+        else {
+            throw new Error('not fined key');
+        }
+    };
+    DicObj.prototype.clear = function () {
+        this._length = 0;
+        this._container = null;
+        this._container = new Object();
+    };
+    DicObj.prototype.get = function (key) {
+        // console.log('进入get1111111')
+        if (!this.isHasKey(key)) {
+            // console.log('是否存在key')
+            // console.log(key);
+            throw new Error('Obj Dictionary: Error you get a not exist ' + key);
+        }
+        // console.log('进入get');
+        // console.log(key);
+        return this._container[key];
+    };
+    DicObj.prototype.isHasKey = function (key) {
+        // console.log(this._container);
+        return this._container.hasOwnProperty(key);
+    };
+    return DicObj;
+}());
+//# sourceMappingURL=DicObj.js.map

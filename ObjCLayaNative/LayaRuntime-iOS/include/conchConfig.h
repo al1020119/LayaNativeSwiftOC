@@ -30,8 +30,6 @@
      UIInterfaceOrientationMaskLandscapeRight,       ===16
      */
     int             m_nOrientationType;     //游戏的方向
-    int             m_nPayType;             //充值类型 0是充值 1是购买道具
-    int             m_nChargeType;          //显示货币类型 0是人民币 1是平台币
     int             m_nLoginType;           //登陆类型 0是没有  1是登陆 2是授权
     int             m_nEnterPlatformType;   //第三方平台的类型
 }

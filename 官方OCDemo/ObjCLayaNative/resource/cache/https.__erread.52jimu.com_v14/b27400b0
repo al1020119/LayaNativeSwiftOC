@@ -1,0 +1,145 @@
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var WaitView = /** @class */ (function (_super) {
+    __extends(WaitView, _super);
+    function WaitView(timeNum, coninfo, callHandler) {
+        var _this = _super.call(this) || this;
+        _this.name = 'WaitView';
+        //banner广告
+        if (jmt.GlobalData.PACKGE) {
+            if (!jmt.GlobalData.PACKGE.all.isbuy) {
+                //QQ
+                WywUtil.addQQbanner();
+                //微信
+                WxUtil.addWxBanner();
+                _this.tip_text.top = Laya.stage.height - 230;
+            }
+        }
+        if (coninfo) {
+            _this.coninfo = coninfo;
+        }
+        if (callHandler) {
+            _this.callHandler = callHandler;
+        }
+        if (timeNum) {
+            _this.timeNum = timeNum;
+            _this.timeNumComplete();
+            Laya.timer.loop(1000, _this, _this.timeDown);
+        }
+        else {
+            _this.timeNum = 10;
+        }
+        _this.goRota(_this.circle_out);
+        _this.goRota(_this.circle_mid);
+        _this.goRota(_this.circle_in);
+        //添加玩一玩图标
+        if (WywUtil.onLimixiu()) {
+            var qqwywIcon = new game.JoinDesk();
+            _this.addChild(qqwywIcon);
+            qqwywIcon.top = 28;
+            qqwywIcon.left = 23;
+        }
+        _this.btn_reduce_time.on(Laya.Event.CLICK, _this, _this.onLookVedio);
+        return _this;
+    }
+    WaitView.prototype.timeNumComplete = function () {
+        var timeM = Math.floor(this.timeNum / 60);
+        var timeS = Math.round(this.timeNum % 60);
+        var m = jmt.util.Common.numpre(timeM);
+        var s = jmt.util.Common.numpre(timeS);
+        this.time_Text.text = m + ":" + s;
+        if (timeM >= 60) {
+            var h = Math.floor(timeM / 60);
+            var m_1 = jmt.util.Common.numpre(Math.round(timeM % 60));
+            this.time_Text.text = h + ":" + m_1 + ":" + s;
+        }
+    };
+    WaitView.prototype.goRota = function (current) {
+        Laya.Tween.to(current, { rotation: 360 }, 10000, Laya.Ease.linearInOut, Laya.Handler.create(this, this.goOnRota, [current]));
+    };
+    WaitView.prototype.goOnRota = function (current) {
+        current.rotation = 0;
+        this.goRota(current);
+    };
+    WaitView.prototype.timeDown = function () {
+        this.timeNumComplete();
+        this.timeNum--;
+        if (this.timeNum <= 0) {
+            Laya.timer.clear(this, this.timeDown);
+            //时间到了，删除自己，清除页面
+            this.clear();
+        }
+    };
+    WaitView.prototype.clear = function () {
+        //清除banner广告
+        WywUtil.desQQbanner();
+        WxUtil.desWxBanner();
+        Laya.timer.once(1000, this, function () {
+            if (this.callHandler) {
+                this.callHandler.run();
+            }
+            this.removeSelf();
+            this.destroy(true);
+        });
+    };
+    WaitView.prototype.reduceTime = function () {
+        if (this.reduceAfterTime) {
+            this.timeNum = this.reduceAfterTime;
+            this.reduceAfterTime = 0;
+        }
+    };
+    WaitView.prototype.onLookVedio = function () {
+        this.btn_reduce_time.off(Laya.Event.CLICK, this, this.onLookVedio);
+        Laya.timer.once(2000, this, function () {
+            this.btn_reduce_time.on(Laya.Event.CLICK, this, this.onLookVedio);
+        });
+        // var apiUtil = new ApiUtil();
+        // apiUtil.reduceWaitTime(this.coninfo.chapterid, this.coninfo.conid, 0, 0 , Handler.create(this, this.checkBVS));
+        if (jmt.Config.DEBUG) {
+            this.resWaitTime(); //调试模式直接减时间
+        }
+        else {
+            this.checkBVS();
+        }
+    };
+    WaitView.prototype.checkBVS = function (res) {
+        var isVS = 1;
+        var vsPrompt = new game.lookVedioOrShare('首次分享成功，缩短5分钟的等待时间', '立即分享', jmt.QQresType.WAIT, this.coninfo.chapterid, 0, isVS, this.coninfo.conid, 0, 0, Handler.create(this, this.resWaitTime));
+        if (isVS === 1) {
+            vsPrompt.infoLabel.text = '每观看1次视频，缩短5分钟的等待时间';
+            vsPrompt.btnImg.label = '观看视频';
+        }
+        vsPrompt.popup();
+    };
+    WaitView.prototype.resWaitTime = function (args) {
+        var apiUtil = new ApiUtil();
+        apiUtil.reduceWaitTime(this.coninfo.chapterid, this.coninfo.conid, 0, Handler.create(this, this.getWaitTime));
+    };
+    WaitView.prototype.getWaitTime = function (res) {
+        if (res) {
+            if (res.finish == 0 && res.remaintime) {
+                this.reduceAfterTime = res.remaintime;
+                this.reduceTime();
+            }
+            if (res.finish == 1 && res.remaintime == 0) {
+                this.timeNum = 0;
+                //清除banner广告
+                WywUtil.desQQbanner();
+                WxUtil.desWxBanner();
+            }
+        }
+    };
+    return WaitView;
+}(ui.home.WaitUI));
+//# sourceMappingURL=WaitView.js.map

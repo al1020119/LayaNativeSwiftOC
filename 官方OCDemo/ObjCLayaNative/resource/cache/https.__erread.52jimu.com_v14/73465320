@@ -1,0 +1,71 @@
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var StoreTitleView = /** @class */ (function (_super) {
+    __extends(StoreTitleView, _super);
+    function StoreTitleView(storeinfo, complete) {
+        var _this = _super.call(this) || this;
+        _this.name = 'StoreTitleView';
+        _this.bgImg.skin = jmt.Skin.CUSTOM_NAMEBOX_BG;
+        _this.completeHandler = complete;
+        _this.storeinfo = storeinfo;
+        _this.btnOk.on(LayaEvent.CLICK, _this, _this.saveStore);
+        var closeIcon = jmt.Config.closeIcon(_this);
+        closeIcon.on(Laya.Event.CLICK, _this, _this.closeView);
+        return _this;
+    }
+    StoreTitleView.prototype.closeView = function () {
+        var res = 0;
+        this.completeHandler.runWith(res);
+        this.close();
+    };
+    StoreTitleView.prototype.onClosed = function () {
+        _super.prototype.onClosed.call(this);
+        // this.removeSelf();
+        this.destroy(true);
+    };
+    StoreTitleView.prototype.saveStore = function () {
+        if (this.inTitle.text == '') {
+            jmt.common.Toast.error('请输入存档标题');
+            return;
+        }
+        if (this.inTitle.text.length > 15) {
+            jmt.common.Toast.error('存档标题超出范围');
+            return;
+        }
+        var title = this.inTitle.text;
+        var storeinfo = jmt.Data.getCurrentStore();
+        var readloglist = jmt.Data.getReadLoglist();
+        if (storeinfo) {
+            storeinfo.index = this.storeinfo.index;
+            var apiUtil = new ApiUtil();
+            apiUtil.storeReading(storeinfo, readloglist, storeinfo.index, title, storeinfo.storeid, Handler.create(this, this.storeResult));
+        }
+        else {
+            jmt.common.Toast.error('本地存档错误');
+        }
+    };
+    StoreTitleView.prototype.storeResult = function (res) {
+        if (res) {
+            //回调父级页面
+            jmt.common.Toast.success('保存成功');
+            this.close();
+            this.completeHandler.runWith(res);
+        }
+        else {
+            jmt.common.Toast.error('未知错误');
+        }
+    };
+    return StoreTitleView;
+}(ui.dialog.StoreTitleUI));
+//# sourceMappingURL=StoreTitleView.js.map

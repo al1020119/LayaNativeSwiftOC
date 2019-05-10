@@ -1,0 +1,64 @@
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var ChapterCoverView = /** @class */ (function (_super) {
+    __extends(ChapterCoverView, _super);
+    function ChapterCoverView(chapterinfo) {
+        var _this = _super.call(this) || this;
+        _this.name = 'ChapterCoverView';
+        _this.height = Laya.stage.height;
+        _this.bgImg.skin = jmt.Skin.CHAPTER_COVER_BG;
+        // console.log(chapterinfo);
+        _this.on(Laya.Event.CLICK, _this, _this.openChapterUnlockView);
+        if (chapterinfo.roottitle) {
+            _this.txtTitle.text = chapterinfo.roottitle;
+        }
+        else {
+            _this.txtTitle.text = chapterinfo.title;
+        }
+        // chapterinfo.index=13;
+        if (chapterinfo.index > 9) {
+            var index1 = Math.floor(chapterinfo.index / 10);
+            var index2 = chapterinfo.index % 10;
+            var clipIndex1 = new Laya.Clip(jmt.Skin.CLIP_CHAPTER_INDEX, 10, 1);
+            clipIndex1.index = index1;
+            var clipIndex2 = new Laya.Clip(jmt.Skin.CLIP_CHAPTER_INDEX, 10, 1);
+            clipIndex2.index = index2;
+            _this.indexBox.addChild(clipIndex1);
+            _this.indexBox.addChild(clipIndex2);
+        }
+        else {
+            var clipIndex1 = new Laya.Clip(jmt.Skin.CLIP_CHAPTER_INDEX, 10, 1);
+            clipIndex1.index = chapterinfo.index;
+            _this.indexBox.addChild(clipIndex1);
+            clipIndex1.centerX = 0;
+        }
+        return _this;
+    }
+    ChapterCoverView.prototype.openChapterUnlockView = function () {
+        if (!ChapterCoverView.isOpenUnlockView) {
+            if (+jmt.Data.chapterinfo.ischarge && jmt.Data.chapterinfo.isbuy != 1) {
+                var unlockDialog = new game.qqChapterUnlock(jmt.Data.chapterinfo, Handler.create(GameMain, GameMain.intoReadingView));
+                unlockDialog.popup();
+                ChapterCoverView.isOpenUnlockView = 1;
+            }
+        }
+    };
+    ChapterCoverView.prototype.clear = function () {
+        jmt.Resource.clearTextureRes(this.bgImg.skin);
+        // this.removeSelf();
+        this.destroy(true);
+    };
+    return ChapterCoverView;
+}(ui.home.ChapterCoverUI));
+//# sourceMappingURL=ChapterCoverView.js.map

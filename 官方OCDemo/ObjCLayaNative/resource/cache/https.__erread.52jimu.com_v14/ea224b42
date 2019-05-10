@@ -1,0 +1,130 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset='utf-8' />
+	<title>颜说</title>
+	<meta name='viewport' content='width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no'
+	/>
+	<meta name="renderer" content="webkit"/>
+	<meta name='apple-mobile-web-app-capable' content='yes' />
+	<meta name='full-screen' content='true' />
+	<meta name='x5-fullscreen' content='true' />
+	<meta name='360-fullscreen' content='true' />
+	<meta name="laya" screenorientation ="portrait"/>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+	<meta http-equiv='expires' content='0' />
+	<meta http-equiv="Cache-Control" content="no-siteapp"/>
+</head>
+
+<body>
+	<script>
+		if(window.loadingView){
+			window.loadingView.loading(20);
+		}
+	</script>
+	<script type="text/javascript" src="libs/laya.core.js"></script>
+	<script type="text/javascript" src="libs/laya.wxmini.js"></script>
+    <script type="text/javascript" src="libs/laya.webgl.js"></script>
+    <script type="text/javascript" src="libs/laya.ani.js"></script>
+    <script type="text/javascript" src="libs/laya.filter.js"></script>
+    <script type="text/javascript" src="libs/laya.html.js"></script>
+    <script type="text/javascript" src="libs/laya.particle.js"></script>
+    <script type="text/javascript" src="libs/laya.tiledmap.js"></script>
+    <script type="text/javascript" src="libs/laya.ui.js"></script>
+	<!--jsfile--Custom-->
+
+	<!--//发布微信要注释掉-->
+	<script src="js/ext/crypto/crypto-js.js"></script>
+	
+	<script src="js/JmtAir.js"></script>
+	<script src="js/ext/HttpUtil.js"></script>
+	<!--jsfile--Custom-->
+	<!--jsfile--startTag-->
+	<script src="js/selfPlatform/weather/WeatherType.js"></script>
+	<script src="js/selfPlatform/weather/WeatherRain.js"></script>
+	<script src="js/selfPlatform/weather/WeatherManager.js"></script>
+	<script src="js/selfPlatform/store/ReadStore.js"></script>
+	<script src="js/selfPlatform/store/KeepStore.js"></script>
+	<script src="js/selfPlatform/speak/SpeakType.js"></script>
+	<script src="js/selfPlatform/speak/SpeakManager.js"></script>
+	<script src="js/selfPlatform/speak/PrintControl.js"></script>
+	<script src="js/selfPlatform/login/Login.js"></script>
+	<script src="js/selfPlatform/downloadAppCheckIsExsit/DownloadAppCheckIsExsit.js"></script>
+	<script src="js/selfPlatform/dictionObj/DicObj.js"></script>
+	<script src="js/selfPlatform/bridge/NativeBridge.js"></script>
+	<script src="js/selfPlatform/bridge/Bridge.js"></script>
+	<script src="js/game/Utils.js"></script>
+	<script src="js/game/Load.js"></script>
+	<script src="js/game/ActorProperty.js"></script>
+	<script src="js/ext/XcryUtil.js"></script>
+	<script src="js/ext/WywUtil.js"></script>
+	<script src="js/ext/WxUtil.js"></script>
+	<script src="js/component/SoulUI.js"></script>
+	<script src="js/ui/layaUI.max.all.js"></script>
+	<script src="js/dialog/AnalyView.js"></script>
+	<script src="js/dialog/CloseUpView.js"></script>
+	<script src="js/dialog/CollectClueView.js"></script>
+	<script src="js/dialog/CountDownView.js"></script>
+	<script src="js/dialog/ImageBoxView.js"></script>
+	<script src="js/dialog/NoticeView.js"></script>
+	<script src="js/dialog/OptionView.js"></script>
+	<script src="js/dialog/PayMode.js"></script>
+	<script src="js/dialog/PromptInView.js"></script>
+	<script src="js/dialog/PromptView.js"></script>
+	<script src="js/dialog/ReNameView.js"></script>
+	<script src="js/dialog/SettingView.js"></script>
+	<script src="js/dialog/StoreTitleView.js"></script>
+	<script src="js/dialog/SystemView.js"></script>
+	<script src="js/dialog/TipsView.js"></script>
+	<script src="js/ext/ApiUtil.js"></script>
+	<script src="js/game/Common.js"></script>
+	<script src="js/game/comp/ImgRoleBox.js"></script>
+	<script src="js/game/comp/RoleCoverBox.js"></script>
+	<script src="js/game/comp/SpineRoleBox.js"></script>
+	<script src="js/game/Effect.js"></script>
+	<script src="js/game/GameUi.js"></script>
+	<script src="js/game/ListItem.js"></script>
+	<script src="js/game/Loading.js"></script>
+	<script src="js/selfPlatform/ReadBackBtn.js"></script>
+	<script src="js/selfPlatform/readMore/ReadMoreBtn.js"></script>
+	<script src="js/selfPlatform/readMore/ReadMoreDialog.js"></script>
+	<script src="js/selfPlatform/readMore/ReadMoreDialogAuthorHead.js"></script>
+	<script src="js/selfPlatform/readMore/ReadMoreDialogList.js"></script>
+	<script src="js/selfPlatform/ReadReviewBtn.js"></script>
+	<script src="js/selfPlatform/roleImg/RoleImg.js"></script>
+	<script src="js/selfPlatform/speak/AsideSpeak.js"></script>
+	<script src="js/selfPlatform/speak/LeadingSpeak.js"></script>
+	<script src="js/selfPlatform/speak/PictureSpeak.js"></script>
+	<script src="js/selfPlatform/speak/RoadA.js"></script>
+	<script src="js/selfPlatform/speak/RoadB.js"></script>
+	<script src="js/selfPlatform/speak/SupportingRoleSpeak.js"></script>
+	<script src="js/selfPlatform/weather/WeatherSnow.js"></script>
+	<script src="js/view/AnalyLogView.js"></script>
+	<script src="js/view/CatalogView.js"></script>
+	<script src="js/view/ChapterCoverView.js"></script>
+	<script src="js/view/ChapterUnlock.js"></script>
+	<script src="js/view/ClueView.js"></script>
+	<script src="js/view/DeathView.js"></script>
+	<script src="js/view/DiaryView.js"></script>
+	<script src="js/view/EndView.js"></script>
+	<script src="js/view/FeedbackView.js"></script>
+	<script src="js/view/GameOver.js"></script>
+	<script src="js/view/LoadingView.js"></script>
+	<script src="js/view/MainView.js"></script>
+	<script src="js/view/ReadingView.js"></script>
+	<script src="js/view/ReadLogView.js"></script>
+	<script src="js/view/RoleCoverView.js"></script>
+	<script src="js/view/SkuView.js"></script>
+	<script src="js/view/StartView.js"></script>
+	<script src="js/view/StoreView.js"></script>
+	<script src="js/view/SystemSetting.js"></script>
+	<script src="js/view/TeamView.js"></script>
+	<script src="js/view/WaitView.js"></script>
+	<!--jsfile--endTag-->
+	<!--jsfile--Main-->
+	<script src="js/LayaIndex.js"></script>
+	<!--jsfile--Main-->
+</body>
+
+</html>

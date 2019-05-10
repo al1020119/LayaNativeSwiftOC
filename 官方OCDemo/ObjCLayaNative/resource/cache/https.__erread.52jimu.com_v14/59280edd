@@ -1,0 +1,329 @@
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+/**
+* 骨骼动画立绘
+*/
+var SpineRoleBox = /** @class */ (function (_super) {
+    __extends(SpineRoleBox, _super);
+    function SpineRoleBox(view, role, x, y, wp) {
+        if (wp === void 0) { wp = 0.5; }
+        var _this = _super.call(this) || this;
+        _this.mStartX = 400;
+        _this.mStartY = 500;
+        _this.aniIndex = 0;
+        _this.mCurrIndex = 0;
+        _this.skinIndex = 0;
+        _this.emoji = 'emoji_0';
+        _this.index = 0;
+        _this.roleid = 0;
+        _this.type = 0;
+        _this.covertype = 1;
+        _this.postype = 0;
+        _this.realWidth = 450;
+        _this.scaleper = 1;
+        _this.mPlay = false;
+        _this.isdelete = false;
+        _this._showspeed = 500;
+        _this.roleinfo = role;
+        _this.index = role.index;
+        _this.roleid = role.roleid;
+        _this.type = role.type;
+        _this.maskBox = new Laya.Sprite();
+        view.addChild(_this);
+        _this.top = 0;
+        _this.bottom = 0;
+        _this.left = 0;
+        _this.right = 0;
+        _this.mStartX = x;
+        _this.mStartY = y;
+        // var width = view.width/2;
+        var width = view.width * wp;
+        _this.scaleper = width / _this.realWidth;
+        return _this;
+    }
+    Object.defineProperty(SpineRoleBox.prototype, "showspeed", {
+        set: function (value) {
+            this._showspeed = value;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    //加载动画
+    SpineRoleBox.prototype.load = function (aniUrl, emoji, complete) {
+        if (!aniUrl || aniUrl == '') {
+            return;
+        }
+        // console.log(aniUrl);
+        // console.log('load:'+emoji);
+        if (emoji) {
+            this.emoji = emoji;
+        }
+        // console.log('load:'+this.emoji);
+        if (complete) {
+            this.completeHandler = complete;
+        }
+        this.aniUrl = aniUrl;
+        this.templet = new Laya.Templet();
+        this.templet.on(Laya.Event.COMPLETE, this, this.parseComplete);
+        // this.templet.on(Event.ERROR, this, this.onError);
+        this.templet.loadAni(this.aniUrl);
+        this.maskBox.graphics.drawRect(0, 0, this.width, this.height, '#ffffff');
+        this.mask = this.maskBox;
+        this.maskBox.alpha = 0;
+        // this.show();
+    };
+    SpineRoleBox.prototype.parseComplete = function () {
+        //创建模式为1，可以启用换装
+        this.skeleton = this.templet.buildArmature(1);
+        this.skeleton.x = this.mStartX;
+        this.skeleton.y = this.mStartY;
+        this.skeleton.scale(this.scaleper, this.scaleper);
+        this.skeleton.on(Laya.Event.STOPPED, this, this.stopHandler);
+        if (!this.emojiArr) {
+            this.emojiArr = {};
+            var emojinum = this.skeleton.getAnimNum();
+            for (var i = 0; i < emojinum; i++) {
+                var element = this.skeleton.getAniNameByIndex(i);
+                this.emojiArr[element] = 1;
+            }
+            // console.log(this.emojiArr);
+        }
+        // console.log('emojiArr1:'+this.emoji);
+        if (!this.emojiArr[this.emoji]) {
+            //如果表情不存在则使用默认第一个
+            this.emoji = this.skeleton.getAniNameByIndex(0);
+        }
+        // console.log('emojiArr2:'+this.emoji);
+        this.play(this.emoji);
+        this.addChild(this.skeleton);
+        this.show();
+        if (this.completeHandler) {
+            this.completeHandler.runWith(this);
+        }
+        if (this.isdelete) {
+            this.remove();
+        }
+    };
+    SpineRoleBox.prototype.stopHandler = function () {
+        // this.mPlay=true;
+        // this.skeleton.texture = Laya.loader.getRes('res/99f9afee9b021c3ce3513ffeba2eb907_spine_dark.png');
+        // console.log(this.roleid);
+        // console.log(this.roleinfo);
+        if (this.skeleton) {
+            //循环播放，控制播放完一次后需要从0开始重新播放，代替循环播放参数
+            // console.log('stopHandler:'+this.emoji);
+            this.play(this.emoji);
+        }
+    };
+    //改变表情
+    SpineRoleBox.prototype.changeEmoji = function (emoji) {
+        // console.log('changeEmoji:'+emoji);
+        if (emoji) {
+            this.emoji = emoji;
+        }
+        if (!this.emojiArr || !this.emojiArr[this.emoji]) {
+            if (this.skeleton) {
+                //如果表情不存在则使用默认第一个
+                this.emoji = this.skeleton.getAniNameByIndex(0);
+            }
+        }
+        var starttime = 0;
+        if (this.skeleton) {
+            //切换表情，从当前播放位置切换，防止跳动
+            starttime = this.skeleton.player.currentPlayTime;
+        }
+        this.play(this.emoji, starttime);
+    };
+    SpineRoleBox.prototype.play = function (emoji, start) {
+        // console.log('play:'+emoji);
+        if (this.skeleton) {
+            //禁止自动循环播放，控制播放完一次后需要从0开始重新播放
+            this.skeleton.play(emoji, false, true, start);
+        }
+    };
+    SpineRoleBox.prototype.scaleRole = function (scaleper) {
+        if (this.skeleton) {
+            this.skeleton.scale(this.scaleper, this.scaleper);
+        }
+    };
+    SpineRoleBox.prototype.show = function () {
+        Laya.Tween.to(this.maskBox, { alpha: 1 }, this._showspeed);
+    };
+    SpineRoleBox.prototype.hide = function () {
+        Laya.Tween.to(this.maskBox, { alpha: 0 }, 300);
+    };
+    SpineRoleBox.prototype.remove = function (speed) {
+        if (speed === void 0) { speed = 200; }
+        this.isdelete = true;
+        if (this.skeleton) {
+            var param = { x: this.skeleton.x };
+            if (this.postype == 1) {
+                param.x = 0;
+                Laya.Tween.to(this.skeleton, param, speed);
+            }
+            else if (this.postype == 2) {
+                param.x = this.width;
+                Laya.Tween.to(this.skeleton, param, speed);
+            }
+            Laya.Tween.to(this.maskBox, { alpha: 0 }, speed, null, Handler.create(this, this.removeComplete));
+        }
+    };
+    SpineRoleBox.prototype.removeComplete = function () {
+        try {
+            if (this.skeleton) {
+                this.skeleton.stop(); //停止龙骨动画播放
+                this.skeleton.removeSelf(); //从显示列表移除龙骨动画本身
+                // this.skeleton.removeChildren();//从显示列表移除龙骨动画子对象
+                this.skeleton.destroy(true); //从显存销毁龙骨动画及其子对象
+            }
+            if (this.templet) {
+                this.templet.releaseResource(true); //释放龙骨资源
+                this.templet.destroy(); //释放动画模板类下的纹理数据                    
+            }
+            this.removeChildren();
+            this.destroyChildren();
+            this.removeSelf();
+            this.destroy(true);
+        }
+        catch (error) {
+            // jmt.Print.log(error);
+        }
+    };
+    // public destroy():void {
+    // 	this.skeleton.stop();//停止龙骨动画播放
+    // 	this.removeEvent();//移除事件
+    // 	this.skeleton.removeSelf();//从显示列表移除龙骨动画本身
+    // 	this.skeleton.removeChildren();//从显示列表移除龙骨动画子对象
+    // 	this.skeleton.destroy(true);//从显存销毁龙骨动画及其子对象
+    // 	this.templet.destroy();//释放动画模板类下的纹理数据
+    // 	this.templet.releaseResource(true);//释放龙骨资源
+    // }
+    // public removeEvent():void{
+    // 	this.templet.off(Event.COMPLETE, this, this.parseComplete);
+    // 	this.skeleton.off(Event.STOPPED, this, this.completeHandler);
+    // }
+    SpineRoleBox.prototype.resize = function (front) {
+        if (front === void 0) { front = 1; }
+        if (front == 1) {
+            // this.skeleton.scale(this.scaleper, this.scaleper);
+            Laya.Tween.to(this.skeleton, { scaleX: this.scaleper, scaleY: this.scaleper }, this._showspeed);
+            // this.disabled=true;                
+            // this.maskBox.alpha=1;
+            this.hideMask();
+        }
+        else {
+            // this.skeleton.scale(this.scaleper-0.08, this.scaleper-0.08);
+            Laya.Tween.to(this.skeleton, { scaleX: this.scaleper - 0.05, scaleY: this.scaleper - 0.05 }, this._showspeed);
+            // this.maskBox.alpha=0.8;
+            // this.disabled=true;
+            this.showMask();
+        }
+    };
+    SpineRoleBox.prototype.showMask = function () {
+        if (!this.coverBlack) {
+            this.coverBlack = new Laya.Image('skin/common/cover_black.png');
+            this.addChild(this.coverBlack);
+            this.coverBlack.alpha = 0;
+        }
+        else {
+            this.coverBlack.visible = true;
+            this.coverBlack.alpha = 0;
+        }
+        // console.log(this.skeleton.getBounds());
+        var rectbound = this.skeleton.getBounds();
+        // console.log(this.roleinfo);
+        // console.log(rectbound);
+        this.coverBlack.width = rectbound.width + 150;
+        this.coverBlack.height = rectbound.height;
+        this.coverBlack.x = rectbound.x - 50;
+        this.coverBlack.y = rectbound.y - 100;
+        Laya.Tween.to(this.coverBlack, { alpha: 0.15 }, this._showspeed);
+    };
+    SpineRoleBox.prototype.hideMask = function () {
+        if (this.coverBlack) {
+            // this.coverBlack.visible=false;
+            Laya.Tween.to(this.coverBlack, { alpha: 0 }, this._showspeed);
+        }
+    };
+    SpineRoleBox.prototype.moveLeft = function (pos, speed, front) {
+        if (pos === void 0) { pos = 0; }
+        if (speed === void 0) { speed = 500; }
+        if (front === void 0) { front = 1; }
+        if (this.skeleton) {
+            this.postype = 1;
+            if (pos == 1) {
+                Laya.Tween.to(this.skeleton, { x: (this.width / 2 - this.width / 4) }, speed, null, Handler.create(this, this.resize, [front]));
+            }
+            else {
+                Laya.Tween.to(this.skeleton, { x: (this.width / 2 - this.width / 4 - this.width / 16) }, speed, null, Handler.create(this, this.resize, [front]));
+            }
+        }
+    };
+    SpineRoleBox.prototype.moveRight = function (pos, speed, front) {
+        if (pos === void 0) { pos = 0; }
+        if (speed === void 0) { speed = 500; }
+        if (front === void 0) { front = 1; }
+        if (this.skeleton) {
+            this.postype = 2;
+            if (pos == 1) {
+                Laya.Tween.to(this.skeleton, { x: (this.width / 2 + this.width / 4) }, speed, null, Handler.create(this, this.resize, [front]));
+            }
+            else {
+                Laya.Tween.to(this.skeleton, { x: (this.width / 2 + this.width / 4 + this.width / 16) }, speed, null, Handler.create(this, this.resize, [front]));
+            }
+        }
+    };
+    SpineRoleBox.prototype.moveMiddle = function (speed, front) {
+        if (speed === void 0) { speed = 500; }
+        if (front === void 0) { front = 1; }
+        if (this.skeleton) {
+            this.postype = 0;
+            Laya.Tween.to(this.skeleton, { x: this.width / 2 }, speed, null, Handler.create(this, this.resize, [front]));
+        }
+    };
+    SpineRoleBox.prototype.clear = function () {
+        this.removeChildren();
+    };
+    SpineRoleBox.prototype.onError = function () {
+    };
+    SpineRoleBox.prototype.maskRole = function () {
+        // var colorMatrix:any = [
+        //     1, 0, 0, 0, -50,  //R
+        //     0, 1, 0, 0, -50, //G
+        //     0, 0, 1, 0, -50,  //B
+        //     0, 0, 0, 1, 0, //A
+        // ];
+        // //创建红色颜色滤镜
+        // var redFilter:Laya.ColorFilter = new Laya.ColorFilter(colorMatrix);
+        //创建模糊滤镜实例
+        var blurFilter = new Laya.BlurFilter(1);
+        // 设置模糊强度
+        // blurFilter.strength = 1;
+        this.filters = [blurFilter];
+        // this.blendMode="lighter";
+        // this.mArmature.alpha = 0.5;
+        // // this.mArmature.play(0, true);
+        // var grayMat = [
+        //     0, 0, 0, 0, 0,
+        //     0, 0, 0, 0, 0,
+        //     0, 0, 0, 0, 0,
+        //     0, 0, 0, 1, 0
+        // ];
+        // //创建一个颜色滤镜对象，灰图
+        // var scaleFilter = new Laya.ColorFilter(grayMat);
+        // this.mArmature.filters = [scaleFilter];
+    };
+    return SpineRoleBox;
+}(Laya.Panel));
+//# sourceMappingURL=SpineRoleBox.js.map

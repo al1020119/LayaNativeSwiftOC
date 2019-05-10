@@ -27,10 +27,6 @@ enum MarketState
 -(void)LP_Init:(NSString*)jsonParam;
 //获得marketName
 -(NSString*)getMarketName;
-//获得支付的方式 0 为充值 1为购买道具
--(int)getZFType;
-//充值方式 0为人民币充值传入元。 1为代币充值，充值传入元宝数量
--(int)getCZType;
 //获得登陆方式 0为自己做的登录  1为第三方平台登录   2为授权的方式
 -(int)getLoginType;
 //获得平台的类型

@@ -1,0 +1,271 @@
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var SkuView = /** @class */ (function (_super) {
+    __extends(SkuView, _super);
+    // private skuPanel: Laya.Panel;
+    // private bgImg: Laya.Sprite;
+    function SkuView() {
+        var _this = _super.call(this) || this;
+        _this.name = 'SkuView';
+        //打开页面，如果图片存在，抽出图片，不清除
+        jmt.common.ImgManager.openClear([jmt.Skin.GENERAL_BG, 'res/atlas/skin/sku.atlas']);
+        //banner广告
+        if (jmt.GlobalData.PACKGE) {
+            if (!jmt.GlobalData.PACKGE.all.isbuy) {
+                //QQ
+                WywUtil.addQQbanner();
+                //微信
+                WxUtil.addWxBanner();
+            }
+        }
+        _this.height = Laya.stage.height;
+        _this.bgImg.skin = jmt.Skin.GENERAL_BG;
+        _this.skuPanel.vScrollBarSkin = '';
+        _this.apiUtil = new ApiUtil();
+        _this.apiUtil.getSkuValue(Handler.create(_this, _this.showSku));
+        // this.bgImg = new Laya.Sprite();
+        // this.bgImg.loadImage('res/image/general_bg_pic.jpg',0,0,Laya.stage.width,Laya.stage.height);
+        // this.addChild(this.bgImg);
+        //实例化Panel组件
+        // this.skuPanel = new Laya.Panel();
+        // //给panel设置宽高
+        // this.skuPanel.size(Laya.stage.width, Laya.stage.height);        
+        // //给panel设置滚动条皮肤
+        // this.skuPanel.vScrollBarSkin = "comp/vscroll.png";
+        // //将panel添加到stage上
+        // this.addChild(this.skuPanel);
+        // // this.skuPanel.left=0;
+        // this.skuPanel.bottom=136;
+        // this.skuPanel.top=136;
+        _this.btnGoback.on(Laya.Event.CLICK, _this, _this.onClose);
+        return _this;
+        // this.skuPanel.vScrollBarSkin="";
+        // this.initRelaSku();
+        // this.initMySku(); 
+    }
+    SkuView.prototype.onClose = function () {
+        //清除banner广告
+        WywUtil.desQQbanner();
+        WxUtil.desWxBanner();
+        //关闭页面，定时清除背景图片
+        // jmt.common.ImgManager.closeClear([jmt.Skin.GENERAL_BG, 'res/atlas/skin/sku.atlas']);
+        this.close();
+    };
+    SkuView.prototype.onClosed = function () {
+        // super.onClosed();
+        // jmt.Resource.clearTextureRes(this.bgImg.skin);
+        // jmt.Resource.clearTextureRes('res/atlas/skin/sku.atlas');
+        // if (this.myskuList) {
+        //     this.myskuList.removeSelf();
+        //     this.myskuList.destroy();
+        // }
+        // if (this.relaList) {
+        //     this.relaList.removeSelf();
+        //     this.relaList.destroy();
+        // }
+        // this.removeSelf();//与destory冲突，remove后，destory无效
+        this.destroy(true);
+    };
+    SkuView.prototype.showSku = function (res) {
+        // 由于网速慢，设置过渡效果
+        Load.style(this.skuVbox, 'alpha', 0, 1);
+        // console.log(res);
+        if (res.mysku) {
+            this.initMySku(res.mysku, res.roleinfo);
+        }
+        if (res.relasku) {
+            // this.initRelaSku(res.relasku);
+            this.initRelaSkuList(res.relasku);
+        }
+    };
+    SkuView.prototype.initMySku = function (skulist, roleinfo) {
+        var bgbox = new Laya.Box();
+        this.skuVbox.addChild(bgbox);
+        var boxbg = new Laya.Image(jmt.Skin.SKU_BG_BIG);
+        bgbox.addChild(boxbg);
+        bgbox.centerX = 0;
+        this.myskuBox = new Laya.HBox();
+        bgbox.addChild(this.myskuBox);
+        this.myskuBox.left = 30;
+        this.myskuBox.right = 30;
+        this.myskuBox.top = 30;
+        this.myskuBox.bottom = 30;
+        var leftbox = new Laya.VBox();
+        var rightbox = new Laya.Box();
+        this.myskuBox.addChild(leftbox);
+        this.myskuBox.addChild(rightbox);
+        leftbox.width = 180;
+        leftbox.height = this.myskuBox.height;
+        var headurl = roleinfo.headurl;
+        // if (jmt.Config.DEBUG) {
+        //     console.log(jmt.Data.userinfo);
+        // }
+        if (jmt.Data.userinfo && jmt.Data.userinfo.headurl) {
+            headurl = jmt.Data.userinfo.headurl; //替换为用户头像
+        }
+        if (!WywUtil.onLimixiu()) {
+            if (headurl) {
+                headurl = headurl.replace(jmt.Config.IMG_DOMAIN_HTTP, jmt.Config.RES_DOMAIN);
+            }
+        }
+        var rolename = '主角';
+        if (jmt.Data.renamerole && jmt.Data.renamerole[roleinfo.roleid]) {
+            rolename = jmt.Data.renamerole[roleinfo.roleid];
+        }
+        else if (jmt.Data.userinfo) {
+            rolename = jmt.Data.userinfo.nickname;
+        }
+        var coverWidth = 110;
+        var cover = new jmt.common.CircleImgBox(coverWidth, coverWidth, headurl);
+        cover.cover = jmt.Skin.SKU_HEAD_COVER;
+        leftbox.addChild(cover);
+        cover.pivotX = cover.width / 2;
+        cover.pivotY = 0;
+        cover.x = leftbox.width / 2;
+        cover.top = 55;
+        var name = new Laya.Text();
+        name.text = rolename;
+        name.bold = true;
+        name.font = jmt.Skin.FONT;
+        name.fontSize = 26;
+        name.color = '#eeeeee';
+        name.align = 'center';
+        name.width = leftbox.width - 20;
+        name.overflow = 'hidden';
+        name.x = 20;
+        name.y = coverWidth + 100;
+        leftbox.addChild(name);
+        // skubox.addChild(sku);
+        // var skubox: game.GridBox = new game.GridBox(rightbox, 2,350, 250);
+        // if (skulist) {
+        //     for (var i = 0; i < skulist.length; i++) {
+        //         var sku = skulist[i];
+        //         var item = new game.MySkuItem(145,sku.skuname,0.7,sku.skin);
+        //         skubox.addItem(item);
+        //     }
+        // }
+        this.myskuList = new LayaList();
+        rightbox.addChild(this.myskuList);
+        var row = Math.ceil(skulist.length / 2);
+        if (row < 1) {
+            row = 1;
+        }
+        this.myskuList.spaceY = 20;
+        this.myskuList.centerX = 0;
+        this.myskuList.repeatX = 2;
+        this.myskuList.repeatY = row;
+        this.myskuList.itemRender = jmt.item.MySkuListItem;
+        // 使用但隐藏滚动条
+        this.myskuList.vScrollBarSkin = "";
+        this.myskuList.renderHandler = new Handler(this, this.updateMySkuItem);
+        // 设置数据项为对应图片的路径
+        var data = [];
+        for (var i = 0; i < skulist.length; i++) {
+            var item = skulist[i];
+            var obj = {
+                skuname: item.skuname,
+                skuvalue: item.skuvalue,
+                maxvalue: item.maxvalue,
+                progress: item.skuper,
+                showtext: item.skuvalue + '/' + item.maxvalue,
+                skin: item.skin
+            };
+            data.push(obj);
+        }
+        this.myskuList.array = data;
+    };
+    SkuView.prototype.initRelaSku = function (rolelist) {
+        // console.log(rolelist);
+        // var testbox: game.SoulGridBox = new game.SoulGridBox(2,200);
+        var width = this.skuPanel.width - 200;
+        var skubox = new game.GridBox(this.skuVbox, 2, width, 300, 'skin/sku/property_love_box.png');
+        // this.skuVbox.addChild(skubox);
+        // skubox.width = this.skuPanel.width-200;
+        skubox.centerX = 0;
+        // skubox.render();
+        if (rolelist) {
+            for (var i = 0; i < rolelist.length; i++) {
+                var info = rolelist[i];
+                var item = new game.RelaSkuItem(info.headurl, info.rolename, 0.6);
+                skubox.addItem(item);
+            }
+        }
+        // var item = new game.RelaSkuItem(jmt.Skin.LOADING_HUMAN,'流浪少女',0.3);
+        // skubox.addItem(item);
+        // var item = new game.RelaSkuItem(jmt.Skin.LOADING_HUMAN,'流浪少女',0.6);
+        // skubox.addItem(item);
+    };
+    /**
+     * 初始化关系属性
+     * @param rolelist
+     */
+    SkuView.prototype.initRelaSkuList = function (rolelist) {
+        this.relaList = new LayaList();
+        this.skuVbox.addChild(this.relaList);
+        var row = Math.ceil(rolelist.length / 2);
+        if (row < 1) {
+            row = 1;
+        }
+        this.relaList.spaceY = 0;
+        this.relaList.centerX = 0;
+        this.relaList.repeatX = 2;
+        this.relaList.repeatY = row;
+        this.relaList.itemRender = jmt.item.RelaSkuListItem;
+        // 使用但隐藏滚动条
+        this.relaList.vScrollBarSkin = "";
+        this.relaList.renderHandler = new Handler(this, this.updateRelaItem);
+        // 设置数据项为对应图片的路径
+        var data = [];
+        for (var i = 0; i < rolelist.length; i++) {
+            var item = rolelist[i];
+            var obj = {
+                rolename: item.rolename,
+                skuname: '好感度',
+                headurl: item.headurl,
+                progress: item.goodfeel.skuper,
+                skuvalue: item.goodfeel.skuvalue,
+                maxvalue: item.goodfeel.maxvalue,
+                showtext: item.goodfeel.skuvalue + '/' + item.goodfeel.maxvalue
+            };
+            data.push(obj);
+        }
+        // var obj2 = {
+        //     rolename: '流浪少女1',
+        //     skuname: '好感度',
+        //     headurl: jmt.Skin.LOADING_HUMAN,
+        //     progress: 0.7
+        // };
+        // data.push(obj2);
+        // var obj3 = {
+        //     rolename: '流浪少女2',
+        //     skuname: '好感度',
+        //     headurl: jmt.Skin.LOADING_HUMAN,
+        //     progress: 0.4
+        // };
+        // data.push(obj3);
+        this.relaList.array = data;
+        // var item = new game.RelaSkuItem(jmt.Skin.LOADING_HUMAN,'流浪少女',0.3);
+        // skubox.addItem(item);
+        // var item = new game.RelaSkuItem(jmt.Skin.LOADING_HUMAN,'流浪少女',0.6);
+        // skubox.addItem(item);
+    };
+    SkuView.prototype.updateRelaItem = function (cell, index) {
+        cell.setData(cell.dataSource);
+    };
+    SkuView.prototype.updateMySkuItem = function (cell, index) {
+        cell.setData(cell.dataSource);
+    };
+    return SkuView;
+}(ui.home.SkuUI));
+//# sourceMappingURL=SkuView.js.map

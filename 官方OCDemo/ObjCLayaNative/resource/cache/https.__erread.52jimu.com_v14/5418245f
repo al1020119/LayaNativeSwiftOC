@@ -1,0 +1,140 @@
+var Platform = Laya.PlatformClass;
+var Bridge = (function () {
+    function Bridge() {
+        Bridge.bridge = Platform.createClass("com.jimu52.fiction.utils.layabox.JSBridge");
+    }
+    Object.defineProperty(Bridge, "instans", {
+        get: function () {
+            if (!Bridge._instans) {
+                Bridge._instans = new Bridge();
+            }
+            return Bridge._instans;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    //获取用户信息用于登陆
+    Bridge.prototype.getUserInfo = function () {
+        var userInfo = Bridge.bridge.call("getUserInfo");
+        // jmt.Print.log('得到安卓信息');
+        // jmt.Print.log(typeof userInfo);
+        // jmt.Print.log('安卓信息'+userInfo);
+        userInfo && (userInfo = JSON.parse(userInfo));
+        if (userInfo.uid && userInfo.token) {
+            jmt.Config.ISLOGIN = 1;
+        }
+        if (userInfo) {
+            return userInfo;
+        }
+    };
+    //获取阅读信息
+    Bridge.prototype.getReadInfo = function () {
+        var info = Bridge.bridge.call("getReadInfo");
+        info = JSON.parse(info);
+        return info;
+    };
+    //拷贝文本
+    Bridge.prototype.copyToClipboard = function (text) {
+        var info = Bridge.bridge.call("copyToClipboard", text);
+    };
+    //获取设备信息
+    Bridge.prototype.getDeviceInfo = function () {
+        var info = Bridge.bridge.call("getDeviceInfo");
+        if (info) {
+            info = JSON.parse(info);
+            return info;
+        }
+        else {
+            return '空';
+        }
+    };
+    //打开剧情回顾
+    Bridge.prototype.openPlotLog = function (novelid, roleid) {
+        // jmt.Print.log('打开剧情回顾');
+        // jmt.Print.log('aaa'+novelid);
+        // jmt.Print.log('bbb'+roleid);
+        // jmt.Print.log(typeof novelid);
+        // jmt.Print.log(typeof roleid);
+        Bridge.bridge.call("openPlotLog", novelid, roleid);
+    };
+    //显示Toast
+    Bridge.prototype.openToast = function (text) {
+        Bridge.bridge.call("openToast", text);
+    };
+    //打开存档
+    Bridge.prototype.openSaveStore = function (novelid, storeJson, readlistJson) {
+        // jmt.Print.log('进入存档桥梁');
+        // jmt.Print.log(`小说ID=${novelid}`);
+        // jmt.Print.log(`章节信息=${storeJson}`);
+        // jmt.Print.log(`剧情信息=${readlistJson}`);
+        Bridge.bridge.call("openSaveStore", novelid, storeJson, readlistJson);
+    };
+    //打开读档
+    Bridge.prototype.openReadStore = function (novelid) {
+        Bridge.bridge.call("openReadStore", novelid);
+    };
+    //打开评论
+    Bridge.prototype.openComment = function (novelid) {
+        Bridge.bridge.call("openComment", novelid);
+    };
+    //打赏作品
+    Bridge.prototype.openReward = function (novelid, chapterid, conid) {
+        Bridge.bridge.call("openReward", novelid, chapterid, conid);
+    };
+    //退出阅读界面
+    Bridge.prototype.closeRead = function () {
+        Bridge.bridge.call("closeRead");
+    };
+    //打开分享
+    //传小说信息里的分享实体
+    Bridge.prototype.openShare = function (novelInfoJson) {
+        novelInfoJson = JSON.stringify(novelInfoJson);
+        Bridge.bridge.call("openShare", novelInfoJson);
+    };
+    //打开章节付费
+    //付费实体json
+    Bridge.prototype.openChapterPay = function (chapterinfoJson) {
+        chapterinfoJson = JSON.stringify(jmt.Data.chapterinfo);
+        Bridge.bridge.call("openChapterPay", chapterinfoJson);
+    };
+    //toast弹窗
+    Bridge.prototype.openDialog = function (type, text) {
+        // jmt.Print.log('type'+type);
+        // jmt.Print.log('text'+ text);
+        Bridge.bridge.call("openDialog", type, text);
+    };
+    //打开大章节过渡，类似章节封面
+    Bridge.prototype.openChapterTranstion = function (novelinfoJson, nextChapterInfoJson, autoBuy) {
+        novelinfoJson = JSON.stringify(novelinfoJson);
+        nextChapterInfoJson = JSON.stringify(nextChapterInfoJson);
+        // jmt.Print.log(`小说信息=${novelinfoJson}`);
+        // jmt.Print.log(`下一章节信息=${nextChapterInfoJson}`);
+        // jmt.Print.log(`是否自动购买=${autoBuy}`);
+        Bridge.bridge.call("openChapterTranstion", novelinfoJson, nextChapterInfoJson, autoBuy);
+    };
+    //打开结局界面
+    Bridge.prototype.openEnding = function (novelinfoJson, title, resultType) {
+        novelinfoJson = JSON.stringify(novelinfoJson);
+        // jmt.Print.log(novelinfoJson);
+        // jmt.Print.log(`结局标题=${title}`);
+        // jmt.Print.log(`结局类型=${resultType}`);
+        Bridge.bridge.call("openEnding", novelinfoJson, title, resultType);
+    };
+    //打开登陆，因为android那边的token会过期，我这边如果请求接口服务器告诉我token过期，说明android给我的token过期了，这时候我要拉出android的登陆页面，登陆成功后，我这边要定义个一个showLogin方法让安卓刷新我这边的userinfo
+    Bridge.prototype.openLogin = function () {
+        Bridge.bridge.call("openLogin");
+    };
+    //打开属性界面
+    Bridge.prototype.openAttr = function (noveliid) {
+        Bridge.bridge.call("openAttr", noveliid);
+    };
+    //改变状态
+    //例如 我这边点赞了，安卓那边不知道，我要刷新安卓那边的点赞 0为取消点赞 1为点赞
+    //例如 我这边加入书架了，安卓那边不知道，我要刷新安卓那边的加入书架 0为取消加入书 1为加入书架
+    //1 加入书架；2点赞
+    Bridge.prototype.changeState = function (type, value) {
+        Bridge.bridge.call("changeState", type, value);
+    };
+    return Bridge;
+}());
+//# sourceMappingURL=Bridge.js.map

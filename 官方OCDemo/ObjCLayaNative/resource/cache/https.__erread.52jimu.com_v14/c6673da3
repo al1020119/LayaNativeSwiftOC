@@ -1,0 +1,58 @@
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var GameOver = /** @class */ (function (_super) {
+    __extends(GameOver, _super);
+    // private endTitle: any;
+    function GameOver(finishtitle, endType) {
+        var _this = _super.call(this) || this;
+        _this.name = 'GameOver';
+        if (finishtitle) {
+            _this.end_text.text = finishtitle;
+        }
+        //如果是未完待续，改变结束文字
+        if (endType && endType == 1) {
+            _this.end_img.skin = jmt.Skin.NO_END_TEXT;
+            _this.end_img.top = 80;
+        }
+        _this.btn_backHome.on(Laya.Event.CLICK, _this, _this.backHome);
+        _this.btn_make.on(Laya.Event.CLICK, _this, _this.makeView);
+        _this.btn_qq_talk.on(Laya.Event.CLICK, _this, _this.qqTalk);
+        //banner广告
+        if (jmt.GlobalData.PACKGE) {
+            if (!jmt.GlobalData.PACKGE.all.isbuy) {
+                //QQ
+                WywUtil.addQQbanner();
+                //微信
+                WxUtil.addWxBanner();
+            }
+        }
+        return _this;
+    }
+    GameOver.prototype.backHome = function () {
+        //清除banner广告
+        WywUtil.desQQbanner();
+        WxUtil.desWxBanner();
+        Laya.stage.addChild(new MainView());
+        // this.removeSelf();//与destory冲突，remove后，destory无效
+        this.destroy(true);
+    };
+    GameOver.prototype.makeView = function () {
+        this.addChild(new TeamView());
+    };
+    GameOver.prototype.qqTalk = function () {
+        WywUtil.openWebView('https://jq.qq.com/?_wv=1027&k=56DAPhq');
+    };
+    return GameOver;
+}(ui.home.GameOverUI));
+//# sourceMappingURL=GameOver.js.map

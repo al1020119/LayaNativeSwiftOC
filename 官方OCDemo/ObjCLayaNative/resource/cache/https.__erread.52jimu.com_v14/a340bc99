@@ -1,0 +1,560 @@
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var ClueView = /** @class */ (function (_super) {
+    __extends(ClueView, _super);
+    function ClueView(type, chapterid, conid, succback, closeViewCallback) {
+        if (chapterid === void 0) { chapterid = 0; }
+        if (conid === void 0) { conid = 0; }
+        var _this = _super.call(this) || this;
+        _this.name = 'ClueView';
+        _this.checkeNum = 0;
+        _this.checkeCompute = 0;
+        _this.firstIn = false;
+        //打开页面，如果图片存在，抽出图片，不清除
+        jmt.common.ImgManager.openClear([
+            jmt.Skin.GENERAL_BG,
+            'skin/clue/pieces_big_box.png',
+            'skin/clue/pieces_big_box.png',
+            'skin/cover/pieces_loading_icon.png',
+            'skin/clue/pieces_small_normal_box.png',
+            'skin/clue/pieces_small_selected_box.png'
+        ]);
+        if (type) {
+            _this.type = type;
+        }
+        if (chapterid) {
+            _this.chapterid = chapterid;
+        }
+        if (conid) {
+            _this.conid = conid;
+        }
+        if (succback) {
+            _this.succback = succback;
+        }
+        if (closeViewCallback) {
+            _this.closeViewCallback = closeViewCallback;
+        }
+        _this.height = Laya.stage.height;
+        _this.bgImg.skin = jmt.Skin.GENERAL_BG;
+        // this.contTextPanel.vScrollBarSkin='';
+        _this.btnGoback.on(LayaEvent.CLICK, _this, _this.clear);
+        _this.btnShowAnaly.on(LayaEvent.CLICK, _this, _this.showAnaly);
+        // this.checkBox.on(LayaEvent.CLICK,this,this.onSelect);
+        _this.btnAnaly.on(LayaEvent.CLICK, _this, _this.alertWho);
+        _this.apiUtil = new ApiUtil();
+        _this.apiUtil.getClueList(_this.chapterid, _this.conid, Handler.create(_this, _this.initClueList), Handler.create(_this, _this.OnError));
+        //banner广告
+        if (jmt.GlobalData.PACKGE) {
+            if (!jmt.GlobalData.PACKGE.all.isbuy && _this.type == 1) {
+                //QQ
+                WywUtil.addQQbanner();
+                //微信
+                WxUtil.addWxBanner();
+            }
+        }
+        new game.newGuide(_this, [null]);
+        return _this;
+    }
+    // 创建提示按钮
+    ClueView.prototype.createPrompt = function () {
+        this.pointPrompt = new game.PointPrompt();
+        this.mainBox.addChild(this.pointPrompt);
+        this.pointPrompt.top = 592 - 137;
+        this.pointPrompt.left = 40;
+        this.pointPrompt.visible = false;
+        //点击提示，做相应处理
+        this.pointPrompt.on(Laya.Event.CLICK, this, this.checkBSV);
+    };
+    ClueView.prototype.checkBSV = function () {
+        this.pointPrompt.off(Laya.Event.CLICK, this, this.checkBSV);
+        Laya.timer.once(2000, this, function () {
+            this.pointPrompt.on(Laya.Event.CLICK, this, this.checkBSV);
+        });
+        var apiUtil = new ApiUtil();
+        apiUtil.getRightClue(this.chapterid, this.conid, 0, Handler.create(this, this.BVSprompt));
+        var apiUtil2 = new ApiUtil();
+        apiUtil2.Stat(jmt.Stat.PAGE_CLUE, jmt.Stat.ACT_ANALY_TIPS);
+    };
+    ClueView.prototype.BVSprompt = function (res) {
+        if (res.payinfo) {
+            var isVS = 1;
+            if (res.payinfo.showshare) {
+                isVS = 0;
+            }
+            if (res.payinfo.showshare || res.payinfo.showad) {
+                var vsPrompt = new game.lookVedioOrShare('分享成功后，提示1个正确线索', '立即分享', jmt.QQresType.CLUE, this.chapterid, 0, isVS, this.conid, 0, 0, Handler.create(this, this.showRightClue));
+                if (isVS === 1) {
+                    vsPrompt.infoLabel.text = '每观看1次视频，提示1个正确线索';
+                    vsPrompt.btnImg.label = '观看视频';
+                    //推理提示按钮统计
+                    var apiUtil1 = new ApiUtil();
+                    apiUtil1.Stat(jmt.Stat.PAGE_CLUE, jmt.Stat.ACT_SHOWAD);
+                }
+                else {
+                    //推理统计
+                    var apiUtil2 = new ApiUtil();
+                    apiUtil2.Stat(jmt.Stat.PAGE_CLUE, jmt.Stat.ACT_SHOWSHARE);
+                }
+                vsPrompt.popup();
+            }
+        }
+        else {
+            //如果已经提示了，直接提示
+            if (this.isShowRightClue) {
+                jmt.common.Toast.msg('已提示部分正确线索，还差最后一个，请再思考一下哦');
+            }
+            else {
+                this.getRightClue(res);
+            }
+        }
+    };
+    //点击提示，显示正确显示
+    ClueView.prototype.showRightClue = function () {
+        var apiUtil = new ApiUtil();
+        apiUtil.getRightClue(this.chapterid, this.conid, 0, Handler.create(this, this.getRightClue));
+    };
+    ClueView.prototype.getRightClue = function (res) {
+        if (res && res.ids) {
+            this.rightClue = res.ids;
+            this.changeClue();
+            this.isShowRightClue = 1;
+        }
+    };
+    ClueView.prototype.changeClue = function () {
+        for (var i = 0; i < this.clueList.array.length; i++) {
+            for (var j = 0; j < this.rightClue.length; j++) {
+                if (this.clueList.array[i].clueid == this.rightClue[j]) {
+                    this.clueList.array[i].right = 1;
+                }
+            }
+        }
+        this.clueList.refresh();
+        // 已经付款，直接toast提示
+        jmt.common.Toast.msg('已提示部分正确线索，还差最后一个，请再思考一下哦');
+    };
+    // 如果选择碎片没有超过两个，就弹窗提示，超过两个才推理
+    ClueView.prototype.alertWho = function () {
+        // console.log(this.checkeCompute);
+        if (this.checkeCompute > 1) {
+            this.postAnaly();
+        }
+        else {
+            this.priventAnaly();
+        }
+    };
+    // 如果选择碎片没有超过两个，就弹窗提示
+    ClueView.prototype.priventAnaly = function () {
+        jmt.common.Toast.error('至少选择两个碎片', 1500);
+    };
+    // 新手引导，第一次引导，后面就不引导
+    ClueView.prototype.newGuide = function () {
+        var _this = this;
+        // 初始化是否有提示
+        var hastip1 = jmt.Data.hasTips(jmt.Data.TIPS_TYPE_CLUE_1);
+        if (!hastip1) {
+            //保存进度新手引导
+            var tipsView1_1 = new TipsView(jmt.Data.TIPS_TYPE_CLUE_1);
+            this.addChild(tipsView1_1);
+            tipsView1_1.on(Laya.Event.CLICK, null, function () {
+                tipsView1_1.removeSelf();
+                tipsView1_1.destroy(true);
+                var hastip2 = jmt.Data.hasTips(jmt.Data.TIPS_TYPE_CLUE_2);
+                if (!hastip2) {
+                    //保存进度新手引导
+                    var tipsView2_1 = new TipsView(jmt.Data.TIPS_TYPE_CLUE_2);
+                    _this.addChild(tipsView2_1);
+                    tipsView2_1.on(Laya.Event.CLICK, null, function () {
+                        tipsView2_1.removeSelf();
+                        tipsView2_1.destroy(true);
+                    });
+                    tipsView2_1.zOrder = 910;
+                }
+            });
+            tipsView1_1.zOrder = 910;
+        }
+    };
+    ClueView.prototype.OnError = function () {
+        this.mainInfoBox.visible = false;
+        this.errorBox = new jmt.common.ErrorBox(this, '网络异常，请稍后再试哦~', jmt.common.ErrorBox.TYPE_NET_ERROR);
+    };
+    ClueView.prototype.showAnaly = function () {
+        var analyView = new AnalyLogView();
+        analyView.popup();
+    };
+    ClueView.prototype.clear = function () {
+        //开启阅读界面顶部菜单栏的鼠标点击事件
+        if (this.closeViewCallback) {
+            this.closeViewCallback.run();
+        }
+        //清除banner广告
+        if (this.type == 1) {
+            WywUtil.desQQbanner();
+            WxUtil.desWxBanner();
+        }
+        //关闭页面，定时清除背景图片
+        // jmt.common.ImgManager.closeClear([
+        //     jmt.Skin.GENERAL_BG, 
+        //     'skin/clue/pieces_big_box.png', 
+        //     'skin/clue/pieces_big_box.png', 
+        //     'skin/cover/pieces_loading_icon.png', 
+        //     'skin/clue/pieces_small_normal_box.png',
+        //     'skin/clue/pieces_small_selected_box.png'
+        //     ]);
+        this.close();
+    };
+    ClueView.prototype.onClosed = function () {
+        _super.prototype.onClosed.call(this);
+        // jmt.Resource.clearTextureRes(this.bgImg.skin);
+        // jmt.Resource.clearTextureRes(this.clueBox.skin);
+        // jmt.Resource.clearTextureRes(this.nameboxImg.skin);
+        // jmt.Resource.clearTextureRes(this.topBar.skin);
+        // jmt.Resource.clearTextureRes(this.footBar.skin);
+        // jmt.Resource.clearTextureRes(jmt.Skin.TIPS_CLUE_1);
+        // jmt.Resource.clearTextureRes(jmt.Skin.TIPS_CLUE_2);
+        // this.bgImg.destroy();
+        // this.removeSelf();
+        this.destroy(true);
+    };
+    /**
+     * 初始化关系属性
+     * @param rolelist
+     */
+    ClueView.prototype.initClueList = function (cluelist) {
+        if (cluelist.length < 1) {
+            this.mainInfoBox.visible = false;
+            this.errorBox = new jmt.common.ErrorBox(this, '还没有收集到记忆碎片，记得留意对话中的内容线索。', jmt.common.ErrorBox.TYPE_BLANK);
+            // this.errorBox.addChild(this.btnShowAnaly);
+            // this.btnShowAnaly.top = 147;
+            // this.btnShowAnaly.left = 30;
+            this.errorBox.visible = false;
+            Load.style(this.errorBox, 'alpha', 0, 1);
+            return;
+        }
+        if (this.errorBox) {
+            this.errorBox.removeSelf();
+        }
+        this.mainInfoBox.visible = true;
+        this.mainBox.vScrollBarSkin = '';
+        this.mainBox.width = Laya.stage.width;
+        this.mainBox.height = Laya.stage.height - 136 * 2;
+        this.mainBox.scrollTo(100, 100);
+        this.numText.text = '线索（' + cluelist.length + '条）';
+        this.clueList = new LayaList();
+        this.listBox.addChild(this.clueList);
+        this.clueList.y = 90;
+        this.clueList.height = this.listBox.height;
+        this.clueList.width = this.listBox.width;
+        this.clueList.mouseThrough = true;
+        var row = 1;
+        this.clueList.spaceX = 20;
+        // this.clueList.centerX = 0;
+        this.clueList.repeatX = cluelist.length;
+        this.clueList.repeatY = row;
+        this.clueList.itemRender = jmt.item.ClueListItem;
+        // 使用但隐藏滚动条
+        this.clueList.hScrollBarSkin = "";
+        // this.clueList.selectEnable = true;
+        // this.clueList.selectHandler = new Handler(this, this.onClueSelect);
+        // this.clueList.mouseEnabled = true;
+        // this.clueList.mouseHandler = new Handler(this, this.onClueSelect);
+        this.clueList.renderHandler = new Handler(this, this.updateClueItem);
+        for (var i = 0; i < cluelist.length; i++) {
+            if (cluelist[i]['isread'] == 0) {
+                cluelist[i]['point'] = 1;
+            }
+        }
+        this.clueList.array = cluelist;
+        // 大碎片第一次显示内容
+        if (cluelist[0].rolename && cluelist[0].rolename != '') {
+            this.nameBox.visible = true;
+            this.nameText.text = cluelist[0].rolename;
+        }
+        else {
+            this.nameBox.visible = false;
+        }
+        // 设置第一个大碎片的滚动
+        this.contText.text = cluelist[0].cont;
+        var textHeight = this.contText.height;
+        this.contText.height = textHeight;
+        this.contTextPanel.vScrollBarSkin = '';
+        //由于网速慢。所以透明加载
+        Load.style(this.topBox, 'alpha', 0, 1);
+        Load.style(this.listBox, 'alpha', 0, 1);
+        if (this.type == 2) {
+            this.createPrompt();
+            Load.style(this.pointPrompt, 'alpha', 0, 1);
+            Load.style(this.btnAnaly, 'alpha', 0, 1);
+        }
+        for (var index = 0; index < this.clueList.array.length; index++) {
+            var aaaa = this.clueList.getCell(index);
+            // console.log(aaaa);
+            var bbbb = aaaa._childs[0];
+            var cccc = aaaa._childs[2];
+            bbbb.on(Laya.Event.MOUSE_DOWN, this, this.bbb, [index]);
+            cccc.on(Laya.Event.MOUSE_DOWN, this, this.ccc, [index]);
+        }
+    };
+    ClueView.prototype.ccc = function (index, check) {
+        if (check === void 0) { check = true; }
+        var currentitem = this.clueList.getItem(index);
+        if (!currentitem) {
+            return;
+        }
+        currentitem.point = 0;
+        // 计数，为了判断是否推理，不超过2就不推理
+        if (currentitem.count) {
+            currentitem.count = false;
+            this.checkeCompute--;
+        }
+        else {
+            currentitem.count = true;
+            this.checkeCompute++;
+        }
+        if (check) {
+            if (currentitem.ischeck == 1) {
+                //已选的第二次点击则取消选择
+                currentitem.bgimg = jmt.Skin.CLUE_NORMAL_BOX;
+                currentitem.checkimg = jmt.Skin.CLUE_CHECKBOX_NORMAL;
+                currentitem.ischeck = 0;
+                if (this.rightClue) {
+                    currentitem.checkimg = jmt.Skin.CLUE_CHECKBOX_NORMAL;
+                }
+                //正确答案
+                if (this.rightClue) {
+                    for (var i_1 = 0; i_1 < this.rightClue.length; i_1++) {
+                        if (this.rightClue[i_1] == currentitem.clueid) {
+                            currentitem.checkimg = 'skin/clue/pieces_pay_normal_btn.png';
+                            currentitem.right = 1;
+                        }
+                    }
+                }
+            }
+            else {
+                currentitem.bgimg = jmt.Skin.CLUE_SELECTED_BOX;
+                currentitem.checkimg = jmt.Skin.CLUE_CHECKBOX_SELECTED;
+                currentitem.ischeck = 1;
+                // 正确答案
+                if (this.rightClue) {
+                    for (var i_2 = 0; i_2 < this.rightClue.length; i_2++) {
+                        if (this.rightClue[i_2] == currentitem.clueid) {
+                            currentitem.checkimg = 'skin/clue/pieces_pay_selected_btn.png';
+                            currentitem.right = 0;
+                        }
+                    }
+                }
+            }
+        }
+        else {
+            currentitem.bgimg = jmt.Skin.CLUE_NORMAL_BOX;
+            currentitem.ischeck = 0;
+        }
+        this.clueList.changeItem(index, currentitem);
+        for (var i = 0; i < this.clueList.length; i++) {
+            var item = this.clueList.getItem(i);
+            if (item.ischeck == 1) {
+                this.checkeNum++;
+            }
+            var bgimg = jmt.Skin.CLUE_NORMAL_BOX;
+            if (i == index) {
+                bgimg = jmt.Skin.CLUE_SELECTED_BOX;
+            }
+            item.bgimg = bgimg;
+            this.clueList.changeItem(i, item);
+        }
+        this.selectText.text = '已选择（' + this.checkeCompute + '条）';
+    };
+    ClueView.prototype.bbb = function (index, check) {
+        // console.log(index);
+        // console.log('ggggggggggg');
+        if (check === void 0) { check = true; }
+        this.currentindex = index;
+        var currentitem = this.clueList.getItem(index);
+        if (!currentitem) {
+            return;
+        }
+        if (currentitem.rolename && currentitem.rolename != '') {
+            this.nameBox.visible = true;
+            this.nameText.text = currentitem.rolename;
+        }
+        else {
+            this.nameBox.visible = false;
+            // this.contTextPanel
+        }
+        //重置高度和文本，防止上次点击文字的显示位置不变
+        this.contTextPanel.height = null;
+        // console.log(this.contText);
+        this.contText.text = '';
+        this.contText.height = null;
+        this.contText.text = currentitem.cont;
+        // 点击设置每个大碎片的高度滚动
+        // let textRow = (Math.round(this.contText.text.length/Math.round((this.contText.width/this.contText.fontSize))))+1;
+        // let totalLeading  = this.contText.leading * (textRow);
+        var textHeight = this.contText.height;
+        this.contText.height = textHeight;
+        this.contTextPanel.height = 200;
+        this.contTextPanel.vScrollBarSkin = '';
+    };
+    ClueView.prototype.onClueSelect = function (e, index, check) {
+        // if (jmt.Config.DEBUG) {
+        //     console.log("当前选择的索引：" + index);
+        //     console.log("mouse:"+e.type);
+        // }
+        if (check === void 0) { check = true; }
+        if (e.type == Laya.Event.CLICK) {
+            this.currentindex = index;
+            var currentitem = this.clueList.getItem(index);
+            if (!currentitem) {
+                return;
+            }
+            currentitem.point = 0;
+            if (check) {
+                // 计数，为了判断是否推理，不超过2就不推理
+                if (currentitem.count) {
+                    currentitem.count = false;
+                    this.checkeCompute--;
+                }
+                else {
+                    currentitem.count = true;
+                    this.checkeCompute++;
+                }
+                if (currentitem.ischeck == 1) {
+                    //已选的第二次点击则取消选择
+                    currentitem.bgimg = jmt.Skin.CLUE_NORMAL_BOX;
+                    currentitem.checkimg = jmt.Skin.CLUE_CHECKBOX_NORMAL;
+                    currentitem.ischeck = 0;
+                    if (this.rightClue) {
+                        currentitem.checkimg = jmt.Skin.CLUE_CHECKBOX_NORMAL;
+                    }
+                    this.checkBox.skin = jmt.Skin.CLUE_CHECKBOX_NORMAL;
+                    // 正确答案
+                    if (this.rightClue) {
+                        for (var i_3 = 0; i_3 < this.rightClue.length; i_3++) {
+                            if (this.rightClue[i_3] == currentitem.clueid) {
+                                currentitem.checkimg = 'skin/clue/pieces_pay_normal_btn.png';
+                                currentitem.right = 1;
+                            }
+                        }
+                    }
+                }
+                else {
+                    currentitem.bgimg = jmt.Skin.CLUE_SELECTED_BOX;
+                    currentitem.checkimg = jmt.Skin.CLUE_CHECKBOX_SELECTED;
+                    currentitem.ischeck = 1;
+                    this.checkBox.skin = jmt.Skin.CLUE_CHECKBOX_SELECTED;
+                    // 正确答案
+                    if (this.rightClue) {
+                        for (var i_4 = 0; i_4 < this.rightClue.length; i_4++) {
+                            if (this.rightClue[i_4] == currentitem.clueid) {
+                                currentitem.checkimg = 'skin/clue/pieces_pay_selected_btn.png';
+                                currentitem.right = 0;
+                            }
+                        }
+                    }
+                }
+            }
+            else {
+                currentitem.bgimg = jmt.Skin.CLUE_NORMAL_BOX;
+                currentitem.checkimg = jmt.Skin.CLUE_CHECKBOX_NORMAL;
+                currentitem.ischeck = 0;
+                this.checkBox.skin = jmt.Skin.CLUE_CHECKBOX_NORMAL;
+            }
+            this.clueList.changeItem(index, currentitem);
+            if (currentitem.rolename && currentitem.rolename != '') {
+                this.nameBox.visible = true;
+                this.nameText.text = currentitem.rolename;
+            }
+            else {
+                this.nameBox.visible = false;
+                // this.contTextPanel
+            }
+            //重置高度和文本，防止上次点击文字的显示位置不变
+            this.contTextPanel.height = null;
+            // console.log(this.contText);
+            this.contText.text = '';
+            this.contText.height = null;
+            this.contText.text = currentitem.cont;
+            // 点击设置每个大碎片的高度滚动
+            // let textRow = (Math.round(this.contText.text.length/Math.round((this.contText.width/this.contText.fontSize))))+1;
+            // let totalLeading  = this.contText.leading * (textRow);
+            var textHeight = this.contText.height;
+            this.contText.height = textHeight;
+            this.contTextPanel.height = 200;
+            this.contTextPanel.vScrollBarSkin = '';
+            // var checknum = 0;
+            for (var i = 0; i < this.clueList.length; i++) {
+                var item = this.clueList.getItem(i);
+                if (item.ischeck == 1) {
+                    this.checkeNum++;
+                }
+                var bgimg = jmt.Skin.CLUE_NORMAL_BOX;
+                if (i == index) {
+                    bgimg = jmt.Skin.CLUE_SELECTED_BOX;
+                }
+                item.bgimg = bgimg;
+                this.clueList.changeItem(i, item);
+            }
+            this.selectText.text = '已选择（' + this.checkeCompute + '条）';
+        }
+    };
+    ClueView.prototype.updateClueItem = function (cell, index) {
+        cell.setData(cell.dataSource);
+    };
+    ClueView.prototype.postAnaly = function () {
+        var notcheck = 0;
+        var cluids = [];
+        for (var i = 0; i < this.clueList.length; i++) {
+            var item = this.clueList.getItem(i);
+            if (item.ischeck) {
+                cluids.push(item.clueid);
+            }
+        }
+        var apiUtil = new ApiUtil();
+        var opidstr = cluids.join(',');
+        apiUtil.analysisClue(cluids, Handler.create(this, this.analyResult));
+    };
+    ClueView.prototype.analyResult = function (res) {
+        if (res) {
+            // var promptView = new PromptView(res.cont);
+            // promptView.popup();
+            // var analyView = new AnalyView(res);
+            // analyView.popup();
+            var countView = new CountDownView(3, Handler.create(this, this.countDownComplete, [res]));
+            countView.popup();
+        }
+    };
+    ClueView.prototype.countDownComplete = function (info) {
+        if (info.anaid && info.isright == 1) {
+            var imgView = new ImageBoxView(jmt.Skin.READ_ANALY_SUCCESS, 1000, Handler.create(this, this.showAnalyResult, [info]));
+            imgView.popup();
+        }
+        else {
+            this.showAnalyResult(info);
+        }
+    };
+    ClueView.prototype.showAnalyResult = function (info) {
+        var analyView = new AnalyView(info, Handler.create(this, this.analyComplete));
+        analyView.popup();
+    };
+    ClueView.prototype.analyComplete = function (issucc) {
+        if (this.succback) {
+            if (issucc) {
+                this.succback.run();
+                //成功直接关闭
+                this.clear();
+            }
+        }
+    };
+    return ClueView;
+}(ui.home.ClueUI));
+//# sourceMappingURL=ClueView.js.map

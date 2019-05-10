@@ -1,0 +1,121 @@
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var AnalyLogView = /** @class */ (function (_super) {
+    __extends(AnalyLogView, _super);
+    // private skuPanel: Laya.Panel;
+    // private bgImg: Laya.Sprite;
+    function AnalyLogView() {
+        var _this = _super.call(this) || this;
+        _this.name = 'AnalyLogView';
+        _this.height = Laya.stage.height;
+        // this.bigBox.skin = jmt.Skin.NOTES_BIG_BOX;
+        _this.bgImg.skin = jmt.Skin.NOTES_BG;
+        _this.btnGoback.on(LayaEvent.CLICK, _this, _this.close);
+        _this.initBox();
+        var apiUtil = new ApiUtil();
+        apiUtil.getAnalysisList(Handler.create(_this, _this.initAnalyList), Handler.create(_this, _this.OnError));
+        return _this;
+    }
+    AnalyLogView.prototype.OnError = function () {
+        this.errorBox = new jmt.common.ErrorBox(this, '网络异常，请稍后再试哦~', jmt.common.ErrorBox.TYPE_NET_ERROR);
+        this.errorBox.visible = false;
+        Load.style(this.errorBox, 'alpha', 0, 1);
+    };
+    AnalyLogView.prototype.onClosed = function () {
+        _super.prototype.onClosed.call(this);
+        jmt.Resource.clearTextureRes(this.bgImg.skin);
+        // this.removeSelf();
+        this.destroy(true);
+    };
+    AnalyLogView.prototype.initBox = function () {
+        this.leftBoxBg.skin = jmt.Skin.NOTES_LEFT_BOX;
+        this.rightBoxBg.skin = jmt.Skin.NOTES_RIGHT_BOX;
+        // this.rollBall = new jmt.common.RollBall(this);
+        // this.rollBall.bottom=150;
+        // this.rollBall.left=30;
+    };
+    /**
+     * 初始化关系属性
+     * @param rolelist
+     */
+    AnalyLogView.prototype.initAnalyList = function (res) {
+        // if (jmt.Config.DEBUG) {
+        //     console.log(res);
+        // }
+        var analylist = [];
+        if (res && res.list) {
+            analylist = res.list;
+        }
+        if (analylist.length < 1) {
+            this.errorBox = new jmt.common.ErrorBox(this, '还没有成功推理出有用的信息，请继续努力哦。', jmt.common.ErrorBox.TYPE_BLANK);
+            this.errorBox.visible = false;
+            Load.style(this.errorBox, 'alpha', 0, 1);
+            return;
+        }
+        if (this.errorBox) {
+            this.errorBox.removeSelf();
+        }
+        var row = analylist.length;
+        this.analyList = new LayaList();
+        this.leftBox.addChild(this.analyList);
+        this.analyList.width = this.leftBox.width;
+        this.analyList.height = this.leftBox.height;
+        this.analyList.top = 100;
+        this.analyList.spaceY = 30;
+        this.analyList.repeatY = row;
+        this.analyList.itemRender = jmt.item.AnalyListItem;
+        // 使用但隐藏滚动条
+        this.analyList.vScrollBarSkin = "";
+        this.analyList.selectEnable = true;
+        this.analyList.selectHandler = new Handler(this, this.onAnalySelect);
+        // this.analyList.mouseEnabled = true;
+        // this.analyList.mouseHandler = new Handler(this, this.onClueSelect);
+        this.analyList.renderHandler = new Handler(this, this.updateAnalyItem);
+        this.analyList.array = analylist;
+        // 网速慢，直接显示太生硬，过渡显示出来
+        Load.style(this.mainBox, 'alpha', 0, 1);
+        if (analylist && analylist.length > 0) {
+            this.onAnalySelect(0);
+        }
+    };
+    AnalyLogView.prototype.onAnalySelect = function (index) {
+        // if (jmt.Config.DEBUG) {
+        //     console.log("当前选择的索引：" + index);
+        // }
+        var currentitem = this.analyList.getItem(index);
+        if (!currentitem) {
+            return;
+        }
+        this.analyText.text = currentitem.cont;
+        this.analyList.changeItem(index, currentitem);
+        for (var i = 0; i < this.analyList.length; i++) {
+            var item = this.analyList.getItem(i);
+            if (i == index) {
+                // item.color='#58C7EE';
+                item.color = '#dddddd';
+                item.bgimg = jmt.Skin.NOTES_TITLE_CHECK;
+            }
+            else {
+                item.color = '#dddddd';
+                item.bgimg = '';
+            }
+            this.analyList.changeItem(i, item);
+        }
+    };
+    AnalyLogView.prototype.updateAnalyItem = function (cell, index) {
+        cell.setData(cell.dataSource);
+    };
+    return AnalyLogView;
+}(ui.home.AnalyLogUI));
+//# sourceMappingURL=AnalyLogView.js.map

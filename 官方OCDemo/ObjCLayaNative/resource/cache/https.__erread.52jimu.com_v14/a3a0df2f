@@ -1,0 +1,72 @@
+var SpeakManager = /** @class */ (function () {
+    function SpeakManager() {
+        this.speakDic = new DicObj();
+        this.speakDic.add(SpeakType.leading, new LeadingSpeak());
+        this.speakDic.add(SpeakType.supportingRole, new SupportingRoleSpeak());
+        this.speakDic.add(SpeakType.roadA, new RoadA());
+        this.speakDic.add(SpeakType.roadB, new RoadB());
+        this.speakDic.add(SpeakType.aside, new AsideSpeak());
+        // this.speakDic.add(SpeakType.picture, new PictureSpeak());
+    }
+    SpeakManager.instance = function () {
+        if (!SpeakManager._instance) {
+            SpeakManager._instance = new SpeakManager();
+        }
+        return SpeakManager._instance;
+    };
+    //获取说话对话框
+    SpeakManager.prototype.getSpeak = function (type) {
+        if (!type) {
+            throw new Error('this speakType is not exsit or null');
+        }
+        // console.log('进入获取对话框');
+        if (!this.currenType) {
+            // console.log(111111111111);
+            var speak = this.speakDic.get(type);
+            // console.log(speak);
+            this.currenType = type;
+            return speak;
+        }
+        else if (this.currenType && this.currenType != type) {
+            // console.log(222222222222);
+            var oldSpeak = this.speakDic.get(this.currenType);
+            oldSpeak.visible = false;
+            //现在的类型和上一个类型不一样，就隐藏当前的对话框，然后清除掉打字控件
+            if (this.currenType != SpeakType.picture) {
+                oldSpeak.printControl.removeChildren();
+                oldSpeak.printControl.removeChildren();
+            }
+            var newSpeak = this.speakDic.get(type);
+            newSpeak.visible = true;
+            this.currenType = type;
+            return newSpeak;
+        }
+        else {
+            // console.log(this.currenType)
+            // console.log(type);
+            // console.log(3333333333);
+            //道具图片出现的时候 会隐藏对话框，所以对话框消失，又是同一个对话框，这时候要显示对话框
+            var oldSpeak = this.speakDic.get(this.currenType);
+            oldSpeak.visible = true;
+            return 'same';
+        }
+    };
+    //你是当前类型吗?
+    SpeakManager.prototype.isCurrentType = function (type) {
+        return this.currenType === type;
+    };
+    //人物图片加载完成，拿到图片宽高，对话框的位置等于人物图片height 三分之二
+    SpeakManager.prototype.changePos = function (posY) {
+        //保存改变的位置
+        this.changePosY = posY;
+        if (this.currenType == SpeakType.supportingRole) {
+            var Speak = this.speakDic.get(this.currenType);
+            // if(Speak.centerY == 0){
+            // Laya.Tween.to(Speak, {y: Laya.stage.height-posY}, 1000);
+            Speak.y = Laya.stage.height - posY;
+            // }
+        }
+    };
+    return SpeakManager;
+}());
+//# sourceMappingURL=SpeakManager.js.map

@@ -1,0 +1,73 @@
+var DownloadAppCheckIsExsit = /** @class */ (function () {
+    function DownloadAppCheckIsExsit() {
+    }
+    //客户端检查
+    DownloadAppCheckIsExsit.BrowserInfo = function () {
+        var json = {
+            userAgent: navigator.userAgent.toLowerCase(),
+            isAndroid: Boolean(navigator.userAgent.match(/android/ig)),
+            isIphone: Boolean(navigator.userAgent.match(/iphone|ipod/ig)),
+            isIpad: Boolean(navigator.userAgent.match(/ipad/ig)),
+            isWeixin: Boolean(navigator.userAgent.match(/MicroMessenger/ig)),
+            isCiyuan: Boolean(navigator.userAgent.match(/JmtCiyuan/ig))
+        };
+        return json;
+    };
+    //打开下载链接
+    DownloadAppCheckIsExsit.openDownloadLink = function () {
+        var browser = DownloadAppCheckIsExsit.BrowserInfo();
+        var openurl = '';
+        if (browser.isIphone || browser.isIpad) {
+            openurl = DownloadAppCheckIsExsit.openLinkInfo.iphoneDownUrl;
+        }
+        else {
+            openurl = DownloadAppCheckIsExsit.openLinkInfo.androidDownUrl;
+        }
+        window.location.href = openurl;
+    };
+    //打开App
+    DownloadAppCheckIsExsit.openApp = function () {
+        var browser = DownloadAppCheckIsExsit.BrowserInfo();
+        var openurl = '';
+        if (browser.isIphone || browser.isIpad) {
+            openurl = DownloadAppCheckIsExsit.openLinkInfo.iphoneSchema;
+        }
+        else {
+            openurl = DownloadAppCheckIsExsit.openLinkInfo.androidSchema;
+        }
+        window.location.href = openurl;
+    };
+    //检查app是否打开
+    DownloadAppCheckIsExsit.checkAppIsOpen = function () {
+        //尝试打开app
+        DownloadAppCheckIsExsit.openApp();
+        var clickTime = Date.now();
+        //启动间隔20ms运行的定时器，并检测累计消耗时间是否超过3000ms，超过则结束
+        var count = 0;
+        var timer = setInterval(function () {
+            count++;
+            var intervalTime = Date.now() - clickTime;
+            if (count >= 100 || intervalTime > 3000) {
+                clearInterval(timer);
+                check(intervalTime);
+            }
+        }, 20);
+        function check(intervalTime) {
+            if (window.document.hidden || window.document.webkitHidden) {
+                // DownloadAppCheckIsExsit.openApp();
+            }
+            else {
+                DownloadAppCheckIsExsit.openDownloadLink();
+            }
+        }
+    };
+    //打开链接的地址
+    DownloadAppCheckIsExsit.openLinkInfo = {
+        iphoneSchema: 'jmtciyuan://',
+        iphoneDownUrl: 'http://er.52jimu.com/app/download?pl=2',
+        androidSchema: 'jmtciyuan://52jimu.com/jump',
+        androidDownUrl: 'http://er.52jimu.com/app/download?pl=1'
+    };
+    return DownloadAppCheckIsExsit;
+}());
+//# sourceMappingURL=DownloadAppCheckIsExsit.js.map

@@ -1,0 +1,43 @@
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var EndView = /** @class */ (function (_super) {
+    __extends(EndView, _super);
+    function EndView() {
+        var _this = _super.call(this) || this;
+        _this.name = 'EndView';
+        _this.height = Laya.stage.height;
+        _this.bgImg.skin = jmt.Skin.END_BG;
+        var glowFilter = new Laya.GlowFilter("#880000", 3, 0, 0);
+        //添加发光滤镜
+        _this.endText.filters = [glowFilter];
+        _this.btnShare.on(Laya.Event.CLICK, _this, _this.showShare);
+        _this.btnHome.on(Laya.Event.CLICK, _this, _this.showHome);
+        return _this;
+    }
+    EndView.prototype.showHome = function () {
+        var mainView = new MainView();
+        Laya.stage.addChild(mainView);
+    };
+    EndView.prototype.showShare = function () {
+        if (Laya.Browser.onMiniGame) {
+            var data = {
+                title: jmt.Data.novelinfo.title,
+                imageUrl: jmt.Data.novelinfo.shareimg
+            };
+            wx.shareAppMessage(data);
+        }
+    };
+    return EndView;
+}(ui.home.EndUI));
+//# sourceMappingURL=EndView.js.map

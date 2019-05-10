@@ -1,0 +1,157 @@
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var SystemView = /** @class */ (function (_super) {
+    __extends(SystemView, _super);
+    function SystemView(readindex, chapterinfo, coninfo) {
+        var _this = _super.call(this) || this;
+        _this.name = 'SystemView';
+        if (readindex) {
+            _this.readindex = readindex;
+        }
+        if (chapterinfo) {
+            _this.chapterinfo = chapterinfo;
+        }
+        if (coninfo) {
+            _this.coninfo = coninfo;
+        }
+        _this.btnClose.on(LayaEvent.CLICK, _this, _this.onClose);
+        //现在是点击不同文字，显示不同界面、
+        _this.btn_log.on(Laya.Event.CLICK, _this, _this.onlogText);
+        _this.btn_catalog.on(Laya.Event.CLICK, _this, _this.oncatalogText);
+        _this.btn_readStore.on(Laya.Event.CLICK, _this, _this.onreadStore);
+        _this.btn_saveStore.on(Laya.Event.CLICK, _this, _this.onsaveStore);
+        // this.volume.on(Laya.Event.CLICK, this, this.onvolume);
+        _this.make.on(Laya.Event.CLICK, _this, _this.onmake);
+        _this.btn_Qtalk.on(Laya.Event.CLICK, _this, _this.onQtalk);
+        _this.share.on(Laya.Event.CLICK, _this, _this.onshare);
+        _this.Niji.on(Laya.Event.CLICK, _this, _this.onNiji);
+        //如果是微信小游戏，就隐藏NiJi社区
+        if (Laya.Browser.onMiniGame) {
+            _this.Niji.visible = false;
+        }
+        return _this;
+        // this.sliderMusic.on(LayaEvent.CHANGE,this,this.changeMusic);
+        // this.sliderSound.on(LayaEvent.CHANGE,this,this.changeSound);
+        // this.sliderVoice.on(LayaEvent.CHANGE,this,this.changeVoice);
+        // // this.btnMusicText.on(LayaEvent.DOUBLE_CLICK,this,this.openDebug);
+        // // this.btnAudioText.on(LayaEvent.DOUBLE_CLICK,this,this.showUid);
+        // this.sliderMusic.value = jmt.Data.getVolume(jmt.Resource.RESTYPE_BGM);
+        // this.sliderSound.value = jmt.Data.getVolume(jmt.Resource.RESTYPE_SOUND);
+        // this.sliderVoice.value = jmt.Data.getVolume(jmt.Resource.RESTYPE_VOICE);
+    }
+    SystemView.prototype.onClose = function () {
+        this.close();
+    };
+    SystemView.prototype.onlogText = function () {
+        var logView = new ReadLogView();
+        logView.popup();
+    };
+    SystemView.prototype.oncatalogText = function () {
+        var catalogView = new CatalogView();
+        catalogView.popup();
+    };
+    SystemView.prototype.onreadStore = function () {
+        var storeView = new StoreView(0, '', Handler.create(this, this.close));
+        storeView.popup();
+    };
+    SystemView.prototype.onsaveStore = function () {
+        var storeView = new StoreView(1);
+        storeView.popup();
+    };
+    SystemView.prototype.onvolume = function () {
+        var systemView = new SystemView();
+        systemView.popup();
+    };
+    SystemView.prototype.onmake = function () {
+        var teamView = new TeamView();
+        teamView.popup();
+    };
+    SystemView.prototype.onQtalk = function () {
+        if (Laya.Browser.onMiniGame) {
+            var promptView = new PromptView("<span>QQ\u7FA4\uFF1A" + jmt.GlobalData.QQ_TALK + "</span>", Handler.create(WxUtil, WxUtil.setClipText), '复制');
+            promptView.bgImg.width = 450;
+            promptView.bgImg.height = 250;
+            promptView.cancelBtn.width = 100;
+            promptView.cancelBtn.height = 40;
+            promptView.cancelBtn.labelSize = 30;
+            promptView.cancelBtn.right = 170;
+            promptView.cancelBtn.bottom = 110;
+            promptView.okBtn.width = 100;
+            promptView.okBtn.height = 40;
+            promptView.okBtn.labelSize = 30;
+            promptView.okBtn.left = 170;
+            promptView.okBtn.bottom = 110;
+            promptView.htmlText.pos(210, 130);
+            promptView.popup();
+        }
+        else if (WywUtil.onLimixiu()) {
+            WywUtil.openWebView('https://jq.qq.com/?_wv=1027&k=56DAPhq');
+        }
+    };
+    SystemView.prototype.onshare = function () {
+        //先从服务端请求分享数据内容，传递给QQ分享接口那边
+        var apiUtil = new ApiUtil();
+        apiUtil.qqShareDataInfo(0, Handler.create(this, this.getShareInfo));
+    };
+    SystemView.prototype.onNiji = function () {
+        WywUtil.openWebView('https://lxjy.52jimu.com/');
+    };
+    SystemView.prototype.getShareInfo = function (res) {
+        if (res) {
+            res.extendInfoType = 0;
+        }
+        //QQ
+        WywUtil.QQshare(function () { }, res);
+        //微信
+        WxUtil.WxShare(function () { }, res);
+    };
+    // showUid():void{
+    //     if (jmt.Data.uid) {
+    //         jmt.common.Toast.msg('uid: '+jmt.Data.uid);
+    //     }        
+    // }
+    // openDebug():void{
+    //     if (jmt.Config.DEBUG) {
+    //         jmt.Config.DEBUG = false;
+    //         jmt.Config.DEBUG_LOG = false;
+    //         jmt.common.Toast.success('已关闭调试模式');
+    //         jmt.Print.closeDebug();
+    //     }else{
+    //         jmt.Config.DEBUG = true;
+    //         jmt.Config.DEBUG_LOG = true;
+    //         jmt.common.Toast.success('已开启调试模式');
+    //     }        
+    // }
+    // changeMusic(res:any):void{
+    //     // console.log(this.sliderMusic.value);
+    //     jmt.Data.setVolume(jmt.Resource.RESTYPE_BGM,this.sliderMusic.value);
+    //     var volume = jmt.Data.getPlayVolume(jmt.Resource.RESTYPE_BGM);
+    //     SoundManager.setMusicVolume(volume);//设置音量
+    // }
+    // changeSound(res:any):void{
+    //     // console.log(this.sliderSound.value);
+    //     jmt.Data.setVolume(jmt.Resource.RESTYPE_SOUND,this.sliderSound.value);
+    // }
+    // changeVoice(res:any):void{
+    //     // console.log(this.sliderVoice.value);
+    //     jmt.Data.setVolume(jmt.Resource.RESTYPE_VOICE,this.sliderVoice.value);
+    // }
+    SystemView.prototype.onClosed = function () {
+        _super.prototype.onClosed.call(this);
+        // this.removeSelf();
+        this.destroy(true);
+    };
+    return SystemView;
+}(ui.dialog.SystemUI));
+//# sourceMappingURL=SystemView.js.map

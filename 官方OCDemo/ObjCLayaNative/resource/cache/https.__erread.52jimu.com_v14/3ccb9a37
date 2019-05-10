@@ -1,0 +1,139 @@
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var PictureSpeak = /** @class */ (function (_super) {
+    __extends(PictureSpeak, _super);
+    function PictureSpeak() {
+        var _this = _super.call(this) || this;
+        _this.tweenIsExist = false; //缓动小icon是否开启过缓动。开启过则不缓动了
+        _this.width = Laya.stage.width;
+        _this.height = Laya.stage.height;
+        _this.bgSp = new LayaBox();
+        _this.printBgImg = new LayaImage();
+        _this.tweenNextImg = new LayaImage();
+        _this.createBgSp();
+        _this.createBg();
+        _this.createTweenNextImg();
+        _this.createFilter();
+        _this.tweenNextImg.on(Laya.Event.CLICK, _this, _this.closeBox);
+        _this.bgSp.on(Laya.Event.CLICK, _this, _this.closeBox);
+        _this.bgSp.mouseEnabled = false;
+        return _this;
+    }
+    //用于 点击 图片以外的区域， 关闭图片
+    PictureSpeak.prototype.createBgSp = function () {
+        if (this.bgSp) {
+            this.bgSp.width = Laya.stage.width;
+            this.bgSp.height = Laya.stage.height;
+            this.addChild(this.bgSp);
+        }
+    };
+    PictureSpeak.prototype.createBg = function () {
+        // this.printBgImg.skin = 'skin/niji/read_pb_dialog.png';
+        this.printBgImg.centerX = 0;
+        this.printBgImg.centerY = 0;
+        this.printBgImg.zOrder = 10;
+        // this.printBgImg.mouseThrough = false;
+        // this.printBgImg.mouseEnabled = false;
+        // this.printBgImg.mou
+        this.addChild(this.printBgImg);
+    };
+    PictureSpeak.prototype.createTweenNextImg = function () {
+        this.tweenNextImg.skin = 'skin/niji/read_continue_icon.png';
+        // this.tweenNextImg.bottom = 0;
+        // this.tweenNextImg.right = 0;
+        this.tweenNextImg.right = 44;
+        this.tweenNextImg.bottom = 44;
+        this.addChild(this.tweenNextImg);
+    };
+    //创建外发光 阴影
+    PictureSpeak.prototype.createFilter = function () {
+        // 创建一个发光滤镜
+        var glowFilter = new Laya.GlowFilter("#000000", 10, 0, 0);
+        // 设置滤镜集合为发光滤镜
+        this.printBgImg.filters = [glowFilter];
+    };
+    PictureSpeak.prototype.initTween = function (roleName, infoText, skin, completeHanler) {
+        this.printBgImg.top = 0;
+        this.printBgImg.left = 0;
+        // if(completeHanler){
+        //     this.completeHanler = completeHanler;
+        // }
+        //网络图片，先加载
+        Laya.loader.load(infoText, Handler.create(this, this.loadComplete, [infoText]), null, Laya.Loader.IMAGE);
+    };
+    //加载图片完成
+    PictureSpeak.prototype.loadComplete = function (skin) {
+        var _this = this;
+        this.printBgImg.skin = skin;
+        if (this.printBgImg) {
+            //限制宽度
+            if (this.printBgImg.width > Laya.stage.width - 68 * 2) {
+                var width = Laya.stage.width - 68 * 2;
+                var scale = width / this.printBgImg.width;
+                this.printBgImg.width = width;
+                this.printBgImg.height = this.printBgImg.height * scale;
+            }
+            //限制高度
+            if (this.printBgImg.height > Laya.stage.height - 400) {
+                var height = Laya.stage.height - 400;
+                var scale = height / this.printBgImg.height;
+                this.printBgImg.height = height;
+                this.printBgImg.width = this.printBgImg.width * scale;
+            }
+            this.visible = true;
+            this.printBgImg.scaleY = 0.1;
+            Laya.Tween.to(this.printBgImg, { scaleY: 1 }, 200, null, Handler.create(this, this.tweenHandler));
+        }
+        //两秒后，点击页面任何区域都能关闭图片
+        this.bgSp.mouseEnabled = false;
+        ;
+        Laya.timer.once(1000, this, function () {
+            _this.bgSp.mouseEnabled = true;
+        });
+    };
+    PictureSpeak.prototype.tweenHandler = function () {
+        // this.tweenNextImg.pivot(this.tweenNextImg.width/2, this.tweenNextImg.height/2);
+        //小三角形缩放动画
+        //小三角形缩放动画
+        //不存在缓动，才执行一次缓动
+        if (!this.tweenIsExist) {
+            Laya.Tween.to(this.tweenNextImg, { scaleX: 0.8, scaleY: 0.8 }, 500, null, Handler.create(this, this.nextTween));
+        }
+    };
+    PictureSpeak.prototype.nextTween = function () {
+        this.tweenIsExist = true;
+        Laya.Tween.to(this.tweenNextImg, { scaleX: 1, scaleY: 1 }, 500, null, Handler.create(this, this.nextTween2));
+    };
+    PictureSpeak.prototype.nextTween2 = function () {
+        Laya.Tween.to(this.tweenNextImg, { scaleX: 0.8, scaleY: 0.8 }, 500, null, Handler.create(this, this.nextTween));
+    };
+    //关闭页面
+    PictureSpeak.prototype.closeBox = function (e) {
+        // console.log('事件');
+        // console.log(e);
+        Laya.Tween.to(this.printBgImg, { scaleY: 0 }, 200, Laya.Ease.bounceOut, Handler.create(this, this.closeBoxTweenHandler));
+        //关闭点击事件
+    };
+    PictureSpeak.prototype.closeBoxTweenHandler = function () {
+        this.visible = false;
+        this.printBgImg.skin = '';
+        if (ReadingView._instans) {
+            ReadingView._instans.readindex++;
+            ReadingView._instans.isPlaying = false;
+            ReadingView._instans.OnState();
+        }
+    };
+    return PictureSpeak;
+}(Laya.Box));
+//# sourceMappingURL=PictureSpeak.js.map

@@ -1,0 +1,751 @@
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+var View = laya.ui.View;
+var Dialog = laya.ui.Dialog;
+var ui;
+(function (ui) {
+    var ani;
+    (function (ani) {
+        var effectEye2UI = (function (_super) {
+            __extends(effectEye2UI, _super);
+            function effectEye2UI() {
+                var _this = _super.call(this) || this;
+                _this.effectData = ui.ani.effectEye2UI.uiView;
+                return _this;
+            }
+            return effectEye2UI;
+        }(laya.display.EffectAnimation));
+        effectEye2UI.uiView = { "type": "View", "props": {} };
+        ani.effectEye2UI = effectEye2UI;
+    })(ani = ui.ani || (ui.ani = {}));
+})(ui || (ui = {}));
+(function (ui) {
+    var dialog;
+    (function (dialog) {
+        var AnalyUI = (function (_super) {
+            __extends(AnalyUI, _super);
+            function AnalyUI() {
+                return _super.call(this) || this;
+            }
+            AnalyUI.prototype.createChildren = function () {
+                _super.prototype.createChildren.call(this);
+                this.createView(ui.dialog.AnalyUI.uiView);
+            };
+            return AnalyUI;
+        }(Dialog));
+        AnalyUI.uiView = { "type": "Dialog", "props": { "width": 810, "height": 1166 }, "child": [{ "type": "Image", "props": { "var": "bgImg", "top": 0, "right": 0, "left": 0, "bottom": 0 } }, { "type": "Label", "props": { "y": 380, "text": "分析结果", "fontSize": 34, "font": "SimHei", "color": "#ffffff", "centerX": 0, "bold": true } }, { "type": "Image", "props": { "y": 380, "x": 630, "var": "btnClose", "skin": "skin/common/system_close_icon.png" } }, { "type": "Label", "props": { "y": 480, "var": "titleText", "valign": "middle", "left": 150, "height": 50, "fontSize": 34, "font": "SimHei", "color": "#0E0E0E", "bold": true } }, { "type": "Panel", "props": { "y": 560, "var": "contPanel", "right": 150, "left": 150, "height": 240 }, "child": [{ "type": "Label", "props": { "y": 0, "wordWrap": true, "var": "contText", "right": 0, "left": 0, "leading": 10, "fontSize": 34, "font": "SimHei", "color": "#0E0E0E" } }] }, { "type": "Button", "props": { "y": 820, "var": "btnTry", "skin": "skin/common/btn_pieces_quantity_limit.png", "label": "重试", "centerX": 0, "stateNum": 2, "labelColors": "#0E0E0E,#FFFFFF,#FFFFFF", "labelFont": "SimHei", "labelSize": 34 } }] };
+        dialog.AnalyUI = AnalyUI;
+    })(dialog = ui.dialog || (ui.dialog = {}));
+})(ui || (ui = {}));
+(function (ui) {
+    var dialog;
+    (function (dialog) {
+        var CloseUpUI = (function (_super) {
+            __extends(CloseUpUI, _super);
+            function CloseUpUI() {
+                return _super.call(this) || this;
+            }
+            CloseUpUI.prototype.createChildren = function () {
+                _super.prototype.createChildren.call(this);
+                this.createView(ui.dialog.CloseUpUI.uiView);
+            };
+            return CloseUpUI;
+        }(Dialog));
+        CloseUpUI.uiView = { "type": "Dialog", "props": { "width": 810, "height": 810 } };
+        dialog.CloseUpUI = CloseUpUI;
+    })(dialog = ui.dialog || (ui.dialog = {}));
+})(ui || (ui = {}));
+(function (ui) {
+    var dialog;
+    (function (dialog) {
+        var CollectClueUI = (function (_super) {
+            __extends(CollectClueUI, _super);
+            function CollectClueUI() {
+                return _super.call(this) || this;
+            }
+            CollectClueUI.prototype.createChildren = function () {
+                _super.prototype.createChildren.call(this);
+                this.createView(ui.dialog.CollectClueUI.uiView);
+            };
+            return CollectClueUI;
+        }(Dialog));
+        CollectClueUI.uiView = { "type": "Dialog", "props": { "width": 810, "height": 1754 }, "child": [{ "type": "Image", "props": { "var": "bgImg", "top": 0, "right": 0, "left": 0, "bottom": 0 } }, { "type": "Box", "props": { "var": "mainBox", "right": 0, "left": 0, "height": 300, "centerY": 0 }, "child": [{ "type": "Image", "props": { "y": 0, "x": 0, "skin": "skin/common/pieces_title.png" } }, { "type": "Line", "props": { "y": 90, "x": 200, "toY": 0, "toX": 410, "lineWidth": 3, "lineColor": "#ffffff" } }, { "type": "Box", "props": { "top": 90, "right": 0, "left": 0, "height": 90 }, "child": [{ "type": "Sprite", "props": { "y": 0, "x": 0, "alpha": 0.5 }, "child": [{ "type": "Rect", "props": { "y": 0, "x": 0, "width": 810, "lineWidth": 0, "height": 100, "fillColor": "#000000" } }] }, { "type": "Button", "props": { "var": "btnOk", "stateNum": 2, "skin": "skin/common/btn_save_pieces.png", "centerY": 0 } }] }] }, { "type": "Image", "props": { "var": "warnImg", "skin": "skin/common/pieces_gth.png", "right": 105, "bottom": 205 } }] };
+        dialog.CollectClueUI = CollectClueUI;
+    })(dialog = ui.dialog || (ui.dialog = {}));
+})(ui || (ui = {}));
+(function (ui) {
+    var dialog;
+    (function (dialog) {
+        var CountDownUI = (function (_super) {
+            __extends(CountDownUI, _super);
+            function CountDownUI() {
+                return _super.call(this) || this;
+            }
+            CountDownUI.prototype.createChildren = function () {
+                _super.prototype.createChildren.call(this);
+                this.createView(ui.dialog.CountDownUI.uiView);
+            };
+            return CountDownUI;
+        }(Dialog));
+        CountDownUI.uiView = { "type": "Dialog", "props": { "width": 810, "height": 810 }, "child": [{ "type": "Box", "props": { "width": 594, "var": "mainBox", "height": 594, "centerY": 0, "centerX": 0 }, "child": [{ "type": "Image", "props": { "var": "ballImg", "skin": "skin/clue/pieces_loading_icon.png", "centerY": 0, "centerX": 0 } }, { "type": "Clip", "props": { "var": "numClip", "skin": "skin/common/clip_pieces_loading_time.png", "index": 2, "clipX": 3, "centerY": 0, "centerX": 0 } }] }] };
+        dialog.CountDownUI = CountDownUI;
+    })(dialog = ui.dialog || (ui.dialog = {}));
+})(ui || (ui = {}));
+(function (ui) {
+    var dialog;
+    (function (dialog) {
+        var ImageBoxUI = (function (_super) {
+            __extends(ImageBoxUI, _super);
+            function ImageBoxUI() {
+                return _super.call(this) || this;
+            }
+            ImageBoxUI.prototype.createChildren = function () {
+                _super.prototype.createChildren.call(this);
+                this.createView(ui.dialog.ImageBoxUI.uiView);
+            };
+            return ImageBoxUI;
+        }(Dialog));
+        ImageBoxUI.uiView = { "type": "Dialog", "props": { "width": 810, "height": 810 }, "child": [{ "type": "Image", "props": { "var": "showImg", "centerY": 0, "centerX": 0 } }] };
+        dialog.ImageBoxUI = ImageBoxUI;
+    })(dialog = ui.dialog || (ui.dialog = {}));
+})(ui || (ui = {}));
+(function (ui) {
+    var dialog;
+    (function (dialog) {
+        var NoticeUI = (function (_super) {
+            __extends(NoticeUI, _super);
+            function NoticeUI() {
+                return _super.call(this) || this;
+            }
+            NoticeUI.prototype.createChildren = function () {
+                View.regComponent("HTMLDivElement", laya.html.dom.HTMLDivElement);
+                _super.prototype.createChildren.call(this);
+                this.createView(ui.dialog.NoticeUI.uiView);
+            };
+            return NoticeUI;
+        }(Dialog));
+        NoticeUI.uiView = { "type": "Dialog", "props": { "width": 810, "height": 1183 }, "child": [{ "type": "Image", "props": { "var": "bgImg", "top": 0, "right": 0, "left": 0, "bottom": 0 } }, { "type": "Image", "props": { "y": 308, "skin": "skin/home/message_redline.png", "centerX": 0 } }, { "type": "Image", "props": { "y": 186, "x": 667, "var": "btnClose", "skin": "skin/common/system_close_icon.png" } }, { "type": "Label", "props": { "y": 250, "var": "titleText", "right": 100, "overflow": "hidden", "left": 100, "height": 50, "fontSize": 29, "font": "SimHei", "color": "#dddddd", "align": "center" } }, { "type": "HTMLDivElement", "props": { "y": 351, "x": 135, "width": 545, "var": "contText", "innerHTML": "htmlText", "height": 613 } }] };
+        dialog.NoticeUI = NoticeUI;
+    })(dialog = ui.dialog || (ui.dialog = {}));
+})(ui || (ui = {}));
+(function (ui) {
+    var dialog;
+    (function (dialog) {
+        var OptionUI = (function (_super) {
+            __extends(OptionUI, _super);
+            function OptionUI() {
+                return _super.call(this) || this;
+            }
+            OptionUI.prototype.createChildren = function () {
+                _super.prototype.createChildren.call(this);
+                this.createView(ui.dialog.OptionUI.uiView);
+            };
+            return OptionUI;
+        }(Dialog));
+        OptionUI.uiView = { "type": "Dialog", "props": { "width": 645, "height": 800 } };
+        dialog.OptionUI = OptionUI;
+    })(dialog = ui.dialog || (ui.dialog = {}));
+})(ui || (ui = {}));
+(function (ui) {
+    var dialog;
+    (function (dialog) {
+        var PayModeUI = (function (_super) {
+            __extends(PayModeUI, _super);
+            function PayModeUI() {
+                return _super.call(this) || this;
+            }
+            PayModeUI.prototype.createChildren = function () {
+                _super.prototype.createChildren.call(this);
+                this.createView(ui.dialog.PayModeUI.uiView);
+            };
+            return PayModeUI;
+        }(Dialog));
+        PayModeUI.uiView = { "type": "Dialog", "props": { "width": 810, "height": 1754 }, "child": [{ "type": "Box", "props": { "y": 692, "x": 61 }, "child": [{ "type": "Image", "props": { "y": 0, "x": 0, "var": "bg_pay", "skin": "skin/store/save_progress_prompt_box.png" } }, { "type": "Button", "props": { "y": 228, "x": 216, "var": "wx_pay", "skin": "skin/common/btn_save_progress_prompt_btn.png", "labelSize": 34, "labelFont": "SimHei", "labelAlign": "center", "label": "微信", "bottom": 80, "stateNum": 2, "labelColors": "#0E0E0E,#FFFFFF,#FFFFFF" } }, { "type": "Image", "props": { "y": -38.5, "x": 644, "var": "bt_close", "skin": "skin/common/read_special_option_close_btn.png" } }] }] };
+        dialog.PayModeUI = PayModeUI;
+    })(dialog = ui.dialog || (ui.dialog = {}));
+})(ui || (ui = {}));
+(function (ui) {
+    var dialog;
+    (function (dialog) {
+        var PromptUI = (function (_super) {
+            __extends(PromptUI, _super);
+            function PromptUI() {
+                return _super.call(this) || this;
+            }
+            PromptUI.prototype.createChildren = function () {
+                _super.prototype.createChildren.call(this);
+                this.createView(ui.dialog.PromptUI.uiView);
+            };
+            return PromptUI;
+        }(Dialog));
+        PromptUI.uiView = { "type": "Dialog", "props": { "width": 688, "height": 370 }, "child": [{ "type": "Image", "props": { "var": "bgImg", "skin": "skin/store/save_progress_prompt_box.png", "sizeGrid": "1,1,1,2", "centerY": 0, "centerX": 0 } }, { "type": "Button", "props": { "y": 10, "x": 10, "var": "okBtn", "skin": "skin/common/btn_save_progress_prompt_btn.png", "left": 51, "label": "确定", "bottom": 80, "stateNum": 2, "labelColors": "#0E0E0E,#FFFFFF,#FFFFFF", "labelFont": "SimHei", "labelSize": 34 } }, { "type": "Button", "props": { "y": 10, "x": 10, "var": "cancelBtn", "skin": "skin/common/btn_save_progress_prompt_btn.png", "right": 51, "label": "关闭", "bottom": 80, "stateNum": 2, "labelColors": "#0E0E0E,#FFFFFF,#FFFFFF", "labelFont": "SimHei", "labelSize": 34 } }] };
+        dialog.PromptUI = PromptUI;
+    })(dialog = ui.dialog || (ui.dialog = {}));
+})(ui || (ui = {}));
+(function (ui) {
+    var dialog;
+    (function (dialog) {
+        var PromptInUI = (function (_super) {
+            __extends(PromptInUI, _super);
+            function PromptInUI() {
+                return _super.call(this) || this;
+            }
+            PromptInUI.prototype.createChildren = function () {
+                _super.prototype.createChildren.call(this);
+                this.createView(ui.dialog.PromptInUI.uiView);
+            };
+            return PromptInUI;
+        }(Dialog));
+        PromptInUI.uiView = { "type": "Dialog", "props": { "width": 535, "height": 341 }, "child": [{ "type": "Image", "props": { "var": "bgImg", "top": 0, "right": 0, "left": 0, "bottom": 0 } }, { "type": "TextInput", "props": { "var": "inText", "top": 80, "skin": "skin/common/textinput.png", "right": 59, "promptColor": "#8d8d8d", "prompt": "请输入...", "left": 59, "height": 77, "fontSize": 30, "font": "SimHei", "color": "#0E0E0E", "align": "center" } }, { "type": "Button", "props": { "var": "btnOk", "stateNum": 2, "skin": "skin/common/btn_save_progress_prompt_btn.png", "right": 140, "left": 140, "labelSize": 34, "labelFont": "SimHei", "labelColors": "#0E0E0E,#DDDDDD,#DDDDDD", "label": "确定", "height": 64, "bottom": 56 } }] };
+        dialog.PromptInUI = PromptInUI;
+    })(dialog = ui.dialog || (ui.dialog = {}));
+})(ui || (ui = {}));
+(function (ui) {
+    var dialog;
+    (function (dialog) {
+        var QqChapterUnlockUI = (function (_super) {
+            __extends(QqChapterUnlockUI, _super);
+            function QqChapterUnlockUI() {
+                return _super.call(this) || this;
+            }
+            QqChapterUnlockUI.prototype.createChildren = function () {
+                _super.prototype.createChildren.call(this);
+                this.createView(ui.dialog.QqChapterUnlockUI.uiView);
+            };
+            return QqChapterUnlockUI;
+        }(Dialog));
+        QqChapterUnlockUI.uiView = { "type": "Dialog", "props": { "width": 810, "height": 1000 }, "child": [{ "type": "Image", "props": { "y": 84, "x": 48, "width": 713, "var": "bg_img", "skin": "skin/store/save_progress_prompt_box.png", "sizeGrid": "10,1,10,1", "height": 832 }, "child": [{ "type": "HBox", "props": { "y": 236, "x": 142, "top": 236, "space": 10, "align": "middle" }, "child": [{ "type": "HBox", "props": { "align": "middle" }, "child": [{ "type": "Label", "props": { "y": 3, "text": "观看视频", "fontSize": 27, "font": "SimHei", "color": "#DDDDDD" } }, { "type": "Label", "props": { "x": 116, "text": "（2个）", "fontSize": 27, "font": "SimHei", "color": "#FF0000" } }] }, { "type": "HBox", "props": { "y": 10, "x": 10, "align": "middle" }, "child": [{ "type": "Label", "props": { "y": 3, "text": " 邀请朋友", "fontSize": 27, "font": "SimHei", "color": "#DDDDDD" } }, { "type": "Label", "props": { "x": 116, "text": "（1个）", "fontSize": 27, "font": "SimHei", "color": "#FF0000" } }] }] }, { "type": "Box", "props": { "y": 421, "x": 49, "top": 421 }, "child": [{ "type": "Line", "props": { "toX": 614, "lineWidth": 2, "lineColor": "#666666" } }] }] }] };
+        dialog.QqChapterUnlockUI = QqChapterUnlockUI;
+    })(dialog = ui.dialog || (ui.dialog = {}));
+})(ui || (ui = {}));
+(function (ui) {
+    var dialog;
+    (function (dialog) {
+        var ReNameUI = (function (_super) {
+            __extends(ReNameUI, _super);
+            function ReNameUI() {
+                return _super.call(this) || this;
+            }
+            ReNameUI.prototype.createChildren = function () {
+                _super.prototype.createChildren.call(this);
+                this.createView(ui.dialog.ReNameUI.uiView);
+            };
+            return ReNameUI;
+        }(Dialog));
+        ReNameUI.uiView = { "type": "Dialog", "props": { "width": 535, "height": 341 }, "child": [{ "type": "Image", "props": { "var": "bgImg", "top": 0, "right": 0, "left": 0, "bottom": 0 } }, { "type": "TextInput", "props": { "var": "inRolename", "top": 80, "skin": "skin/common/textinput.png", "right": 59, "promptColor": "#8d8d8d", "prompt": "请输入你的名字", "left": 59, "height": 77, "fontSize": 30, "font": "SimHei", "color": "#0E0E0E", "align": "center" } }, { "type": "Button", "props": { "var": "btnOk", "stateNum": 2, "skin": "skin/common/btn_save_progress_prompt_btn.png", "right": 140, "left": 140, "labelSize": 34, "labelFont": "SimHei", "labelColors": "#0E0E0E,#DDDDDD,#DDDDDD", "label": "确定", "height": 64, "bottom": 56 } }] };
+        dialog.ReNameUI = ReNameUI;
+    })(dialog = ui.dialog || (ui.dialog = {}));
+})(ui || (ui = {}));
+(function (ui) {
+    var dialog;
+    (function (dialog) {
+        var SettingUI = (function (_super) {
+            __extends(SettingUI, _super);
+            function SettingUI() {
+                return _super.call(this) || this;
+            }
+            SettingUI.prototype.createChildren = function () {
+                View.regComponent("Text", laya.display.Text);
+                _super.prototype.createChildren.call(this);
+                this.createView(ui.dialog.SettingUI.uiView);
+            };
+            return SettingUI;
+        }(Dialog));
+        SettingUI.uiView = { "type": "Dialog", "props": { "width": 810, "height": 885 }, "child": [{ "type": "Image", "props": { "var": "bgImg", "top": 0, "right": 0, "left": 0, "bottom": 0 } }, { "type": "Text", "props": { "y": 169, "x": 0, "width": 810, "valign": "middle", "text": "设置", "height": 84, "fontSize": 34, "font": "SimHei", "color": "#ffffff", "align": "center" } }, { "type": "Button", "props": { "width": 140, "top": 604, "stateNum": 2, "sizeGrid": "2,2,2,2", "left": 320, "labelSize": 24, "labelFont": "SimHei", "labelColors": "#dddddd,#ffffff,#ffffff", "label": "Q群讨论", "height": 52 } }, { "type": "Button", "props": { "width": 120, "var": "btnTeam", "top": 604, "stateNum": 2, "sizeGrid": "2,2,2,2", "left": 180, "labelSize": 24, "labelFont": "SimHei", "labelColors": "#dddddd,#ffffff,#ffffff", "label": "制作组", "height": 52 } }, { "type": "Button", "props": { "width": 200, "top": 604, "stateNum": 2, "sizeGrid": "2,2,2,2", "right": 141, "labelSize": 24, "labelFont": "SimHei", "labelColors": "#dddddd,#ffffff,#ffffff", "label": "Niji社区", "height": 52 } }, { "type": "Image", "props": { "y": 195, "var": "btnClose", "skin": "skin/common/system_close_icon.png", "right": 70 } }, { "type": "HSlider", "props": { "y": 332, "x": 356, "var": "sliderMusic", "value": 50, "skin": "skin/common/hslider_music.png", "min": 0, "max": 100, "allowClickBack": true } }, { "type": "HSlider", "props": { "y": 416, "x": 356, "var": "sliderSound", "value": 50, "skin": "skin/common/hslider_music.png", "min": 0, "max": 100, "allowClickBack": true } }, { "type": "HSlider", "props": { "y": 499, "x": 356, "var": "sliderVoice", "value": 50, "skin": "skin/common/hslider_music.png", "min": 0, "max": 100, "allowClickBack": true } }, { "type": "Text", "props": { "y": 329, "x": 194, "text": "音乐", "fontSize": 25, "font": "SimHei", "color": "#dddddd" } }, { "type": "Text", "props": { "y": 411, "x": 194, "text": "音效", "fontSize": 25, "font": "SimHei", "color": "#dddddd" } }, { "type": "Text", "props": { "y": 492, "x": 194, "text": "角色声音", "fontSize": 25, "font": "SimHei", "color": "#dddddd" } }] };
+        dialog.SettingUI = SettingUI;
+    })(dialog = ui.dialog || (ui.dialog = {}));
+})(ui || (ui = {}));
+(function (ui) {
+    var dialog;
+    (function (dialog) {
+        var StoreTitleUI = (function (_super) {
+            __extends(StoreTitleUI, _super);
+            function StoreTitleUI() {
+                return _super.call(this) || this;
+            }
+            StoreTitleUI.prototype.createChildren = function () {
+                _super.prototype.createChildren.call(this);
+                this.createView(ui.dialog.StoreTitleUI.uiView);
+            };
+            return StoreTitleUI;
+        }(Dialog));
+        StoreTitleUI.uiView = { "type": "Dialog", "props": { "width": 535, "height": 341 }, "child": [{ "type": "Image", "props": { "var": "bgImg", "top": 0, "right": 0, "left": 0, "bottom": 0 } }, { "type": "TextInput", "props": { "var": "inTitle", "top": 80, "skin": "skin/common/textinput.png", "right": 59, "promptColor": "#8d8d8d", "prompt": "请输入存档标题", "left": 59, "height": 77, "fontSize": 30, "font": "SimHei", "color": "#0E0E0E", "align": "center" } }, { "type": "Button", "props": { "var": "btnOk", "stateNum": 2, "skin": "skin/common/btn_save_progress_prompt_btn.png", "right": 140, "left": 140, "labelSize": 34, "labelFont": "SimHei", "labelColors": "#0E0E0E,#DDDDDD,#DDDDDD", "label": "确定", "height": 64, "bottom": 56 } }] };
+        dialog.StoreTitleUI = StoreTitleUI;
+    })(dialog = ui.dialog || (ui.dialog = {}));
+})(ui || (ui = {}));
+(function (ui) {
+    var dialog;
+    (function (dialog) {
+        var SystemUI = (function (_super) {
+            __extends(SystemUI, _super);
+            function SystemUI() {
+                return _super.call(this) || this;
+            }
+            SystemUI.prototype.createChildren = function () {
+                View.regComponent("Text", laya.display.Text);
+                _super.prototype.createChildren.call(this);
+                this.createView(ui.dialog.SystemUI.uiView);
+            };
+            return SystemUI;
+        }(Dialog));
+        SystemUI.uiView = { "type": "Dialog", "props": { "width": 810, "height": 1754 }, "child": [{ "type": "Box", "props": { "y": 0, "x": 0, "alpha": 0.7 }, "child": [{ "type": "Rect", "props": { "width": 810, "lineWidth": 1, "height": 1754, "fillColor": "#000000" } }] }, { "type": "Image", "props": { "width": 810, "skin": "skin/common/system_box.png", "height": 885, "centerY": 0, "centerX": 0 }, "child": [{ "type": "HBox", "props": { "top": 305, "space": 107, "centerX": 0, "align": "middle" }, "child": [{ "type": "Label", "props": { "var": "btn_log", "text": "日志", "fontSize": 31, "font": "SimHei", "color": "#FFFFFF" } }, { "type": "Label", "props": { "y": 10, "x": 10, "var": "btn_catalog", "text": "目录", "fontSize": 31, "font": "SimHei", "color": "#FFFFFF" } }, { "type": "Label", "props": { "y": 20, "x": 20, "var": "btn_readStore", "text": "读档", "fontSize": 31, "font": "SimHei", "color": "#FFFFFF" } }, { "type": "Label", "props": { "y": 30, "x": 30, "var": "btn_saveStore", "text": "存档", "fontSize": 31, "font": "SimHei", "color": "#FFFFFF" } }] }, { "type": "HBox", "props": { "space": 95, "centerX": 0, "bottom": 218, "align": "middle" }, "child": [{ "type": "Label", "props": { "var": "make", "text": "制作组", "fontSize": 31, "font": "SimHei", "color": "#999999" } }, { "type": "Label", "props": { "y": 10, "x": 10, "var": "btn_Qtalk", "text": "Q群讨论", "fontSize": 31, "font": "SimHei", "color": "#999999" } }, { "type": "Label", "props": { "y": 20, "x": 20, "var": "share", "text": "分享", "fontSize": 31, "font": "SimHei", "color": "#999999" } }, { "type": "Label", "props": { "y": 30, "x": 30, "var": "Niji", "text": "Niji社区", "fontSize": 22, "font": "SimHei", "color": "#999999" } }] }, { "type": "Image", "props": { "top": 417, "skin": "skin/common/system_mid_box.png", "centerX": 0 } }] }, { "type": "Box", "props": { "y": 578, "centerX": 0 }, "child": [{ "type": "Text", "props": { "y": 0, "x": 0, "width": 724, "valign": "middle", "text": "系统", "height": 84, "fontSize": 34, "font": "SimHei", "color": "#ffffff", "align": "center" } }, { "type": "Image", "props": { "y": 26, "x": 664, "var": "btnClose", "skin": "skin/common/system_close_icon.png" } }] }, { "type": "Box", "props": { "y": 734, "x": 200, "visible": false, "top": 156 }, "child": [{ "type": "HSlider", "props": { "y": 6.5, "x": 162, "var": "sliderMusic", "value": 50, "skin": "skin/common/hslider_music.png", "min": 0, "max": 100, "allowClickBack": true } }, { "type": "HSlider", "props": { "y": 80.5, "x": 162, "var": "sliderSound", "value": 50, "skin": "skin/common/hslider_music.png", "min": 0, "max": 100, "allowClickBack": true } }, { "type": "HSlider", "props": { "y": 153.5, "x": 162, "var": "sliderVoice", "value": 50, "skin": "skin/common/hslider_music.png", "min": 0, "max": 100, "allowClickBack": true } }, { "type": "Text", "props": { "y": 3.5, "var": "btnMusicText", "text": "音乐", "fontSize": 25, "font": "SimHei", "color": "#dddddd" } }, { "type": "Text", "props": { "y": 75.5, "x": 0, "var": "btnAudioText", "text": "音效", "fontSize": 25, "font": "SimHei", "color": "#dddddd" } }, { "type": "Text", "props": { "y": 146.5, "x": 0, "text": "角色声音", "fontSize": 25, "font": "SimHei", "color": "#dddddd" } }] }] };
+        dialog.SystemUI = SystemUI;
+    })(dialog = ui.dialog || (ui.dialog = {}));
+})(ui || (ui = {}));
+(function (ui) {
+    var dialog;
+    (function (dialog) {
+        var SystemSettingUI = (function (_super) {
+            __extends(SystemSettingUI, _super);
+            function SystemSettingUI() {
+                return _super.call(this) || this;
+            }
+            SystemSettingUI.prototype.createChildren = function () {
+                _super.prototype.createChildren.call(this);
+                this.createView(ui.dialog.SystemSettingUI.uiView);
+            };
+            return SystemSettingUI;
+        }(Dialog));
+        SystemSettingUI.uiView = { "type": "Dialog", "props": { "width": 810, "height": 1754 }, "child": [{ "type": "Image", "props": { "y": 0, "x": -2, "skin": "skin/common/top_label.png" } }, { "type": "Image", "props": { "y": 46, "x": 361, "skin": "skin/common/system_top_label_name.png", "centerX": 0 } }, { "type": "Image", "props": { "var": "btn_close", "top": 38, "skin": "skin/common/top_label_return_icon.png", "left": 20 } }, { "type": "Image", "props": { "y": 1314, "x": 10, "skin": "skin/common/foot_label.png", "left": 0, "bottom": 0 } }] };
+        dialog.SystemSettingUI = SystemSettingUI;
+    })(dialog = ui.dialog || (ui.dialog = {}));
+})(ui || (ui = {}));
+(function (ui) {
+    var dialog;
+    (function (dialog) {
+        var TipsUI = (function (_super) {
+            __extends(TipsUI, _super);
+            function TipsUI() {
+                return _super.call(this) || this;
+            }
+            TipsUI.prototype.createChildren = function () {
+                _super.prototype.createChildren.call(this);
+                this.createView(ui.dialog.TipsUI.uiView);
+            };
+            return TipsUI;
+        }(Dialog));
+        TipsUI.uiView = { "type": "Dialog", "props": { "width": 810, "height": 1754 }, "child": [{ "type": "Image", "props": { "var": "bgImg", "top": 0, "right": 0, "left": 0, "bottom": 0 } }] };
+        dialog.TipsUI = TipsUI;
+    })(dialog = ui.dialog || (ui.dialog = {}));
+})(ui || (ui = {}));
+(function (ui) {
+    var ext;
+    (function (ext) {
+        var ChatBoxUI = (function (_super) {
+            __extends(ChatBoxUI, _super);
+            function ChatBoxUI() {
+                return _super.call(this) || this;
+            }
+            ChatBoxUI.prototype.createChildren = function () {
+                _super.prototype.createChildren.call(this);
+                this.createView(ui.ext.ChatBoxUI.uiView);
+            };
+            return ChatBoxUI;
+        }(View));
+        ChatBoxUI.uiView = { "type": "View", "props": { "width": 810, "height": 300 }, "child": [{ "type": "Image", "props": { "top": 0, "skin": "skin/common/read_dialog_box.png", "right": 0, "left": 0, "bottom": 0 } }, { "type": "Image", "props": { "y": 162, "x": 650, "skin": "skin/common/read_dialog_continue_icon.png" } }] };
+        ext.ChatBoxUI = ChatBoxUI;
+    })(ext = ui.ext || (ui.ext = {}));
+})(ui || (ui = {}));
+(function (ui) {
+    var ext;
+    (function (ext) {
+        var CircleImgUI = (function (_super) {
+            __extends(CircleImgUI, _super);
+            function CircleImgUI() {
+                return _super.call(this) || this;
+            }
+            CircleImgUI.prototype.createChildren = function () {
+                _super.prototype.createChildren.call(this);
+                this.createView(ui.ext.CircleImgUI.uiView);
+            };
+            return CircleImgUI;
+        }(View));
+        CircleImgUI.uiView = { "type": "View", "props": { "width": 300, "height": 300 }, "child": [{ "type": "Image", "props": { "var": "circleImg", "top": 0, "right": 0, "left": 0, "bottom": 0 }, "child": [{ "type": "Sprite", "props": { "y": 0, "x": 0, "width": 300, "renderType": "mask", "height": 300 }, "child": [{ "type": "Circle", "props": { "y": 150, "x": 150, "radius": 150, "lineWidth": 1, "fillColor": "#ff0000" } }] }] }] };
+        ext.CircleImgUI = CircleImgUI;
+    })(ext = ui.ext || (ui.ext = {}));
+})(ui || (ui = {}));
+(function (ui) {
+    var ext;
+    (function (ext) {
+        var WaveLoadingUI = (function (_super) {
+            __extends(WaveLoadingUI, _super);
+            function WaveLoadingUI() {
+                return _super.call(this) || this;
+            }
+            WaveLoadingUI.prototype.createChildren = function () {
+                _super.prototype.createChildren.call(this);
+                this.createView(ui.ext.WaveLoadingUI.uiView);
+            };
+            return WaveLoadingUI;
+        }(View));
+        WaveLoadingUI.uiView = { "type": "View", "props": { "width": 300, "height": 300 } };
+        ext.WaveLoadingUI = WaveLoadingUI;
+    })(ext = ui.ext || (ui.ext = {}));
+})(ui || (ui = {}));
+(function (ui) {
+    var home;
+    (function (home) {
+        var AnalyLogUI = (function (_super) {
+            __extends(AnalyLogUI, _super);
+            function AnalyLogUI() {
+                return _super.call(this) || this;
+            }
+            AnalyLogUI.prototype.createChildren = function () {
+                _super.prototype.createChildren.call(this);
+                this.createView(ui.home.AnalyLogUI.uiView);
+            };
+            return AnalyLogUI;
+        }(Dialog));
+        AnalyLogUI.uiView = { "type": "Dialog", "props": { "width": 810, "height": 1754 }, "child": [{ "type": "Image", "props": { "var": "bgImg", "top": 0, "right": 0, "left": 0, "bottom": 0 } }, { "type": "Box", "props": { "x": 0, "visible": false, "var": "mainBox", "top": 138, "right": 0, "left": 0, "bottom": 138 }, "child": [{ "type": "Box", "props": { "y": 50, "var": "rightBox", "top": 50, "right": 20, "left": 270, "bottom": 50 }, "child": [{ "type": "Image", "props": { "var": "rightBoxBg", "top": 0, "right": 0, "left": 0, "bottom": 0 } }, { "type": "Label", "props": { "wordWrap": true, "var": "analyText", "top": 70, "right": 60, "left": 70, "leading": 15, "fontSize": 27, "font": "SimHei", "color": "#999999", "bottom": 60 } }] }, { "type": "Box", "props": { "width": 320, "var": "leftBox", "top": 0, "left": 0, "bottom": 0 }, "child": [{ "type": "Image", "props": { "width": 240, "var": "leftBoxBg", "top": 0, "left": 0, "bottom": 0 } }] }] }, { "type": "Image", "props": { "y": 0, "x": 0, "top": 0, "skin": "skin/common/top_label.png", "right": 0, "left": 0 } }, { "type": "Image", "props": { "y": 46, "width": 180, "var": "titleImg", "skin": "skin/clue/notes_top_label_name.png", "height": 44, "centerX": 0 } }, { "type": "Image", "props": { "var": "btnGoback", "top": 38, "skin": "skin/common/top_label_return_icon.png", "left": 30 } }, { "type": "Image", "props": { "y": 602, "x": 0, "skin": "skin/common/foot_label.png", "right": 0, "left": 0, "bottom": 0 } }] };
+        home.AnalyLogUI = AnalyLogUI;
+    })(home = ui.home || (ui.home = {}));
+})(ui || (ui = {}));
+(function (ui) {
+    var home;
+    (function (home) {
+        var CatalogUI = (function (_super) {
+            __extends(CatalogUI, _super);
+            function CatalogUI() {
+                return _super.call(this) || this;
+            }
+            CatalogUI.prototype.createChildren = function () {
+                _super.prototype.createChildren.call(this);
+                this.createView(ui.home.CatalogUI.uiView);
+            };
+            return CatalogUI;
+        }(Dialog));
+        CatalogUI.uiView = { "type": "Dialog", "props": { "width": 810, "height": 1754 }, "child": [{ "type": "Image", "props": { "var": "bgImg", "top": 0, "right": 0, "left": 0, "bottom": 0 } }, { "type": "Image", "props": { "y": 0, "x": 0, "top": 0, "skin": "skin/common/top_label.png", "right": 0, "left": 0 } }, { "type": "Image", "props": { "var": "btnGoback", "top": 38, "skin": "skin/common/top_label_return_icon.png", "left": 30 } }, { "type": "Image", "props": { "y": 1304, "x": 0, "skin": "skin/common/foot_label.png", "left": 0, "bottom": 0 } }, { "type": "Image", "props": { "y": 46, "skin": "skin/common/catalog_label_name.png", "centerX": 0 } }] };
+        home.CatalogUI = CatalogUI;
+    })(home = ui.home || (ui.home = {}));
+})(ui || (ui = {}));
+(function (ui) {
+    var home;
+    (function (home) {
+        var ChapterCoverUI = (function (_super) {
+            __extends(ChapterCoverUI, _super);
+            function ChapterCoverUI() {
+                return _super.call(this) || this;
+            }
+            ChapterCoverUI.prototype.createChildren = function () {
+                _super.prototype.createChildren.call(this);
+                this.createView(ui.home.ChapterCoverUI.uiView);
+            };
+            return ChapterCoverUI;
+        }(View));
+        ChapterCoverUI.uiView = { "type": "View", "props": { "width": 810, "height": 1754 }, "child": [{ "type": "Image", "props": { "var": "bgImg", "top": 0, "right": 0, "left": 0, "bottom": 0 } }, { "type": "Image", "props": { "y": 388, "x": 212, "var": "titleImg", "skin": "skin/common/chapter_cover_title.png" } }, { "type": "HBox", "props": { "y": 440, "width": 156, "var": "indexBox", "height": 100, "centerX": 0 } }, { "type": "Label", "props": { "y": 674, "var": "txtTitle", "text": "章节名称", "styleSkin": "comp/label.png", "right": 0, "left": 0, "fontSize": 40, "font": "SimHei", "color": "#ffffff", "align": "center" } }] };
+        home.ChapterCoverUI = ChapterCoverUI;
+    })(home = ui.home || (ui.home = {}));
+})(ui || (ui = {}));
+(function (ui) {
+    var home;
+    (function (home) {
+        var ChapterUnlockUI = (function (_super) {
+            __extends(ChapterUnlockUI, _super);
+            function ChapterUnlockUI() {
+                return _super.call(this) || this;
+            }
+            ChapterUnlockUI.prototype.createChildren = function () {
+                _super.prototype.createChildren.call(this);
+                this.createView(ui.home.ChapterUnlockUI.uiView);
+            };
+            return ChapterUnlockUI;
+        }(View));
+        ChapterUnlockUI.uiView = { "type": "View", "props": { "width": 810, "height": 1754 }, "child": [{ "type": "Image", "props": { "var": "bgImg", "top": 0, "right": 0, "left": 0, "bottom": 0 } }, { "type": "Panel", "props": { "y": 0, "x": 0, "var": "swiper_panel" }, "child": [{ "type": "Box", "props": { "y": 0, "x": 0, "var": "swiper_box" }, "child": [{ "type": "Image", "props": { "y": 125, "x": 459, "var": "girlImg", "top": 125, "skin": "skin/common/chapter_pay_role.png", "right": 0 } }, { "type": "Box", "props": { "y": 214, "x": 53, "top": 214, "left": 53, "alpha": 0.5 }, "child": [{ "type": "Rect", "props": { "width": 452, "lineWidth": 0, "height": 3, "fillColor": "#000000" } }] }, { "type": "Box", "props": { "y": 380, "x": 53, "top": 380, "left": 53, "alpha": 0.5 }, "child": [{ "type": "Rect", "props": { "width": 452, "lineWidth": 0, "height": 3, "fillColor": "#000000" } }] }, { "type": "Image", "props": { "y": 228, "x": 61, "top": 228, "skin": "skin/common/chapter_pay_red_ring.png", "left": 61 } }, { "type": "Label", "props": { "y": 237, "x": 123, "var": "chapter_title", "text": "第3章：境界的彼方", "fontSize": 34, "font": "SimHei", "color": "#DDDDDD" } }, { "type": "Label", "props": { "y": 291, "x": 61, "wordWrap": true, "width": 430, "var": "chapter_pay_prompt", "text": "以下章节需付费解锁，如果喜欢请支持我们。感谢。", "leading": 10, "fontSize": 29, "font": "SimHei", "color": "#666666" } }] }] }] };
+        home.ChapterUnlockUI = ChapterUnlockUI;
+    })(home = ui.home || (ui.home = {}));
+})(ui || (ui = {}));
+(function (ui) {
+    var home;
+    (function (home) {
+        var ClueUI = (function (_super) {
+            __extends(ClueUI, _super);
+            function ClueUI() {
+                return _super.call(this) || this;
+            }
+            ClueUI.prototype.createChildren = function () {
+                View.regComponent("Text", laya.display.Text);
+                _super.prototype.createChildren.call(this);
+                this.createView(ui.home.ClueUI.uiView);
+            };
+            return ClueUI;
+        }(Dialog));
+        ClueUI.uiView = { "type": "Dialog", "props": { "width": 810, "height": 1754 }, "child": [{ "type": "Image", "props": { "y": 0, "x": 0, "var": "bgImg", "top": 0, "right": 0, "left": 0, "bottom": 0 } }, { "type": "Image", "props": { "y": 0, "x": 0, "var": "footBar", "top": 0, "skin": "skin/common/top_label.png", "right": 0, "left": 0 } }, { "type": "Image", "props": { "y": 46, "var": "titleImg", "skin": "skin/clue/pieces_top_label_name.png", "centerX": 0 } }, { "type": "Image", "props": { "var": "btnGoback", "top": 38, "skin": "skin/common/top_label_return_icon.png", "left": 30 } }, { "type": "Image", "props": { "y": 602, "x": 0, "var": "topBar", "skin": "skin/common/foot_label.png", "right": 0, "left": 0, "bottom": 0 } }, { "type": "Panel", "props": { "y": 138, "x": 0, "width": 810, "var": "mainBox", "height": 1459 }, "child": [{ "type": "Box", "props": { "y": 0, "var": "mainInfoBox", "right": 0, "left": 0 }, "child": [{ "type": "Box", "props": { "y": 0, "x": 0, "visible": false, "var": "topBox", "top": 0, "right": 0, "left": 0, "height": 560 }, "child": [{ "type": "Image", "props": { "var": "clueBox", "skin": "skin/clue/pieces_big_box.png", "centerY": 0, "centerX": 0 } }, { "type": "Box", "props": { "y": 177, "x": 35, "visible": false, "var": "nameBox", "rotation": -25 }, "child": [{ "type": "Image", "props": { "var": "nameboxImg", "skin": "skin/clue/pieces_big_label_name.png" } }, { "type": "Text", "props": { "y": 5, "x": 0, "width": 296, "var": "nameText", "valign": "middle", "height": 101, "fontSize": 46, "font": "SimHei", "color": "#dddddd", "align": "center" } }] }, { "type": "Panel", "props": { "y": 225, "x": 138, "width": 552, "var": "contTextPanel", "height": 200 }, "child": [{ "type": "Label", "props": { "wordWrap": true, "var": "contText", "right": 0, "left": 0, "leading": 15, "fontSize": 34, "font": "SimHei", "color": "#dddddd" } }] }] }, { "type": "Box", "props": { "y": 600, "x": 0, "visible": false, "var": "listBox", "top": 600, "right": 0, "left": 0, "height": 370 }, "child": [{ "type": "Image", "props": { "y": 0, "width": 810, "top": 0, "skin": "skin/cover/illustration_bot_box.png", "right": 0, "left": 0, "height": 367 } }, { "type": "Box", "props": { "right": 0, "left": 0, "height": 87 }, "child": [{ "type": "Label", "props": { "y": 0, "x": 36, "var": "numText", "valign": "middle", "text": "线索（0条）", "left": 36, "height": 87, "fontSize": 29, "font": "SimHei", "color": "#dddddd" } }, { "type": "Label", "props": { "var": "selectText", "valign": "middle", "text": "已选（0条）", "right": 36, "height": 87, "fontSize": 29, "font": "SimHei", "color": "#dddddd" } }] }] }, { "type": "Button", "props": { "y": 1022, "x": 215, "visible": false, "var": "btnAnaly", "skin": "skin/common/btn_pieces_analysis.png", "labelSize": 42, "label": "推理分析", "centerX": 0, "stateNum": 2, "labelColors": "#0E0E0E,#FFFFFF,#FFFFFF", "labelFont": "SimHei" } }] }, { "type": "Image", "props": { "x": 30, "var": "btnShowAnaly", "top": 10, "skin": "skin/clue/pieces_top_label_notes_icon.png", "left": 30 } }] }] };
+        home.ClueUI = ClueUI;
+    })(home = ui.home || (ui.home = {}));
+})(ui || (ui = {}));
+(function (ui) {
+    var home;
+    (function (home) {
+        var DeathUI = (function (_super) {
+            __extends(DeathUI, _super);
+            function DeathUI() {
+                return _super.call(this) || this;
+            }
+            DeathUI.prototype.createChildren = function () {
+                _super.prototype.createChildren.call(this);
+                this.createView(ui.home.DeathUI.uiView);
+            };
+            return DeathUI;
+        }(Dialog));
+        DeathUI.uiView = { "type": "Dialog", "props": { "width": 810, "height": 1754 }, "child": [{ "type": "Image", "props": { "var": "bgImg", "top": 0, "right": 0, "left": 0, "bottom": 0 } }, { "type": "Box", "props": { "visible": false, "var": "loadBox", "top": 0, "right": 0, "left": 0, "bottom": 0 }, "child": [{ "type": "Image", "props": { "y": 333, "x": 201, "skin": "skin/end/dead_title.png", "centerX": 0 } }, { "type": "Button", "props": { "y": 785, "x": 277, "var": "btnReLive", "stateNum": 2, "skin": "skin/common/btn_pieces_quantity_limit.png", "label": " ", "centerX": 0, "labelColors": "#0E0E0E,#FFFFFF,#FFFFFF", "labelFont": "SimHei", "labelSize": 34 } }, { "type": "Label", "props": { "y": 890, "var": "btnReliveInfo", "text": " ", "right": 0, "left": 0, "fontSize": 24, "font": "SimHei", "color": "#666666", "align": "center" } }, { "type": "Box", "props": { "y": 1084, "x": 205, "centerX": 0 }, "child": [{ "type": "Button", "props": { "var": "btnReadStore", "stateNum": 2, "skin": "skin/end/btn_dead_readstore.png" } }, { "type": "Button", "props": { "x": 252, "var": "btnReadChapter", "stateNum": 2, "skin": "skin/end/btn_dead_readchapter.png" } }] }] }] };
+        home.DeathUI = DeathUI;
+    })(home = ui.home || (ui.home = {}));
+})(ui || (ui = {}));
+(function (ui) {
+    var home;
+    (function (home) {
+        var DiaryUI = (function (_super) {
+            __extends(DiaryUI, _super);
+            function DiaryUI() {
+                return _super.call(this) || this;
+            }
+            DiaryUI.prototype.createChildren = function () {
+                _super.prototype.createChildren.call(this);
+                this.createView(ui.home.DiaryUI.uiView);
+            };
+            return DiaryUI;
+        }(View));
+        DiaryUI.uiView = { "type": "View", "props": { "width": 810, "height": 1754 }, "child": [{ "type": "Image", "props": { "y": 10, "x": 10, "top": 0, "skin": "skin/common/top_label.png", "right": 0, "left": 0 } }, { "type": "Image", "props": { "y": 56, "x": 10, "skin": "skin/common/team_top_label_name.png", "centerX": 0 } }, { "type": "Image", "props": { "y": 10, "x": 10, "var": "btnGoback", "top": 38, "skin": "skin/common/top_label_return_icon.png", "left": 20 } }, { "type": "Image", "props": { "y": 1314, "x": 10, "skin": "skin/common/foot_label.png", "left": 0, "bottom": 0 } }] };
+        home.DiaryUI = DiaryUI;
+    })(home = ui.home || (ui.home = {}));
+})(ui || (ui = {}));
+(function (ui) {
+    var home;
+    (function (home) {
+        var EndUI = (function (_super) {
+            __extends(EndUI, _super);
+            function EndUI() {
+                return _super.call(this) || this;
+            }
+            EndUI.prototype.createChildren = function () {
+                _super.prototype.createChildren.call(this);
+                this.createView(ui.home.EndUI.uiView);
+            };
+            return EndUI;
+        }(Dialog));
+        EndUI.uiView = { "type": "Dialog", "props": { "width": 810, "height": 1754 }, "child": [{ "type": "Image", "props": { "var": "bgImg", "top": 0, "right": 0, "left": 0, "bottom": 0 } }, { "type": "Image", "props": { "var": "btnShare", "top": 40, "skin": "skin/end/share_icon.png", "left": 40 } }, { "type": "Image", "props": { "y": 470, "skin": "skin/end/end_title.png", "centerX": 0 } }, { "type": "Box", "props": { "y": 750, "width": 595, "left": 108, "height": 146 }, "child": [{ "type": "Image", "props": { "skin": "skin/end/end_text_box.png" } }, { "type": "Label", "props": { "wordWrap": true, "var": "endText", "valign": "middle", "top": 10, "text": "封测存在较多问题，请积极反 馈意见。我们会全力优化。", "right": 40, "left": 50, "leading": 15, "fontSize": 31, "font": "SimHei", "color": "#0E0E0E", "bottom": 0 } }] }, { "type": "Button", "props": { "var": "btnHome", "skin": "skin/common/btn_pieces_quantity_limit.png", "label": "返回首页", "centerX": 0, "bottom": 100, "stateNum": 2, "labelColors": "#0E0E0E,#FFFFFF,#FFFFFF", "labelFont": "SimHei", "labelSize": 34 } }, { "type": "Image", "props": { "y": 1000, "x": 381, "skin": "skin/end/end_taptap_selected_icon.png" } }, { "type": "Image", "props": { "y": 1000, "x": 530, "skin": "skin/end/end_mdw_selected_icon.png" } }, { "type": "Label", "props": { "y": 1037, "x": 184, "text": "去支持：", "fontSize": 31, "font": "SimHei", "color": "#dddddd", "bold": true } }] };
+        home.EndUI = EndUI;
+    })(home = ui.home || (ui.home = {}));
+})(ui || (ui = {}));
+(function (ui) {
+    var home;
+    (function (home) {
+        var FeedbackUI = (function (_super) {
+            __extends(FeedbackUI, _super);
+            function FeedbackUI() {
+                return _super.call(this) || this;
+            }
+            FeedbackUI.prototype.createChildren = function () {
+                _super.prototype.createChildren.call(this);
+                this.createView(ui.home.FeedbackUI.uiView);
+            };
+            return FeedbackUI;
+        }(Dialog));
+        FeedbackUI.uiView = { "type": "Dialog", "props": { "width": 810, "height": 1754 }, "child": [{ "type": "Image", "props": { "var": "bgImg", "top": 0, "right": 0, "left": 0, "bottom": 0 } }, { "type": "Image", "props": { "y": 0, "x": 0, "top": 0, "skin": "skin/common/top_label.png", "right": 0, "left": 0 } }, { "type": "Image", "props": { "y": 46, "skin": "skin/common/fkyj_top_label_name.png", "centerX": 0 } }, { "type": "Image", "props": { "var": "btnGoback", "top": 38, "skin": "skin/common/top_label_return_icon.png", "left": 30 } }, { "type": "Image", "props": { "y": 1304, "x": 0, "skin": "skin/common/foot_label.png", "left": 0, "bottom": 0 } }, { "type": "Box", "props": { "top": 138, "right": 0, "left": 0, "bottom": 138 }, "child": [{ "type": "Label", "props": { "top": 80, "text": "详细内容", "left": 34, "fontSize": 34, "font": "SimHei", "color": "#dddddd" } }, { "type": "TextArea", "props": { "var": "txtContent", "top": 160, "skin": "skin/common/textinput.png", "sizeGrid": "20,20,20,20", "right": 34, "promptColor": "#888888", "prompt": "请留下您的反馈和建议（我们将会随机抽选10名留言的小伙伴，为你们派送零下记忆周边）", "padding": "20,20,20,20", "left": 34, "leading": 15, "height": 400, "fontSize": 30, "font": "SimHei", "color": "#333333" } }, { "type": "TextInput", "props": { "y": 687, "wordWrap": true, "var": "txtContact", "valign": "middle", "skin": "skin/common/textinput.png", "sizeGrid": "30,30,30,30", "right": 34, "promptColor": "#888888", "prompt": "请留下您的手机号码/QQ/邮箱", "padding": "0,20,0,20", "left": 34, "height": 91, "fontSize": 30, "font": "SimHei", "color": "#666666", "align": "left" } }, { "type": "Label", "props": { "top": 611, "text": "联系方式（选填）", "left": 34, "fontSize": 34, "font": "SimHei", "color": "#dddddd" } }, { "type": "Button", "props": { "y": 900, "var": "btnSave", "stateNum": 2, "skin": "skin/common/btn_pieces_quantity_limit.png", "labelSize": 34, "labelFont": "SimHei", "label": "提交", "centerX": 0, "labelColors": "#0E0E0E,#FFFFFF,#FFFFFF" } }] }] };
+        home.FeedbackUI = FeedbackUI;
+    })(home = ui.home || (ui.home = {}));
+})(ui || (ui = {}));
+(function (ui) {
+    var home;
+    (function (home) {
+        var GameOverUI = (function (_super) {
+            __extends(GameOverUI, _super);
+            function GameOverUI() {
+                return _super.call(this) || this;
+            }
+            GameOverUI.prototype.createChildren = function () {
+                _super.prototype.createChildren.call(this);
+                this.createView(ui.home.GameOverUI.uiView);
+            };
+            return GameOverUI;
+        }(View));
+        GameOverUI.uiView = { "type": "View", "props": { "width": 810, "height": 1754 }, "child": [{ "type": "Sprite", "props": { "y": 0, "x": 0 }, "child": [{ "type": "Rect", "props": { "y": 0, "x": 0, "width": 810, "lineWidth": 1, "height": 1754, "fillColor": "#000000" } }] }, { "type": "Box", "props": { "y": 420, "x": 112, "width": 586, "height": 914 }, "child": [{ "type": "Image", "props": { "y": 0, "var": "end_img", "skin": "skin/end/end_wj_title.png", "centerX": 0 } }, { "type": "VBox", "props": { "y": 532, "space": 100, "centerX": 0, "align": "center" }, "child": [{ "type": "Button", "props": { "var": "btn_backHome", "stateNum": 2, "skin": "skin/end/btn_end_hdzjm_btn.png" } }, { "type": "Button", "props": { "var": "btn_make", "stateNum": 2, "skin": "skin/end/btn_zzz_btn.png" } }, { "type": "Button", "props": { "var": "btn_qq_talk", "stateNum": 2, "skin": "skin/end/btn_end_qqtl_btn.png" } }] }, { "type": "HBox", "props": { "y": 252, "space": 26, "centerX": 0, "align": "middle" }, "child": [{ "type": "Box", "props": { "y": 8.5, "x": 0, "width": 209, "height": 2 }, "child": [{ "type": "Line", "props": { "y": 4.5, "x": -0.5, "toX": 209, "lineWidth": 1, "lineColor": "#DDDDDD" } }] }, { "type": "Label", "props": { "y": 0, "text": "谢谢观赏", "fontSize": 29, "font": "SimHei", "color": "#DDDDDD" } }, { "type": "Box", "props": { "y": 6, "x": 376.5, "width": 209, "height": 2 }, "child": [{ "type": "Line", "props": { "y": 4.5, "x": -0.5, "toX": 209, "lineWidth": 1, "lineColor": "#DDDDDD" } }] }] }, { "type": "Image", "props": { "y": 314, "width": 372, "skin": "skin/end/end_content_box.png", "height": 54, "centerX": 0 }, "child": [{ "type": "Label", "props": { "var": "end_text", "text": "结局01：遗憾结束", "fontSize": 29, "font": "SimHei", "color": "#0E0E0E", "centerY": 0, "centerX": 0 } }] }, { "type": "Label", "props": { "y": 890, "text": "（人物外传，后续故事）", "fontSize": 24, "font": "SimHei", "color": "#666666", "centerX": 0 } }] }] };
+        home.GameOverUI = GameOverUI;
+    })(home = ui.home || (ui.home = {}));
+})(ui || (ui = {}));
+(function (ui) {
+    var home;
+    (function (home) {
+        var LoadingUI = (function (_super) {
+            __extends(LoadingUI, _super);
+            function LoadingUI() {
+                return _super.call(this) || this;
+            }
+            LoadingUI.prototype.createChildren = function () {
+                _super.prototype.createChildren.call(this);
+                this.createView(ui.home.LoadingUI.uiView);
+            };
+            return LoadingUI;
+        }(View));
+        LoadingUI.uiView = { "type": "View", "props": { "width": 810, "height": 1754 }, "child": [{ "type": "Box", "props": { "var": "midBox", "right": 0, "left": 0, "height": 580, "centerY": 0 }, "child": [{ "type": "Label", "props": { "y": 433, "var": "loadingText", "valign": "middle", "styleSkin": "comp/label.png", "right": 0, "left": 0, "height": 30, "fontSize": 30, "color": "#ffffff", "align": "center" } }, { "type": "ProgressBar", "props": { "y": 493, "var": "loadProgress", "value": 0, "skin": "skin/common/progress.png", "rotation": 0, "right": 100, "left": 100, "height": 22 } }, { "type": "Label", "props": { "text": "资源文件下载中，请保持应用处于打开状态", "styleSkin": "comp/label.png", "right": 0, "left": 0, "height": 30, "fontSize": 25, "color": "#666666", "bottom": 0, "align": "center" } }, { "type": "Image", "props": { "y": 0, "skin": "skin/common/loading_zero.png", "centerX": 0 } }] }] };
+        home.LoadingUI = LoadingUI;
+    })(home = ui.home || (ui.home = {}));
+})(ui || (ui = {}));
+(function (ui) {
+    var home;
+    (function (home) {
+        var MainUI = (function (_super) {
+            __extends(MainUI, _super);
+            function MainUI() {
+                return _super.call(this) || this;
+            }
+            MainUI.prototype.createChildren = function () {
+                View.regComponent("Text", laya.display.Text);
+                _super.prototype.createChildren.call(this);
+                this.createView(ui.home.MainUI.uiView);
+            };
+            return MainUI;
+        }(View));
+        MainUI.uiView = { "type": "View", "props": { "width": 810, "height": 1754 }, "child": [{ "type": "Image", "props": { "var": "bgImg", "top": 0, "right": 0, "left": 0, "bottom": 0 } }, { "type": "Image", "props": { "y": 0, "x": 0, "width": 810, "var": "fogImg1", "height": 1754 } }, { "type": "Image", "props": { "y": 0, "x": 0, "width": 810, "var": "fogImg2", "height": 1754 } }, { "type": "Image", "props": { "y": 171, "x": 79, "var": "mainLogo", "skin": "skin/home/main_interface_logo.png", "scaleY": 0.8, "scaleX": 0.8 } }, { "type": "Box", "props": { "var": "btnBox", "top": 650, "right": 0, "left": 0, "bottom": 100 } }, { "type": "Box", "props": { "visible": false, "right": 0, "left": 0, "height": 50, "bottom": 30 }, "child": [{ "type": "Label", "props": { "text": "关注微信公众号”Niji互动小说“，获取福利秘钥、剧情攻略", "right": 100, "left": 150, "fontSize": 20, "font": "SimHei", "color": "#999999", "centerY": 0, "align": "center" } }, { "type": "Image", "props": { "skin": "skin/common/main_interface_niji_icon.png", "left": 100, "centerY": 0 } }] }, { "type": "Image", "props": { "y": 62, "x": 32, "visible": false, "var": "btnMsg", "top": 62, "skin": "skin/home/message_icon.png", "left": 32 } }, { "type": "Box", "props": { "width": 645, "var": "promptText", "height": 117, "centerX": 0, "bottom": 100 }, "child": [{ "type": "Label", "props": { "wordWrap": true, "width": 645, "text": "抵制不良游戏，拒绝盗版游戏。注意自我保护，谨防受骗上当。适度游戏益脑，沉迷游戏伤身。合理安排时间，享受健康生活。", "pivotY": 0, "pivotX": 0, "leading": 10, "height": 56, "fontSize": 23, "font": "SimHei", "color": "#DDDDDD", "centerX": 0, "bottom": 0, "align": "center" } }, { "type": "Label", "props": { "text": "健康游戏忠告", "fontSize": 27, "font": "SimHei", "color": "#DDDDDD", "centerX": 0, "bottom": 80, "align": "center" } }] }, { "type": "Text", "props": { "y": 23, "x": 45, "var": "game_version", "text": "版本号：1.0.1", "fontSize": 12, "font": "SimHei", "color": "#ffffff" } }] };
+        home.MainUI = MainUI;
+    })(home = ui.home || (ui.home = {}));
+})(ui || (ui = {}));
+(function (ui) {
+    var home;
+    (function (home) {
+        var ReadingUI = (function (_super) {
+            __extends(ReadingUI, _super);
+            function ReadingUI() {
+                return _super.call(this) || this;
+            }
+            ReadingUI.prototype.createChildren = function () {
+                _super.prototype.createChildren.call(this);
+                this.createView(ui.home.ReadingUI.uiView);
+            };
+            return ReadingUI;
+        }(View));
+        ReadingUI.uiView = { "type": "View", "props": { "width": 810, "height": 1754 } };
+        home.ReadingUI = ReadingUI;
+    })(home = ui.home || (ui.home = {}));
+})(ui || (ui = {}));
+(function (ui) {
+    var home;
+    (function (home) {
+        var ReadLogUI = (function (_super) {
+            __extends(ReadLogUI, _super);
+            function ReadLogUI() {
+                return _super.call(this) || this;
+            }
+            ReadLogUI.prototype.createChildren = function () {
+                _super.prototype.createChildren.call(this);
+                this.createView(ui.home.ReadLogUI.uiView);
+            };
+            return ReadLogUI;
+        }(Dialog));
+        ReadLogUI.uiView = { "type": "Dialog", "props": { "width": 810, "height": 1754 }, "child": [{ "type": "Image", "props": { "var": "bgImg", "top": 0, "skin": "res/image/notes_bg_pic.jpg", "right": 0, "left": 0, "bottom": 0 } }, { "type": "Image", "props": { "y": 0, "x": 0, "top": 0, "skin": "skin/common/top_label.png", "right": 0, "left": 0 } }, { "type": "Image", "props": { "y": 46, "var": "titleImg", "skin": "skin/common/journal_name_top_label_name.png", "centerX": 0 } }, { "type": "Image", "props": { "var": "btnGoback", "top": 38, "skin": "skin/common/top_label_return_icon.png", "left": 20 } }, { "type": "Image", "props": { "y": 602, "x": 0, "skin": "skin/common/foot_label.png", "right": 0, "left": 0, "bottom": 0 } }, { "type": "Box", "props": { "y": 10, "x": 10, "top": 138, "right": 0, "left": 0, "bottom": 138 }, "child": [{ "type": "Box", "props": { "y": 50, "var": "rightBox", "top": 50, "right": 20, "left": 270, "bottom": 50 }, "child": [{ "type": "Image", "props": { "var": "rightBoxBg", "top": 0, "right": 0, "left": 0, "bottom": 0 } }, { "type": "Panel", "props": { "var": "rightPanel", "top": 70, "right": 60, "left": 70, "bottom": 60 } }] }, { "type": "Box", "props": { "width": 320, "var": "leftBox", "top": 0, "left": 0, "bottom": 0 }, "child": [{ "type": "Image", "props": { "width": 240, "var": "leftBoxBg", "top": 0, "left": 0, "bottom": 0 } }] }] }] };
+        home.ReadLogUI = ReadLogUI;
+    })(home = ui.home || (ui.home = {}));
+})(ui || (ui = {}));
+(function (ui) {
+    var home;
+    (function (home) {
+        var RoleCoverUI = (function (_super) {
+            __extends(RoleCoverUI, _super);
+            function RoleCoverUI() {
+                return _super.call(this) || this;
+            }
+            RoleCoverUI.prototype.createChildren = function () {
+                _super.prototype.createChildren.call(this);
+                this.createView(ui.home.RoleCoverUI.uiView);
+            };
+            return RoleCoverUI;
+        }(Dialog));
+        RoleCoverUI.uiView = { "type": "Dialog", "props": { "width": 810, "height": 1754 }, "child": [{ "type": "Image", "props": { "var": "bgImg", "top": 0, "right": 0, "left": 0, "bottom": 0 } }, { "type": "Image", "props": { "y": 0, "x": 0, "top": 0, "skin": "skin/common/top_label.png", "right": 0, "left": 0 } }, { "type": "Image", "props": { "y": 46, "var": "titleImg", "skin": "skin/cover/illustration_top_label_name.png", "centerX": 0 } }, { "type": "Image", "props": { "var": "btnGoback", "top": 38, "skin": "skin/common/top_label_return_icon.png", "left": 20 } }, { "type": "Box", "props": { "var": "mainBox", "top": 138, "right": 0, "left": 0, "bottom": 0 } }, { "type": "Box", "props": { "visible": false, "var": "introBox", "right": 0, "left": 0, "height": 480, "bottom": 0 }, "child": [{ "type": "Image", "props": { "var": "introBg", "top": 0, "skin": "skin/cover/illustration_bot_box.png", "right": 0, "left": 0, "bottom": 0 } }, { "type": "Label", "props": { "var": "nameText", "top": 44, "text": "角色名", "left": 61, "height": 60, "fontSize": 44, "font": "SimHei", "color": "#dddddd", "bold": true } }, { "type": "Label", "props": { "wordWrap": true, "var": "introText", "top": 160, "right": 61, "left": 61, "leading": 13, "fontSize": 27, "font": "SimHei", "color": "#dddddd", "bottom": 70 } }, { "type": "HBox", "props": { "top": 100, "space": 10, "right": 61, "left": 61, "height": 30 }, "child": [{ "type": "Label", "props": { "var": "ageText", "valign": "middle", "text": "0岁", "height": 30, "fontSize": 27, "font": "SimHei", "color": "#dddddd" } }, { "type": "HBox", "props": { "var": "roleSkuBox", "height": 30 } }] }] }] };
+        home.RoleCoverUI = RoleCoverUI;
+    })(home = ui.home || (ui.home = {}));
+})(ui || (ui = {}));
+(function (ui) {
+    var home;
+    (function (home) {
+        var SkuUI = (function (_super) {
+            __extends(SkuUI, _super);
+            function SkuUI() {
+                return _super.call(this) || this;
+            }
+            SkuUI.prototype.createChildren = function () {
+                _super.prototype.createChildren.call(this);
+                this.createView(ui.home.SkuUI.uiView);
+            };
+            return SkuUI;
+        }(Dialog));
+        SkuUI.uiView = { "type": "Dialog", "props": { "width": 810, "height": 1754 }, "child": [{ "type": "Image", "props": { "var": "bgImg", "top": 0, "right": 0, "left": 0, "bottom": 0 } }, { "type": "Panel", "props": { "x": 0, "width": 810, "var": "skuPanel", "top": 136, "bottom": 136 }, "child": [{ "type": "VBox", "props": { "visible": false, "var": "skuVbox", "top": 70, "right": 0, "left": 0 } }] }, { "type": "Image", "props": { "y": 0, "x": 0, "top": 0, "skin": "skin/common/top_label.png", "right": 0, "left": 0 } }, { "type": "Image", "props": { "y": 46, "skin": "skin/sku/property_top_label_name.png", "centerX": 0 } }, { "type": "Image", "props": { "var": "btnGoback", "top": 38, "skin": "skin/common/top_label_return_icon.png", "left": 20 } }, { "type": "Image", "props": { "y": 1304, "x": 0, "skin": "skin/common/foot_label.png", "left": 0, "bottom": 0 } }] };
+        home.SkuUI = SkuUI;
+    })(home = ui.home || (ui.home = {}));
+})(ui || (ui = {}));
+(function (ui) {
+    var home;
+    (function (home) {
+        var StartUI = (function (_super) {
+            __extends(StartUI, _super);
+            function StartUI() {
+                return _super.call(this) || this;
+            }
+            StartUI.prototype.createChildren = function () {
+                _super.prototype.createChildren.call(this);
+                this.createView(ui.home.StartUI.uiView);
+            };
+            return StartUI;
+        }(View));
+        StartUI.uiView = { "type": "View", "props": { "width": 810, "height": 1754 }, "child": [{ "type": "Image", "props": { "var": "bgImg", "top": 0, "right": 0, "left": 0, "bottom": 0 } }, { "type": "Image", "props": { "var": "mainLogo", "skin": "skin/common/starup_mian_logo.png", "centerY": 0, "centerX": 0, "alpha": 0 } }, { "type": "Box", "props": { "x": 0, "var": "erjiBox", "right": 0, "left": 0, "height": 190, "centerY": 0, "alpha": 0 }, "child": [{ "type": "Image", "props": { "var": "erjiIcon", "skin": "skin/common/promet_wear_headset.png", "centerX": 0 } }, { "type": "Label", "props": { "text": "开启声音，佩戴耳机使用更佳", "fontSize": 23, "font": "SimHei", "color": "#dddddd", "centerX": 0, "bottom": 0 } }] }] };
+        home.StartUI = StartUI;
+    })(home = ui.home || (ui.home = {}));
+})(ui || (ui = {}));
+(function (ui) {
+    var home;
+    (function (home) {
+        var StoreUI = (function (_super) {
+            __extends(StoreUI, _super);
+            function StoreUI() {
+                return _super.call(this) || this;
+            }
+            StoreUI.prototype.createChildren = function () {
+                _super.prototype.createChildren.call(this);
+                this.createView(ui.home.StoreUI.uiView);
+            };
+            return StoreUI;
+        }(Dialog));
+        StoreUI.uiView = { "type": "Dialog", "props": { "width": 810, "height": 1754 }, "child": [{ "type": "Image", "props": { "var": "bgImg", "top": 0, "right": 0, "left": 0, "bottom": 0 } }, { "type": "Box", "props": { "x": 0, "visible": false, "var": "mainBox", "top": 230, "right": 0, "left": 0, "bottom": 136 } }, { "type": "Image", "props": { "y": 0, "x": 0, "top": 0, "skin": "skin/common/top_label.png", "right": 0, "left": 0 } }, { "type": "Image", "props": { "y": 46, "x": 360, "var": "titleImg", "skin": "skin/store/read_pregress_top_label_name.png", "centerX": 0 } }, { "type": "Image", "props": { "var": "btnGoback", "top": 38, "skin": "skin/common/top_label_return_icon.png", "left": 20 } }, { "type": "Image", "props": { "y": 1304, "x": 0, "skin": "skin/common/foot_label.png", "left": 0, "bottom": 0 } }] };
+        home.StoreUI = StoreUI;
+    })(home = ui.home || (ui.home = {}));
+})(ui || (ui = {}));
+(function (ui) {
+    var home;
+    (function (home) {
+        var TeamUI = (function (_super) {
+            __extends(TeamUI, _super);
+            function TeamUI() {
+                return _super.call(this) || this;
+            }
+            TeamUI.prototype.createChildren = function () {
+                View.regComponent("Text", laya.display.Text);
+                _super.prototype.createChildren.call(this);
+                this.createView(ui.home.TeamUI.uiView);
+            };
+            return TeamUI;
+        }(Dialog));
+        TeamUI.uiView = { "type": "Dialog", "props": { "width": 810, "height": 1754 }, "child": [{ "type": "Image", "props": { "var": "bgImg", "top": 0, "right": 0, "left": 0, "bottom": 0 } }, { "type": "Image", "props": { "y": 0, "x": 0, "top": 0, "skin": "skin/common/top_label.png", "right": 0, "left": 0 } }, { "type": "Image", "props": { "y": 46, "skin": "skin/common/team_top_label_name.png", "centerX": 0 } }, { "type": "Image", "props": { "var": "btnGoback", "top": 38, "skin": "skin/common/top_label_return_icon.png", "left": 20 } }, { "type": "Image", "props": { "y": 1304, "x": 0, "skin": "skin/common/foot_label.png", "left": 0, "bottom": 0 } }, { "type": "VBox", "props": { "space": 84, "centerY": 0, "centerX": 0 }, "child": [{ "type": "Box", "props": { "y": 0, "name": "item0", "centerX": 0 }, "child": [{ "type": "Text", "props": { "y": 0, "x": 82, "text": "监制", "fontSize": 34, "font": "SimHei", "color": "#DDDDDD", "bold": true, "alpha": 0.5 } }, { "type": "Text", "props": { "y": 60, "x": 0, "text": "Intro，Leo", "fontSize": 47, "font": "SimHei", "color": "#DDDDDD" } }] }, { "type": "Box", "props": { "y": 178, "name": "item1", "centerX": 0 }, "child": [{ "type": "Text", "props": { "y": 0, "x": 129, "text": "编剧", "fontSize": 34, "font": "SimHei", "color": "#DDDDDD", "bold": true, "alpha": 0.5 } }, { "type": "Text", "props": { "y": 60, "x": 0, "text": "傻狗，黄静，Pi", "fontSize": 47, "font": "SimHei", "color": "#DDDDDD" } }] }, { "type": "Box", "props": { "y": 356, "name": "item2", "centerX": 0 }, "child": [{ "type": "Text", "props": { "y": 0, "x": 141, "text": "策划", "fontSize": 34, "font": "SimHei", "color": "#DDDDDD", "bold": true, "alpha": 0.5 } }, { "type": "Text", "props": { "y": 60, "x": 0, "text": "Leo，傻狗，思思", "fontSize": 47, "font": "SimHei", "color": "#DDDDDD" } }] }, { "type": "Box", "props": { "y": 534, "name": "item4", "centerX": 0 }, "child": [{ "type": "Text", "props": { "y": 0, "x": 118, "var": "txtDesign", "text": "美术设计", "fontSize": 34, "font": "SimHei", "color": "#DDDDDD", "bold": true, "alpha": 0.5 } }, { "type": "Text", "props": { "y": 60, "x": 0, "text": "橙子味的毛，三三", "fontSize": 47, "font": "SimHei", "color": "#DDDDDD" } }] }, { "type": "Box", "props": { "y": 712, "name": "item5", "centerX": 0 }, "child": [{ "type": "Text", "props": { "y": 0, "x": 212, "var": "txtDev", "text": "技术研发", "fontSize": 34, "font": "SimHei", "color": "#DDDDDD", "bold": true, "alpha": 0.5 } }, { "type": "Text", "props": { "y": 60, "x": 0, "text": "魂影，iCocos，天帅，南川", "fontSize": 47, "font": "SimHei", "color": "#DDDDDD" } }] }] }] };
+        home.TeamUI = TeamUI;
+    })(home = ui.home || (ui.home = {}));
+})(ui || (ui = {}));
+(function (ui) {
+    var home;
+    (function (home) {
+        var WaitUI = (function (_super) {
+            __extends(WaitUI, _super);
+            function WaitUI() {
+                return _super.call(this) || this;
+            }
+            WaitUI.prototype.createChildren = function () {
+                _super.prototype.createChildren.call(this);
+                this.createView(ui.home.WaitUI.uiView);
+            };
+            return WaitUI;
+        }(View));
+        WaitUI.uiView = { "type": "View", "props": { "width": 810, "height": 1754, "alpha": 1 }, "child": [{ "type": "Box", "props": { "top": 0, "right": 0, "left": 0, "bottom": 0 }, "child": [{ "type": "Rect", "props": { "width": 810, "lineWidth": 1, "height": 1754, "fillColor": "#000000" } }, { "type": "Box", "props": { "width": 425, "height": 536, "centerY": -200, "centerX": 0 }, "child": [{ "type": "Image", "props": { "y": 218, "x": 208, "var": "circle_in", "skin": "skin/wait/wait_time_inside_circle.png", "anchorY": 0.5, "anchorX": 0.5 } }, { "type": "Image", "props": { "y": 236, "x": 208, "var": "circle_mid", "skin": "skin/wait/wait_time_mid_circle.png", "anchorY": 0.5, "anchorX": 0.5 } }, { "type": "Image", "props": { "y": 219, "x": 210, "var": "circle_out", "skin": "skin/wait/wait_time_outside_circle.png", "anchorY": 0.5, "anchorX": 0.5 } }, { "type": "Label", "props": { "y": 227, "wordWrap": false, "var": "time_Text", "text": "00:00", "fontSize": 51, "font": "SimHei", "color": "#DDDDDD", "centerX": 0, "anchorY": 0.5, "anchorX": 0.5, "align": "center" } }, { "type": "Button", "props": { "y": 482, "var": "btn_reduce_time", "stateNum": 2, "skin": "skin/wait/btn_wait_time_reduce_time_btn.png", "centerX": 0 } }] }, { "type": "Label", "props": { "y": 1695, "x": 117, "var": "tip_text", "text": "故事在主角遇到昏迷或者需要休息等情况时，需要等待", "fontSize": 24, "font": "SimHei", "color": "#666666", "bottom": 35 } }] }] };
+        home.WaitUI = WaitUI;
+    })(home = ui.home || (ui.home = {}));
+})(ui || (ui = {}));
+//# sourceMappingURL=layaUI.max.all.js.map

@@ -47,6 +47,7 @@ static ReadingGamesViewController* g_pIOSMainViewController = nil;
     self = [super init];
     if( self != nil )
     {
+        NSLog(@"-----------------------%s-----------------------", __FUNCTION__);
         g_pIOSMainViewController = self;
         return self;
     }
@@ -85,13 +86,13 @@ static ReadingGamesViewController* g_pIOSMainViewController = nil;
     //conchRuntime 初始化ConchRuntime引擎
     CGRect frame = UIScreen.mainScreen.bounds;
     m_pConchRuntime = [[conchRuntime alloc]initWithView:m_pGLKView frame:frame EAGLContext:m_pGLContext downloadThreadNum:3];
+    NSLog(@"-----------------------%s-----------------------", __FUNCTION__);
 }
 //------------------------------------------------------------------------------
 - (void)dealloc
 {
     [self tearDownGL];
-    if ( [EAGLContext currentContext] == self->m_pGLContext )
-    {
+    if ([EAGLContext currentContext] == self->m_pGLContext ) {
         [EAGLContext setCurrentContext:nil];
     }
 }
@@ -100,47 +101,54 @@ static ReadingGamesViewController* g_pIOSMainViewController = nil;
 {
     [super didReceiveMemoryWarning];
 
+    NSLog(@"-----------------------%s-----------------------", __FUNCTION__);
     //conchRuntime 内存警告的时候的处理
     [m_pConchRuntime didReceiveMemoryWarning];
 }
 //------------------------------------------------------------------------------
 - (void)tearDownGL
 {
+    NSLog(@"-----------------------%s-----------------------", __FUNCTION__);
     [EAGLContext setCurrentContext:self->m_pGLContext];
 }
 //------------------------------------------------------------------------------
 - (void)update
 {
-
+    NSLog(@"-----------------------%s-----------------------", __FUNCTION__);
 }
 //------------------------------------------------------------------------------
 - (void)glkView:(GLKView *)view drawInRect:(CGRect)rect
 {
     //conchRuntime renderFrame
+    NSLog(@"-----------------------%s-----------------------", __FUNCTION__);
     [m_pConchRuntime renderFrame];
 }
 //-------------------------------------------------------------------------------
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
 {
     //conchRuntime touch
+    NSLog(@"-----------------------%s-----------------------", __FUNCTION__);
     [m_pConchRuntime touchesBegan:touches withEvent:event];
 }
 //-------------------------------------------------------------------------------
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event
 {
     //conchRuntime touch
+    NSLog(@"-----------------------%s-----------------------", __FUNCTION__);
     [m_pConchRuntime touchesMoved:touches withEvent:event];
 }
 //-------------------------------------------------------------------------------
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event
 {
     //conchRuntime touch
+    NSLog(@"-----------------------%s-----------------------", __FUNCTION__);
     [m_pConchRuntime touchesEnded:touches withEvent:event];
 }
 //-------------------------------------------------------------------------------
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event
 {
     //conchRuntime touch
+    NSLog(@"-----------------------%s-----------------------", __FUNCTION__);
     [m_pConchRuntime touchesCancelled:touches withEvent:event];
 }
 //-------------------------------------------------------------------------------
@@ -152,16 +160,19 @@ static ReadingGamesViewController* g_pIOSMainViewController = nil;
      UIInterfaceOrientationMaskLandscapeLeft,        ===8
      UIInterfaceOrientationMaskLandscapeRight,       ===16
      */
+    NSLog(@"-----------------------%s-----------------------", __FUNCTION__);
     return [conchConfig GetInstance]->m_nOrientationType;
 }
 //-------------------------------------------------------------------------------
 - (BOOL)shouldAutorotate
 {
+    NSLog(@"-----------------------%s-----------------------", __FUNCTION__);
     return YES;//支持转屏
 }
 //-------------------------------------------------------------------------------
 - (void)viewDidLayoutSubviews {
     [super viewDidLayoutSubviews];
+    NSLog(@"-----------------------%s-----------------------", __FUNCTION__);
     self.view.frame = m_pConchRuntime->m_currentFrame;
 }
 @end

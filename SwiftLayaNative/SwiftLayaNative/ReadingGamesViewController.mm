@@ -22,8 +22,18 @@
 //░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 // **************************************************************
 #import "ReadingGamesViewController.h"
+#import <conchRuntime.h>
 
 @implementation ReadingGamesViewController
+{
+@public
+    
+    GLKView*                    m_pGLKView;
+    
+    EAGLContext*                m_pGLContext;
+    
+    conchRuntime*               m_pConchRuntime;
+}
 
 static ReadingGamesViewController* g_pIOSMainViewController = nil;
 //------------------------------------------------------------------------------

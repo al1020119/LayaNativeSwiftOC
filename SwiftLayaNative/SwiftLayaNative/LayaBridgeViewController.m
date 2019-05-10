@@ -23,6 +23,7 @@
 // **************************************************************
 
 #import "LayaBridgeViewController.h"
+#import "ReadingGamesViewController.h"
 
 @interface LayaBridgeViewController ()
 
@@ -32,7 +33,14 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    self.view.backgroundColor = [UIColor redColor];
     // Do any additional setup after loading the view.
+}
+
+- (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    ReadingGamesViewController *vc = [[ReadingGamesViewController alloc] init];
+    [self.view addSubview:vc.view];
+    [self addChildViewController:vc];
 }
 
 /*

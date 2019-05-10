@@ -471,4 +471,4 @@ window['updateByZip'] = function (url, onEvent, onEnd) {
         }
     }, 10, 100000000);
 };
-loadUrl(conch.presetUrl||"https://erread.52jimu.com/v14/index.html?novelid=5076");
+loadUrl(conch.presetUrl || "http://192.168.0.101:8901/bin/index.html");

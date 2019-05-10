@@ -380,6 +380,9 @@
 		B56160B5228408FA0032BF41 /* drawMatFilterImagePS.glsl in Resources */ = {isa = PBXBuildFile; fileRef = B5615F60228408F90032BF41 /* drawMatFilterImagePS.glsl */; };
 		B56160B6228408FA0032BF41 /* layabox.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B5615F62228408F90032BF41 /* layabox.ttf */; };
 		B56160B82284091A0032BF41 /* libconch.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B56160B7228409190032BF41 /* libconch.a */; };
+		B5C65A0022854E49002EF3FE /* JSBridge+JS_execute_OC.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5C659FB22854E3E002EF3FE /* JSBridge+JS_execute_OC.mm */; };
+		B5C65A0122854E49002EF3FE /* JSBridge+OC_execute_JS.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5C659FD22854E43002EF3FE /* JSBridge+OC_execute_JS.mm */; };
+		B5C65A0222854E49002EF3FE /* JSBridge.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5C659FE22854E45002EF3FE /* JSBridge.mm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -782,6 +785,12 @@
 		B5615F60228408F90032BF41 /* drawMatFilterImagePS.glsl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = drawMatFilterImagePS.glsl; sourceTree = "<group>"; };
 		B5615F62228408F90032BF41 /* layabox.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = layabox.ttf; sourceTree = "<group>"; };
 		B56160B7228409190032BF41 /* libconch.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libconch.a; path = "LayaRuntime-iOS/libs/libconch.a"; sourceTree = "<group>"; };
+		B5C659FA22854E3D002EF3FE /* JSBridge+OC_execute_JS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "JSBridge+OC_execute_JS.h"; sourceTree = "<group>"; };
+		B5C659FB22854E3E002EF3FE /* JSBridge+JS_execute_OC.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "JSBridge+JS_execute_OC.mm"; sourceTree = "<group>"; };
+		B5C659FC22854E40002EF3FE /* JSBridge+JS_execute_OC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "JSBridge+JS_execute_OC.h"; sourceTree = "<group>"; };
+		B5C659FD22854E43002EF3FE /* JSBridge+OC_execute_JS.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "JSBridge+OC_execute_JS.mm"; sourceTree = "<group>"; };
+		B5C659FE22854E45002EF3FE /* JSBridge.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = JSBridge.mm; sourceTree = "<group>"; };
+		B5C659FF22854E47002EF3FE /* JSBridge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JSBridge.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -868,6 +877,12 @@
 				B5615DD42284067F0032BF41 /* LayaBridgeViewController.h */,
 				B5615DD52284067F0032BF41 /* LayaBridgeViewController.m */,
 				B5615DD0228406400032BF41 /* SwiftLayaNative-Bridging-Header.h */,
+				B5C659FF22854E47002EF3FE /* JSBridge.h */,
+				B5C659FE22854E45002EF3FE /* JSBridge.mm */,
+				B5C659FC22854E40002EF3FE /* JSBridge+JS_execute_OC.h */,
+				B5C659FB22854E3E002EF3FE /* JSBridge+JS_execute_OC.mm */,
+				B5C659FA22854E3D002EF3FE /* JSBridge+OC_execute_JS.h */,
+				B5C659FD22854E43002EF3FE /* JSBridge+OC_execute_JS.mm */,
 				B5615E08228408F80032BF41 /* resource */,
 			);
 			path = SwiftLayaNative;
@@ -1790,9 +1805,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				B5615DD62284067F0032BF41 /* LayaBridgeViewController.m in Sources */,
+				B5C65A0222854E49002EF3FE /* JSBridge.mm in Sources */,
 				B5615DA42284051E0032BF41 /* ViewController.swift in Sources */,
 				B5615DA22284051E0032BF41 /* AppDelegate.swift in Sources */,
 				B5615DD3228406400032BF41 /* ReadingGamesViewController.mm in Sources */,
+				B5C65A0122854E49002EF3FE /* JSBridge+OC_execute_JS.mm in Sources */,
+				B5C65A0022854E49002EF3FE /* JSBridge+JS_execute_OC.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

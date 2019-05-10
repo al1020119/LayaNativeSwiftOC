@@ -24,18 +24,8 @@
 
 #import <UIKit/UIKit.h>
 #import <GLKit/GLKit.h>
-#import <conchRuntime.h>
 
 @interface ReadingGamesViewController : GLKViewController
-{
-@public
-    
-    GLKView*                    m_pGLKView;
-    
-    EAGLContext*                m_pGLContext;
-    
-    conchRuntime*               m_pConchRuntime;
-}
 +(ReadingGamesViewController*)GetIOSViewController;
 -(id)init;
 @end

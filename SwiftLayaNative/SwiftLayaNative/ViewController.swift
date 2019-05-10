@@ -13,8 +13,12 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
-        //let layaBridge = LayaBridgeViewController()
-        //print(layaBridge)
+    }
+    
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        let layaBridge = LayaBridgeViewController()
+        self.view.addSubview(layaBridge.view)
+        self.addChild(layaBridge)
     }
 
 }

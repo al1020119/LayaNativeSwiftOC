@@ -86,82 +86,82 @@ static ReadingGamesViewController* g_pIOSMainViewController = nil;
     CGRect frame = UIScreen.mainScreen.bounds;
     m_pConchRuntime = [[conchRuntime alloc]initWithView:m_pGLKView frame:frame EAGLContext:m_pGLContext downloadThreadNum:3];
 }
-////------------------------------------------------------------------------------
-//- (void)dealloc
-//{
-//    [self tearDownGL];
-//    if ( [EAGLContext currentContext] == self->m_pGLContext )
-//    {
-//        [EAGLContext setCurrentContext:nil];
-//    }
-//}
-////------------------------------------------------------------------------------
-//- (void)didReceiveMemoryWarning
-//{
-//    [super didReceiveMemoryWarning];
-//
-//    //conchRuntime 内存警告的时候的处理
-//    [m_pConchRuntime didReceiveMemoryWarning];
-//}
-////------------------------------------------------------------------------------
-//- (void)tearDownGL
-//{
-//    [EAGLContext setCurrentContext:self->m_pGLContext];
-//}
-////------------------------------------------------------------------------------
-//- (void)update
-//{
-//
-//}
-////------------------------------------------------------------------------------
-//- (void)glkView:(GLKView *)view drawInRect:(CGRect)rect
-//{
-//    //conchRuntime renderFrame
-//    [m_pConchRuntime renderFrame];
-//}
-////-------------------------------------------------------------------------------
-//- (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
-//{
-//    //conchRuntime touch
-//    [m_pConchRuntime touchesBegan:touches withEvent:event];
-//}
-////-------------------------------------------------------------------------------
-//- (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event
-//{
-//    //conchRuntime touch
-//    [m_pConchRuntime touchesMoved:touches withEvent:event];
-//}
-////-------------------------------------------------------------------------------
-//- (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event
-//{
-//    //conchRuntime touch
-//    [m_pConchRuntime touchesEnded:touches withEvent:event];
-//}
-////-------------------------------------------------------------------------------
-//- (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event
-//{
-//    //conchRuntime touch
-//    [m_pConchRuntime touchesCancelled:touches withEvent:event];
-//}
-////-------------------------------------------------------------------------------
-//-(NSUInteger)supportedInterfaceOrientations
-//{
-//    /*
-//     UIInterfaceOrientationMaskPortrait,             ===2
-//     UIInterfaceOrientationMaskPortraitUpsideDown,   ===4
-//     UIInterfaceOrientationMaskLandscapeLeft,        ===8
-//     UIInterfaceOrientationMaskLandscapeRight,       ===16
-//     */
-//    return [conchConfig GetInstance]->m_nOrientationType;
-//}
-////-------------------------------------------------------------------------------
-//- (BOOL)shouldAutorotate
-//{
-//    return YES;//支持转屏
-//}
-////-------------------------------------------------------------------------------
-//- (void)viewDidLayoutSubviews {
-//    [super viewDidLayoutSubviews];
-//    self.view.frame = m_pConchRuntime->m_currentFrame;
-//}
+//------------------------------------------------------------------------------
+- (void)dealloc
+{
+    [self tearDownGL];
+    if ( [EAGLContext currentContext] == self->m_pGLContext )
+    {
+        [EAGLContext setCurrentContext:nil];
+    }
+}
+//------------------------------------------------------------------------------
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+
+    //conchRuntime 内存警告的时候的处理
+    [m_pConchRuntime didReceiveMemoryWarning];
+}
+//------------------------------------------------------------------------------
+- (void)tearDownGL
+{
+    [EAGLContext setCurrentContext:self->m_pGLContext];
+}
+//------------------------------------------------------------------------------
+- (void)update
+{
+
+}
+//------------------------------------------------------------------------------
+- (void)glkView:(GLKView *)view drawInRect:(CGRect)rect
+{
+    //conchRuntime renderFrame
+    [m_pConchRuntime renderFrame];
+}
+//-------------------------------------------------------------------------------
+- (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
+{
+    //conchRuntime touch
+    [m_pConchRuntime touchesBegan:touches withEvent:event];
+}
+//-------------------------------------------------------------------------------
+- (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event
+{
+    //conchRuntime touch
+    [m_pConchRuntime touchesMoved:touches withEvent:event];
+}
+//-------------------------------------------------------------------------------
+- (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event
+{
+    //conchRuntime touch
+    [m_pConchRuntime touchesEnded:touches withEvent:event];
+}
+//-------------------------------------------------------------------------------
+- (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event
+{
+    //conchRuntime touch
+    [m_pConchRuntime touchesCancelled:touches withEvent:event];
+}
+//-------------------------------------------------------------------------------
+-(NSUInteger)supportedInterfaceOrientations
+{
+    /*
+     UIInterfaceOrientationMaskPortrait,             ===2
+     UIInterfaceOrientationMaskPortraitUpsideDown,   ===4
+     UIInterfaceOrientationMaskLandscapeLeft,        ===8
+     UIInterfaceOrientationMaskLandscapeRight,       ===16
+     */
+    return [conchConfig GetInstance]->m_nOrientationType;
+}
+//-------------------------------------------------------------------------------
+- (BOOL)shouldAutorotate
+{
+    return YES;//支持转屏
+}
+//-------------------------------------------------------------------------------
+- (void)viewDidLayoutSubviews {
+    [super viewDidLayoutSubviews];
+    self.view.frame = m_pConchRuntime->m_currentFrame;
+}
 @end

@@ -1,5 +1,34 @@
  ------------------------------------------ 先解压zip：（压缩文件位置：LayaRuntime-iOS->libs.zip） ------------------------------------------ 
 
+存在问题：
+
+在Swift中接入，调用到- (void)glkView:(GLKView *)view drawInRect:(CGRect)rect之后就不执行update 了，OC会继续执行update方法，并且循环执行刷新UI
+ 
+//------------------------------------------------------------------------------
+ 
+- (void)update {   
+NSLog(@"----------------------%s----------------------", __FUNCTION__);
+}
+ 
+//------------------------------------------------------------------------------
+  - (void)glkView:(GLKView *)view drawInRect:(CGRect)rect {
+    //conchRuntime renderFrame
+    [self.m_pConchRuntime renderFrame];
+    NSLog(@"----------------------%s----------------------", __FUNCTION__);
+} 
+
+具体操作是：
+demo中会在- (void)glkView:(GLKView *)view drawInRect:(CGRect)rect 和 - (void)update 执行渲染
+ 
+但是我的Swift项目，走完一次- (void)glkView:(GLKView *)view drawInRect:(CGRect)rect就不在执行任何方法了
+所以无法渲染界面！
+
+经测试验证，关闭引擎初始化正常
+//    //conchRuntime 初始化ConchRuntime引擎
+//    CGRect frame = UIScreen.mainScreen.bounds;
+//    m_pConchRuntime = [[conchRuntime alloc]initWithView:m_pGLKView frame:frame EAGLContext:m_pGLContext downloadThreadNum:3];
+//    NSLog(@"-----------------------%s-----------------------", __FUNCTION__); 
+
 # LayaNativeSwiftOC
 LayaNative与Swift交互，LayaNative与OC
 
